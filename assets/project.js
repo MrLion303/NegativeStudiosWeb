@@ -1,5 +1,9 @@
 document.addEventListener('DOMContentLoaded',()=>{
   const id=new URLSearchParams(location.search).get('id');
+  if(id==='negativemc-ep3'){
+    location.replace('proyectos/negativemc-episodio-3/');
+    return;
+  }
   const project=window.NS_DATA?.projects?.find(item=>item.id===id);
   const original=window.NS_ORIGINAL_CONTENT?.[id];
   const set=(selector,value)=>{const el=document.querySelector(selector);if(el)el.textContent=value||'—'};
