@@ -1,4 +1,7 @@
 document.addEventListener('DOMContentLoaded',()=>{
+  const icon=document.querySelector('link[rel="icon"]');
+  if(icon) icon.href='assets/brand-mark.png';
+
   if(!document.querySelector('link[href="assets/extras.css"]')){
     const extraStyles=document.createElement('link');
     extraStyles.rel='stylesheet';
