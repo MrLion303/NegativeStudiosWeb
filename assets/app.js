@@ -1,6 +1,6 @@
 document.addEventListener('DOMContentLoaded',()=>{
   const icon=document.querySelector('link[rel="icon"]');
-  if(icon) icon.href='assets/brand-mark.png';
+  if(icon) icon.href='assets/media/brand-icon.webp';
 
   if(!document.querySelector('link[href="assets/extras.css"]')){
     const extraStyles=document.createElement('link');
@@ -17,7 +17,8 @@ document.addEventListener('DOMContentLoaded',()=>{
     'pc-rebirth':'proyectos/pdc-rebirth/',
     'negative-awards':'proyectos/negative-awards/',
     'negativemc-ep3':'proyectos/negativemc-episodio-3/',
-    'proyecto-x':'proyectos/proyecto-x/'
+    'proyecto-x':'proyectos/proyecto-x/',
+    'pc-final':'proyectos/pdc-final-chapter/'
   };
   document.querySelectorAll('a[href^="proyecto.html?id="]').forEach(link=>{
     try{
@@ -25,6 +26,31 @@ document.addEventListener('DOMContentLoaded',()=>{
       const projectId=target.searchParams.get('id');
       if(canonicalProjectRoutes[projectId]) link.href=canonicalProjectRoutes[projectId];
     }catch(_){ }
+  });
+
+  const projectArtwork={
+    'OVERLAND':'assets/media/overland.webp',
+    'Proyecto Y':'assets/media/proyecto-y.webp',
+    'PARASITES':'assets/media/parasites.webp',
+    'Negative Awards':'assets/media/negative-awards.webp',
+    'NEGATIVE AWARDS':'assets/media/negative-awards.webp',
+    'NegativeMC Episodio 3':'assets/media/negativemc-ep3.webp',
+    'NegativeMC 2':'assets/media/negativemc-2.webp',
+    'NegativeMC':'assets/media/negativemc.webp',
+    'Proyecto X':'assets/media/proyecto-x.webp'
+  };
+  document.querySelectorAll('.card').forEach(card=>{
+    const title=card.querySelector('h3')?.textContent?.trim();
+    const src=projectArtwork[title];
+    const media=card.querySelector('.card-media');
+    if(!src||!media||media.querySelector('.card-media-img'))return;
+    const image=document.createElement('img');
+    image.className='card-media-img';
+    image.src=src;
+    image.alt='';
+    image.loading='lazy';
+    media.prepend(image);
+    media.classList.add('has-image');
   });
 
   const oldCta=document.querySelector('.nav-cta');
