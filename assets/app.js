@@ -9,6 +9,24 @@ document.addEventListener('DOMContentLoaded',()=>{
     document.head.appendChild(extraStyles);
   }
 
+  const canonicalProjectRoutes={
+    'overland':'proyectos/overland/',
+    'proyecto-y':'proyectos/proyecto-y/',
+    'parasites':'proyectos/parasites/',
+    'jujutsu-kaisen':'proyectos/culling-games/',
+    'pc-rebirth':'proyectos/pdc-rebirth/',
+    'negative-awards':'proyectos/negative-awards/',
+    'negativemc-ep3':'proyectos/negativemc-episodio-3/',
+    'proyecto-x':'proyectos/proyecto-x/'
+  };
+  document.querySelectorAll('a[href^="proyecto.html?id="]').forEach(link=>{
+    try{
+      const target=new URL(link.getAttribute('href'),location.href);
+      const projectId=target.searchParams.get('id');
+      if(canonicalProjectRoutes[projectId]) link.href=canonicalProjectRoutes[projectId];
+    }catch(_){ }
+  });
+
   const oldCta=document.querySelector('.nav-cta');
   if(oldCta){
     const actions=document.createElement('div');
