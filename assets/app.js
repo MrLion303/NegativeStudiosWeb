@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded',()=>{
-  const VERSION='20260927i';
+  const VERSION='20260927j';
   const icon=document.querySelector('link[rel="icon"]');if(icon)icon.href='assets/media/brand-icon.webp';
   if(!document.querySelector('link[href^="assets/extras.css"]')){const s=document.createElement('link');s.rel='stylesheet';s.href=`assets/extras.css?v=${VERSION}`;document.head.appendChild(s)}
   if(!document.querySelector('link[href*="refresh.css"]')){const s=document.createElement('link');s.rel='stylesheet';s.href=`assets/refresh.css?v=${VERSION}`;document.head.appendChild(s)}
