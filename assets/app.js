@@ -9,6 +9,12 @@ document.addEventListener('DOMContentLoaded',()=>{
     document.head.appendChild(extraStyles);
   }
 
+  // Identidad oficial del estudio en todas las páginas de primer nivel.
+  document.querySelectorAll('.brand img').forEach(img=>{
+    img.src='assets/media/brand-logo.webp';
+    img.alt='NegativeStudios';
+  });
+
   const canonicalProjectRoutes={
     'overland':'proyectos/overland/',
     'proyecto-y':'proyectos/proyecto-y/',
@@ -20,6 +26,7 @@ document.addEventListener('DOMContentLoaded',()=>{
     'proyecto-x':'proyectos/proyecto-x/',
     'pc-final':'proyectos/pdc-final-chapter/'
   };
+
   document.querySelectorAll('a[href^="proyecto.html?id="]').forEach(link=>{
     try{
       const target=new URL(link.getAttribute('href'),location.href);
@@ -39,19 +46,25 @@ document.addEventListener('DOMContentLoaded',()=>{
     'NegativeMC':'assets/media/negativemc.webp',
     'Proyecto X':'assets/media/proyecto-x.webp'
   };
-  document.querySelectorAll('.card').forEach(card=>{
-    const title=card.querySelector('h3')?.textContent?.trim();
-    const src=projectArtwork[title];
-    const media=card.querySelector('.card-media');
-    if(!src||!media||media.querySelector('.card-media-img'))return;
-    const image=document.createElement('img');
-    image.className='card-media-img';
-    image.src=src;
-    image.alt='';
-    image.loading='lazy';
-    media.prepend(image);
-    media.classList.add('has-image');
-  });
+
+  const enhanceProjectCards=()=>{
+    document.querySelectorAll('.card').forEach(card=>{
+      const title=card.querySelector('h3')?.textContent?.trim();
+      const src=projectArtwork[title];
+      const media=card.querySelector('.card-media');
+      if(!src||!media||media.querySelector('.card-media-img'))return;
+      const image=document.createElement('img');
+      image.className='card-media-img';
+      image.src=src;
+      image.alt=title?`Arte oficial de ${title}`:'';
+      image.loading='lazy';
+      image.decoding='async';
+      media.prepend(image);
+      media.classList.add('has-image');
+    });
+  };
+  enhanceProjectCards();
+  document.addEventListener('projects-rendered',enhanceProjectCards);
 
   const oldCta=document.querySelector('.nav-cta');
   if(oldCta){
