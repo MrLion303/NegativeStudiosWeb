@@ -14,6 +14,7 @@ document.addEventListener('DOMContentLoaded',()=>{
     location.replace(dedicatedRoutes[id]);
     return;
   }
+
   const project=window.NS_DATA?.projects?.find(item=>item.id===id);
   const original=window.NS_ORIGINAL_CONTENT?.[id];
   const set=(selector,value)=>{const el=document.querySelector(selector);if(el)el.textContent=value||'—'};
@@ -29,14 +30,38 @@ document.addEventListener('DOMContentLoaded',()=>{
   document.title=`${project.name} — NegativeStudios`;
   const summary=original?.summary||project.summary;
   set('#projectName',project.name);
+  set('#projectCrumb',project.name);
   set('#projectSummary',summary);
   set('#projectStatus',project.status);
   set('#projectPhase',project.phase);
   set('#projectType',project.type);
+  set('#projectMediaLabel',`${project.phase} · ${project.type}`);
   set('#sideStatus',project.status);
   set('#sideType',project.type);
   set('#sidePhase',project.phase);
   set('#sidePeriod',project.dates||project.year);
+
+  const mediaById={
+    'negativemc':'assets/media/negativemc.webp',
+    'negativemc-2':'assets/media/negativemc-2.webp',
+    'negativemc-ep3':'assets/media/negativemc-ep3.webp',
+    'overland':'assets/media/overland.webp',
+    'proyecto-y':'assets/media/proyecto-y.webp',
+    'parasites':'assets/media/parasites.webp',
+    'negative-awards':'assets/media/negative-awards.webp',
+    'proyecto-x':'assets/media/proyecto-x.webp'
+  };
+  const mediaSrc=mediaById[id];
+  if(mediaSrc){
+    const band=document.querySelector('#projectMediaBand');
+    const image=document.querySelector('#projectMedia');
+    if(image){
+      image.src=mediaSrc;
+      image.alt=`Arte oficial de ${project.name}`;
+      image.decoding='async';
+    }
+    if(band) band.hidden=false;
+  }
 
   const legacy=document.querySelector('#legacyLink');
   if(legacy) legacy.href=project.legacy||'proyectos.html';
@@ -56,9 +81,9 @@ document.addEventListener('DOMContentLoaded',()=>{
       block.appendChild(heading);
     }
     (section.paragraphs||[]).forEach(copy=>{
-      const p=document.createElement('p');
-      p.textContent=copy;
-      block.appendChild(p);
+      const paragraph=document.createElement('p');
+      paragraph.textContent=copy;
+      block.appendChild(paragraph);
     });
     return block;
   };
@@ -67,9 +92,9 @@ document.addEventListener('DOMContentLoaded',()=>{
     if(original?.sections?.length){
       original.sections.forEach(section=>contentHost.appendChild(renderSection(section)));
     }else{
-      const p=document.createElement('p');
-      p.textContent=project.summary;
-      contentHost.appendChild(p);
+      const paragraph=document.createElement('p');
+      paragraph.textContent=project.summary;
+      contentHost.appendChild(paragraph);
     }
 
     if(original?.subpages?.length){
