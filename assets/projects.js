@@ -11,6 +11,16 @@ document.addEventListener('DOMContentLoaded',()=>{
     'negativemc-ep3':'proyectos/negativemc-episodio-3/',
     'proyecto-x':'proyectos/proyecto-x/'
   };
+  const artwork={
+    'overland':'assets/media/overland.webp',
+    'proyecto-y':'assets/media/proyecto-y.webp',
+    'parasites':'assets/media/parasites.webp',
+    'negative-awards':'assets/media/negative-awards.webp',
+    'negativemc-ep3':'assets/media/negativemc-ep3.webp',
+    'negativemc-2':'assets/media/negativemc-2.webp',
+    'negativemc':'assets/media/negativemc.webp',
+    'proyecto-x':'assets/media/proyecto-x.webp'
+  };
   window.NS_DATA.projects.forEach((p,index)=>{
     const original=window.NS_ORIGINAL_CONTENT?.[p.id];
     const link=document.createElement('a');
@@ -19,7 +29,15 @@ document.addEventListener('DOMContentLoaded',()=>{
     link.dataset.phase=p.phase;
     link.dataset.status=p.status;
     const media=document.createElement('div');
-    media.className='card-media';
+    media.className=`card-media${artwork[p.id]?' has-image':''}`;
+    if(artwork[p.id]){
+      const image=document.createElement('img');
+      image.className='card-media-img';
+      image.src=artwork[p.id];
+      image.alt=`Portada de ${p.name}`;
+      image.loading='lazy';
+      media.appendChild(image);
+    }
     const number=document.createElement('span');
     number.className='card-index';
     number.textContent=String(index+1).padStart(2,'0');
