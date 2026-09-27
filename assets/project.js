@@ -1,7 +1,17 @@
 document.addEventListener('DOMContentLoaded',()=>{
   const id=new URLSearchParams(location.search).get('id');
-  if(id==='negativemc-ep3'){
-    location.replace('proyectos/negativemc-episodio-3/');
+  const dedicatedRoutes={
+    'overland':'proyectos/overland/',
+    'proyecto-y':'proyectos/proyecto-y/',
+    'parasites':'proyectos/parasites/',
+    'jujutsu-kaisen':'proyectos/culling-games/',
+    'pc-rebirth':'proyectos/pdc-rebirth/',
+    'negative-awards':'proyectos/negative-awards/',
+    'negativemc-ep3':'proyectos/negativemc-episodio-3/',
+    'proyecto-x':'proyectos/proyecto-x/'
+  };
+  if(dedicatedRoutes[id]){
+    location.replace(dedicatedRoutes[id]);
     return;
   }
   const project=window.NS_DATA?.projects?.find(item=>item.id===id);
