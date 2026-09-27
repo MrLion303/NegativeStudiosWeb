@@ -1,8 +1,9 @@
 document.addEventListener('DOMContentLoaded',()=>{
-  const VERSION='20260927f';
+  const VERSION='20260927h';
   const icon=document.querySelector('link[rel="icon"]');if(icon)icon.href='assets/media/brand-icon.webp';
   if(!document.querySelector('link[href^="assets/extras.css"]')){const s=document.createElement('link');s.rel='stylesheet';s.href=`assets/extras.css?v=${VERSION}`;document.head.appendChild(s)}
   if(!document.querySelector('link[href*="refresh.css"]')){const s=document.createElement('link');s.rel='stylesheet';s.href=`assets/refresh.css?v=${VERSION}`;document.head.appendChild(s)}
+  if(!document.querySelector('link[href*="studio-wide.css"]')){const s=document.createElement('link');s.rel='stylesheet';s.href=`assets/studio-wide.css?v=${VERSION}`;document.head.appendChild(s)}
   document.querySelectorAll('.brand img').forEach(img=>{img.src='assets/media/brand-logo.webp';img.alt='NegativeStudios'});
 
   const socials=[
