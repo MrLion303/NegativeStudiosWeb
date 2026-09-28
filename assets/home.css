@@ -37,9 +37,9 @@
   background-repeat:no-repeat;
   opacity:0;
   transform:none!important;
-  filter:none!important;
+  filter:url("#home-sharpen") contrast(1.025) saturate(1.015)!important;
   transition:opacity 1.15s ease-in-out;
-  will-change:opacity;
+  will-change:opacity,filter;
   pointer-events:none;
 }
 
