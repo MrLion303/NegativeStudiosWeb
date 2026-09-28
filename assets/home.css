@@ -37,7 +37,10 @@
   background-repeat:no-repeat;
   opacity:0;
   transform:none!important;
-  filter:url("#home-sharpen") contrast(1.025) saturate(1.015)!important;
+  filter:url("#home-sharpen") contrast(1.08) saturate(1.035) brightness(1.015)!important;
+  image-rendering:auto;
+  -webkit-backface-visibility:hidden;
+  backface-visibility:hidden;
   transition:opacity 1.15s ease-in-out;
   will-change:opacity,filter;
   pointer-events:none;
