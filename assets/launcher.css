@@ -104,3 +104,7 @@
   .client-hero-v2-mark{min-height:215px}
   .client-hero-v2-mark img{width:min(190px,68%);max-height:190px}
 }
+
+/* Windows platform icon */
+.client-platform-v2 .client-platform-top img{width:26px;height:26px;display:block;object-fit:contain;opacity:.92;filter:drop-shadow(0 4px 12px rgba(31,142,255,.18))}
+.client-platform-v2.available .client-platform-top img{transform:scale(1.02)}
