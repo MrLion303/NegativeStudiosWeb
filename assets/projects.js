@@ -2,14 +2,14 @@ document.addEventListener('DOMContentLoaded',()=>{
   const grid=document.querySelector('#projectGrid');
   if(!grid||!window.NS_DATA)return;
   const pageRoutes={
-    'overland':'proyectos/overland/',
-    'proyecto-y':'proyectos/proyecto-y/',
-    'parasites':'proyectos/parasites/',
-    'jujutsu-kaisen':'proyectos/culling-games/',
-    'pc-rebirth':'proyectos/pdc-rebirth/',
-    'negative-awards':'proyectos/negative-awards/',
-    'negativemc-ep3':'proyectos/negativemc-episodio-3/',
-    'proyecto-x':'proyectos/proyecto-x/'
+    'overland':'proyectos/overland/index.html',
+    'proyecto-y':'proyectos/proyecto-y/index.html',
+    'parasites':'proyectos/parasites/index.html',
+    'jujutsu-kaisen':'proyectos/culling-games/index.html',
+    'pc-rebirth':'proyectos/pdc-rebirth/index.html',
+    'negative-awards':'proyectos/negative-awards/index.html',
+    'negativemc-ep3':'proyectos/negativemc-episodio-3/index.html',
+    'proyecto-x':'proyectos/proyecto-x/index.html'
   };
   const artwork={
     'overland':'assets/media/overland.webp',
@@ -21,8 +21,8 @@ document.addEventListener('DOMContentLoaded',()=>{
     'negativemc':'assets/media/negativemc.webp',
     'proyecto-x':'assets/media/proyecto-x.webp',
     'caos-games':'https://drive.google.com/uc?export=view&id=18LamdjHDQ1AH2S5B78c50ndQpluWftOM',
-    'pc-rebirth':'https://mrlion303.github.io/NegativeStudiosWeb/assets/media/pdc-rebirth.webp',
-    'permamuerte':'https://mrlion303.github.io/NegativeStudiosWeb/assets/media/pdc-final-chapter.webp'
+    'pc-rebirth':'https://mrlion303.github.io/NegativeStudiosWeb/assets/media/pdc-rebirth.webp?v=2',
+    'permamuerte':'https://mrlion303.github.io/NegativeStudiosWeb/assets/media/pdc-final-chapter.webp?v=2'
   };
   const hiddenProjects=new Set(['caos-games','guerra-nexus','the-200-rooms','the-100-rooms']);
   let visibleIndex=0;
