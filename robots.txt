@@ -1,7 +1,5 @@
 User-agent: *
 Allow: /
 
-# Keep automated crawlers from repeatedly hammering the site.
+# Hint for well-behaved crawlers to avoid aggressive request rates.
 Crawl-delay: 5
-
-Sitemap: https://negativestudios.eu.org/sitemap.xml
