@@ -1,0 +1,4 @@
+Contact: mailto:contacto.negativestudios@gmail.com
+Preferred-Languages: es, en
+Canonical: https://negativestudios.eu.org/.well-known/security.txt
+Policy: https://negativestudios.eu.org/legal.html#privacidad
