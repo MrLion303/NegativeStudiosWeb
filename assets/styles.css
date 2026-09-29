@@ -39,18 +39,3 @@ html.ns-ready body{opacity:1;visibility:visible;transition:opacity .14s ease}
 @media(prefers-reduced-motion:reduce){.nav-links,.nav-links a,.menu-btn{transition:none!important}}
 
 /* Shared cinematic header carousel */
-.ns-page-carousel{position:relative;height:clamp(300px,42vw,500px);min-height:300px;overflow:hidden;isolation:isolate;background:#03070b;border-bottom:1px solid rgba(122,184,255,.18)}
-.ns-page-carousel .ns-carousel-slides{position:absolute;inset:0;overflow:hidden;background:#03070b}
-.ns-page-carousel .ns-carousel-slide{position:absolute;inset:0;background-position:center;background-size:cover;background-repeat:no-repeat;opacity:0;transition:opacity 3.2s cubic-bezier(.22,.61,.36,1);will-change:opacity}
-.ns-page-carousel .ns-carousel-slide.is-active{opacity:1}
-.ns-page-carousel .ns-carousel-overlay{position:absolute;inset:0;z-index:2;background:linear-gradient(90deg,rgba(2,6,10,.82),rgba(2,6,10,.42) 58%,rgba(2,6,10,.20)),linear-gradient(180deg,rgba(2,6,10,.06),rgba(5,8,13,.82))}
-.ns-page-carousel .ns-carousel-grid{position:relative;z-index:3;height:100%;display:flex;align-items:flex-end;padding-bottom:clamp(42px,7vw,78px)}
-.ns-page-carousel .ns-carousel-copy{max-width:min(900px,100%)}
-.ns-page-carousel .ns-carousel-eyebrow{display:inline-flex;align-items:center;gap:10px;color:#66c2ff;text-transform:uppercase;letter-spacing:.16em;font-size:.72rem;font-weight:900;text-shadow:0 2px 12px rgba(0,0,0,.6)}
-.ns-page-carousel .ns-carousel-eyebrow:before{content:"";width:24px;height:2px;background:currentColor}
-.ns-page-carousel h1{margin:14px 0 0;font-size:clamp(3.4rem,8vw,7.4rem);line-height:.86;letter-spacing:-.065em;font-weight:900;text-transform:uppercase;text-shadow:0 5px 30px rgba(0,0,0,.75)}
-.ns-page-carousel .ns-carousel-progress{position:absolute;z-index:4;right:clamp(20px,4vw,56px);bottom:clamp(30px,5vw,56px);display:flex;gap:5px}
-.ns-page-carousel .ns-carousel-progress i{display:block;width:24px;height:2px;background:rgba(255,255,255,.28);transition:background .3s ease,width .3s ease}
-.ns-page-carousel .ns-carousel-progress i.active{width:38px;background:#66c2ff}
-@media(max-width:620px){.ns-page-carousel{height:330px;min-height:330px}.ns-page-carousel .ns-carousel-overlay{background:linear-gradient(90deg,rgba(2,6,10,.82),rgba(2,6,10,.40)),linear-gradient(180deg,rgba(2,6,10,.08),#05080d)}.ns-page-carousel .ns-carousel-grid{padding-bottom:42px}.ns-page-carousel h1{font-size:clamp(3rem,15vw,4.8rem)}.ns-page-carousel .ns-carousel-progress{right:13px;bottom:22px}.ns-page-carousel .ns-carousel-progress i{width:14px}.ns-page-carousel .ns-carousel-progress i.active{width:24px}}
-@media(prefers-reduced-motion:reduce){.ns-page-carousel .ns-carousel-slide{transition:none}}
