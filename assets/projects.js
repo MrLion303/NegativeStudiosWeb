@@ -12,17 +12,17 @@ document.addEventListener('DOMContentLoaded',()=>{
     'proyecto-x':'proyectos/proyecto-x/index.html'
   };
   const artwork={
-    'overland':'https://lh3.googleusercontent.com/d/1c3Olfch4Z7sxE2tTDgSHmCzhmhDM_amM=w3000',
-    'proyecto-y':'https://drive.google.com/thumbnail?id=1_JC_6D1aLbyn9QzBG3ZPCZEhKrKUikLl&sz=w4000',
-    'parasites':'https://drive.google.com/thumbnail?id=1aWDnR3Zq1jYY8JZyXGQnftHPXkl2zW6a&sz=w4000',
-    'negative-awards':'https://drive.google.com/thumbnail?id=1L5rhrQESm1KuHehaRb_DLA1iGiuKfFCJ&sz=w4000',
+    'overland':'assets/media/overland.webp',
+    'proyecto-y':'assets/media/proyecto-y.webp',
+    'parasites':'assets/media/parasites.webp',
+    'negative-awards':'assets/media/negative-awards.webp',
     'negativemc-ep3':'assets/media/negativemc-ep3.webp',
     'negativemc-2':'assets/media/negativemc-2.webp',
     'negativemc':'assets/media/negativemc.webp',
-    'proyecto-x':'https://drive.google.com/thumbnail?id=1o17IKUnh84JE1b5Fh52_wJxhNVWXAFzl&sz=w4000',
+    'proyecto-x':'assets/media/proyecto-x.webp',
     'caos-games':'https://lh3.googleusercontent.com/d/18LamdjHDQ1AH2S5B78c50ndQpluWftOM=w3000',
-    'pc-rebirth':'https://lh3.googleusercontent.com/d/1qDIaslDrscW1VV2Z6ayqiAlBlK-hdFb=w3000',
-    'permamuerte':'https://lh3.googleusercontent.com/d/1e8bXb9B_pTYv13sGfOhAEpBD8E0K955F=w3000'
+    'pc-rebirth':'assets/media/pdc-rebirth.webp',
+    'permamuerte':'assets/media/pdc-final-chapter.webp'
   };
   const hiddenProjects=new Set(['caos-games','guerra-nexus','the-200-rooms','the-100-rooms']);
   let visibleIndex=0;
