@@ -108,3 +108,6 @@
 /* Windows platform icon */
 .client-platform-v2 .client-platform-top img{width:26px;height:26px;display:block;object-fit:contain;opacity:.92;filter:drop-shadow(0 4px 12px rgba(31,142,255,.18))}
 .client-platform-v2.available .client-platform-top img{transform:scale(1.02)}
+
+/* Windows platform icon — monochrome to match the other platform cards */
+.client-platform-v2 .client-platform-top img.windows-platform-icon{filter:brightness(0) invert(1);opacity:.94}
