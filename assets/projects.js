@@ -12,7 +12,7 @@ document.addEventListener('DOMContentLoaded',()=>{
     'proyecto-x':'proyectos/proyecto-x/index.html'
   };
   const artwork={
-    'overland':'assets/media/overland.webp',
+    'overland':'https://lh3.googleusercontent.com/d/1c3Olfch4Z7sxE2tTDgSHmCzhmhDM_amM=w3000',
     'proyecto-y':'assets/media/proyecto-y.webp',
     'parasites':'assets/media/parasites.webp',
     'negative-awards':'assets/media/negative-awards.webp',
@@ -20,9 +20,9 @@ document.addEventListener('DOMContentLoaded',()=>{
     'negativemc-2':'assets/media/negativemc-2.webp',
     'negativemc':'assets/media/negativemc.webp',
     'proyecto-x':'assets/media/proyecto-x.webp',
-    'caos-games':'https://drive.google.com/uc?export=view&id=18LamdjHDQ1AH2S5B78c50ndQpluWftOM',
-    'pc-rebirth':'https://mrlion303.github.io/NegativeStudiosWeb/assets/media/pdc-rebirth.webp?v=2',
-    'permamuerte':'https://mrlion303.github.io/NegativeStudiosWeb/assets/media/pdc-final-chapter.webp?v=2'
+    'caos-games':'https://lh3.googleusercontent.com/d/18LamdjHDQ1AH2S5B78c50ndQpluWftOM=w3000',
+    'pc-rebirth':'https://lh3.googleusercontent.com/d/1qDIaslDrscW1VV2Z6ayqiAlBlK-hdFb=w3000',
+    'permamuerte':'https://lh3.googleusercontent.com/d/1e8bXb9B_pTYv13sGfOhAEpBD8E0K955F=w3000'
   };
   const hiddenProjects=new Set(['caos-games','guerra-nexus','the-200-rooms','the-100-rooms']);
   let visibleIndex=0;
