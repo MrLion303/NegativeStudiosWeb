@@ -18,3 +18,89 @@
 .client-end-v2{padding:88px 0 104px;background:#060a0f}.client-end-box{display:grid;grid-template-columns:1fr minmax(280px,.55fr);gap:70px;align-items:end;padding:54px 0;border-top:1px solid var(--client-line);border-bottom:1px solid var(--client-line)}.client-end-box h2{font-size:clamp(3.4rem,7vw,7rem);line-height:.82;letter-spacing:-.06em;margin:15px 0 0}.client-end-box>div:last-child p{color:var(--client-muted);font-size:1.05rem;line-height:1.6;margin:0 0 24px}
 @media(max-width:980px){.client-hero-v2-grid,.client-section-head-v2,.client-end-box{grid-template-columns:1fr;gap:36px}.client-hero-v2-panel{min-height:320px}.client-platform-grid-v2,.client-feature-grid-v2{grid-template-columns:1fr}.client-platform-v2{min-height:260px}.client-platform-v2 h3{margin-top:34px}.client-feature-v2{min-height:210px}.client-feature-v2 h3{margin-top:34px}}
 @media(max-width:640px){.client-hero-v2{padding:66px 0 62px}.client-hero-v2-copy h1{font-size:clamp(4rem,20vw,6.2rem)}.client-hero-v2-grid{gap:28px}.client-hero-v2-panel{padding:24px;min-height:280px}.client-platforms-v2,.client-showcase-v2,.client-features-v2,.client-end-v2{padding:64px 0}.client-section-head-v2 h2,.client-feature-title h2{font-size:clamp(3rem,16vw,4.8rem)}.client-platform-v2,.client-feature-v2{padding:24px}.client-showcase-frame{padding:10px}.client-end-box{padding:38px 0}.client-end-box h2{font-size:clamp(3.2rem,17vw,5rem)}}
+/* Refined download control + launcher hero mark */
+.client-download{gap:9px!important}
+.client-download-icon{width:18px!important;height:18px!important;display:block!important;flex:0 0 auto!important;stroke:currentColor!important;stroke-width:2.2!important;stroke-linecap:round!important;stroke-linejoin:round!important}
+@media(max-width:620px){
+  .client-download{font-size:0!important;width:42px!important;height:42px!important;min-width:42px!important;padding:0!important;display:grid!important;place-items:center!important;border-radius:12px!important}
+  .client-download-label{display:none!important}
+  .client-download-icon{width:20px!important;height:20px!important}
+  .client-download::before{content:none!important}
+}
+
+/* Negative Client hero: turn the studio logo into a deliberate visual centerpiece */
+.client-hero-v2-panel{
+  min-height:420px;
+  padding:28px;
+  border-radius:2px;
+  background:
+    radial-gradient(circle at 72% 30%,rgba(20,243,241,.12),transparent 34%),
+    radial-gradient(circle at 32% 72%,rgba(44,140,255,.13),transparent 42%),
+    linear-gradient(145deg,rgba(19,45,68,.68),rgba(5,11,18,.94));
+}
+.client-hero-v2-panel:after{
+  content:"";
+  position:absolute;
+  inset:16px;
+  border:1px solid rgba(128,205,255,.10);
+  pointer-events:none;
+}
+.client-hero-v2-mark{
+  position:relative;
+  flex:1;
+  min-height:285px;
+  align-items:center;
+  justify-content:center;
+  isolation:isolate;
+}
+.client-hero-v2-mark:before{
+  content:"";
+  position:absolute;
+  width:min(310px,82%);
+  aspect-ratio:1;
+  border-radius:50%;
+  background:radial-gradient(circle,rgba(20,243,241,.18) 0%,rgba(44,140,255,.09) 34%,transparent 68%);
+  filter:blur(8px);
+  z-index:-1;
+}
+.client-hero-v2-mark:after{
+  content:"";
+  position:absolute;
+  width:min(250px,68%);
+  aspect-ratio:1;
+  border-radius:50%;
+  border:1px solid rgba(115,203,255,.16);
+  box-shadow:0 0 0 18px rgba(115,203,255,.025),0 0 70px rgba(31,142,255,.16);
+  z-index:-1;
+}
+.client-hero-v2-mark img{
+  width:min(235px,64%);
+  max-height:235px;
+  object-fit:contain;
+  filter:drop-shadow(0 0 24px rgba(20,243,241,.20)) drop-shadow(0 18px 35px rgba(0,0,0,.42));
+  transform:translateY(-4px);
+}
+.client-hero-v2-meta{
+  position:relative;
+  z-index:2;
+  background:rgba(3,9,15,.38);
+  padding:18px 4px 0;
+  backdrop-filter:blur(8px);
+}
+.client-hero-v2-panel:before{
+  content:"NEGATIVE";
+  right:-44px;
+  top:50%;
+  opacity:.9;
+  font-size:5.2rem;
+}
+@media(max-width:980px){
+  .client-hero-v2-panel{min-height:360px}
+  .client-hero-v2-mark{min-height:235px}
+}
+@media(max-width:640px){
+  .client-hero-v2-panel{min-height:320px;padding:22px}
+  .client-hero-v2-panel:after{inset:12px}
+  .client-hero-v2-mark{min-height:215px}
+  .client-hero-v2-mark img{width:min(190px,68%);max-height:190px}
+}
