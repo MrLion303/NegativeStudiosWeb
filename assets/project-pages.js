@@ -1,4 +1,5 @@
 (function(){
+  document.documentElement.classList.add('ns-loading');
 const PAGES={
   'personajes':{title:'Personajes',label:'Proyectos · Archivo',source:'https://sites.google.com/view/negativestudios/proyectos/personajes',sections:[]},
   'overland':{title:'OVERLAND',label:'Proyecto · Fase 2',source:'https://sites.google.com/view/negativestudios/proyectos/overland',media:'assets/media/overland.webp',gallery:[['assets/media/overland-gallery.webp','Una vista adicional del mundo de OVERLAND.']],sections:[{title:'TRÁILER CINEMATOGRÁFICO',p:[]},{title:'OVERLAND',p:['Es un SMP con cambios de dificultad, hecho para disfrutar la experiencia de Survival con Mods; contando con eventos semanales de Lore que expande el Universo Cinematográfico.','¿Estás listo para el DESAFÍO?']},{title:'DESARROLLO',p:['Este servidor da inicio a la Fase 2 del UCC (Universo Cinematográfico del Caos), el cual expande el Lore de los servidores de NegativeStudios y GG Studios.']},{title:'Teasers',p:['Teasers que fueron publicados meses antes de la salida del proyecto.']}],videos:[['f4QOdfNcB0k','TRÁILER CINEMATOGRÁFICO']]},
