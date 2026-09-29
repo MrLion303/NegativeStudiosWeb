@@ -60,3 +60,6 @@ html.ns-ready body{opacity:1;visibility:visible;transition:opacity .14s ease}
   .client-download-icon{width:20px!important;height:20px!important}
 }
 .archive-project-card{padding:0}.archive-project-media{height:210px;padding:0}.archive-project-media .card-media-img{height:100%;width:100%;object-fit:cover;object-position:center}.archive-project-card .service-content{padding:28px}.archive-project-card .service-content h3{margin-top:36px}@media(max-width:620px){.archive-project-media{height:180px}.archive-project-card .service-content{padding:24px}}
+/* Project header title / description spacing */
+.project-hero .project-hero-copy,.project-header .project-hero-copy{gap:0}
+.project-hero .project-hero-copy .muted,.project-hero .project-hero-copy p,.project-header .project-hero-copy .muted,.project-header .project-hero-copy p{margin-top:24px!important}
