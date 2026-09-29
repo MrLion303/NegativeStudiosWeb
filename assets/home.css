@@ -206,3 +206,10 @@
 @media(prefers-reduced-motion:reduce){
   .home-project-slide{transition:opacity .2s ease!important;transform:none!important}
 }
+
+/* Final presentation spacing */
+.home-presentation-grid{grid-template-columns:minmax(0,1.12fr) minmax(260px,.72fr)!important;gap:24px!important}
+.home-presentation-video{max-width:620px!important}
+.home-presentation-copy{max-width:340px!important;justify-self:start!important}
+.home-presentation-copy .title{font-size:clamp(1.35rem,1.8vw,1.9rem)!important}
+@media(max-width:920px){.home-presentation-grid{gap:28px!important}.home-presentation-copy{max-width:680px!important}.home-presentation-copy .title{font-size:clamp(1.6rem,4vw,2.1rem)!important}}
