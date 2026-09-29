@@ -21,7 +21,11 @@ document.addEventListener('DOMContentLoaded',()=>{
     'negativemc':'assets/media/negativemc.webp',
     'proyecto-x':'assets/media/proyecto-x.webp'
   };
-  window.NS_DATA.projects.forEach((p,index)=>{
+  const hiddenProjects=new Set(['caos-games','guerra-nexus','the-200-rooms','the-100-rooms']);
+  let visibleIndex=0;
+  window.NS_DATA.projects.forEach((p)=>{
+    if(hiddenProjects.has(p.id))return;
+    const index=visibleIndex++;
     const original=window.NS_ORIGINAL_CONTENT?.[p.id];
     const link=document.createElement('a');
     link.className='card project-card reveal';
