@@ -35,8 +35,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   let currentProject = 0;
   let projectTimer = null;
-  const PROJECT_TIME = 6500;
-  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const PROJECT_TIME = 5000;
+  const reduceMotion = false;
 
   const showProject = (index, resetTimer = true) => {
     currentProject = (index + projectSlides.length) % projectSlides.length;
@@ -68,12 +68,6 @@ document.addEventListener('DOMContentLoaded', () => {
   prev?.addEventListener('click', () => showProject(currentProject - 1));
   next?.addEventListener('click', () => showProject(currentProject + 1));
   dots.forEach(dot => dot.addEventListener('click', () => showProject(Number(dot.dataset.projectDot))));
-  carousel.addEventListener('mouseenter', stopProjectTimer);
-  carousel.addEventListener('mouseleave', startProjectTimer);
-  carousel.addEventListener('focusin', stopProjectTimer);
-  carousel.addEventListener('focusout', event => {
-    if (!carousel.contains(event.relatedTarget)) startProjectTimer();
-  });
   document.addEventListener('visibilitychange', () => document.hidden ? stopProjectTimer() : startProjectTimer());
 
   showProject(0, false);
