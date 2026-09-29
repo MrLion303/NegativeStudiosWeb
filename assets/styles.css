@@ -19,3 +19,21 @@ html.ns-ready body{opacity:1;visibility:visible;transition:opacity .14s ease}
   .nav-inner{height:70px}
   .nav-links a{padding:15px 16px}
 }
+
+/* Mobile navigation redesign */
+@media (max-width: 920px){
+  .nav-links{position:absolute!important;top:calc(100% + 10px)!important;left:10px!important;right:10px!important;width:auto!important;display:flex!important;flex-direction:column!important;gap:4px!important;padding:10px!important;border-radius:18px!important;background:rgba(9,14,23,.985)!important;border:1px solid rgba(255,255,255,.10)!important;box-shadow:0 18px 50px rgba(0,0,0,.45),0 4px 18px rgba(0,0,0,.22)!important;backdrop-filter:blur(18px)!important;overflow:hidden!important;transform:translateY(-8px)!important;opacity:0!important;visibility:hidden!important;pointer-events:none!important;transition:opacity .18s ease,transform .22s ease,visibility 0s linear .22s!important;z-index:100!important}
+  .nav-links.open{opacity:1!important;visibility:visible!important;pointer-events:auto!important;transform:translateY(0)!important;transition-delay:0s!important}
+  .nav-links a{display:flex!important;align-items:center!important;min-height:48px!important;padding:0 14px!important;border-radius:12px!important;color:rgba(255,255,255,.82)!important;font-size:.96rem!important;font-weight:650!important;letter-spacing:.01em!important;background:transparent!important;transform:none!important;transition:background .16s ease,color .16s ease!important}
+  .nav-links a:hover,.nav-links a:focus-visible,.nav-links a.active{background:rgba(102,194,255,.10)!important;color:#fff!important}
+  .nav-links a.active{box-shadow:inset 3px 0 0 #66c2ff!important}
+  .menu-btn{width:42px!important;height:42px!important;border-radius:12px!important;background:rgba(255,255,255,.055)!important;border:1px solid rgba(255,255,255,.11)!important;box-shadow:none!important}
+}
+@media(max-width:620px){
+  .nav-links{top:calc(100% + 8px)!important;left:8px!important;right:8px!important;padding:8px!important;border-radius:16px!important}
+  .nav-links a{min-height:50px!important;padding:0 15px!important}
+  .client-download{font-size:0!important;width:42px!important;height:42px!important;min-width:42px!important;padding:0!important;display:grid!important;place-items:center!important;border-radius:12px!important;position:relative!important}
+  .client-download-label{display:none!important}
+  .client-download::before{content:"↓"!important;font-size:21px!important;line-height:1!important;font-weight:800!important;color:#fff!important}
+}
+@media(prefers-reduced-motion:reduce){.nav-links,.nav-links a,.menu-btn{transition:none!important}}
