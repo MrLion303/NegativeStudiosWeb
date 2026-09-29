@@ -21,8 +21,8 @@ document.addEventListener('DOMContentLoaded',()=>{
     'negativemc':'assets/media/negativemc.webp',
     'proyecto-x':'assets/media/proyecto-x.webp',
     'caos-games':'https://drive.google.com/uc?export=view&id=18LamdjHDQ1AH2S5B78c50ndQpluWftOM',
-    'pc-rebirth':'assets/media/pdc-rebirth.webp',
-    'permamuerte':'assets/media/pdc-final-chapter.webp'
+    'pc-rebirth':'https://mrlion303.github.io/NegativeStudiosWeb/assets/media/pdc-rebirth.webp',
+    'permamuerte':'https://mrlion303.github.io/NegativeStudiosWeb/assets/media/pdc-final-chapter.webp'
   };
   const hiddenProjects=new Set(['caos-games','guerra-nexus','the-200-rooms','the-100-rooms']);
   let visibleIndex=0;
