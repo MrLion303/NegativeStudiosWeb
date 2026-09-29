@@ -1,16 +1,3 @@
-document.addEventListener('click', (event) => {
-  const link = event.target.closest('a[href]');
-  if (!link) return;
-  const raw = link.getAttribute('href');
-  if (!raw || raw.startsWith('#') || raw.startsWith('mailto:') || raw.startsWith('tel:') || raw.startsWith('javascript:')) return;
-  if (/^https?:\\/\\//i.test(raw)) return;
-
-  const canonical = 'https://mrlion303.github.io/NegativeStudiosWeb/';
-  const target = new URL(raw, canonical);
-  event.preventDefault();
-  window.location.href = target.href;
-}, true);
-
 document.addEventListener('DOMContentLoaded',()=>{
   const VERSION='20260927j';
   const icon=document.querySelector('link[rel="icon"]');if(icon)icon.href='assets/media/brand-icon.webp';
