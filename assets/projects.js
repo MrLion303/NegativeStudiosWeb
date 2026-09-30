@@ -1,4 +1,4 @@
-document.addEventListener('DOMContentLoaded',()=>{
+document.addEventListener('DOMContentLoaded',async()=>{try{const r=await fetch('assets/project-registry.json?v='+Date.now());if(r.ok){const extra=await r.json();if(Array.isArray(extra)){window.NS_DATA.projects.push(...extra.map(x=>({...x,legacy:x.route||'',featured:false})))}}}catch(e){} 
   const grid=document.querySelector('#projectGrid');
   if(!grid||!window.NS_DATA)return;
   const pageRoutes={
