@@ -1,5 +1,45 @@
 {
-  "version": 1,
-  "global": {"customCss": ""},
-  "pages": {}
+  "version": 2,
+  "global": {
+    "customCss": "",
+    "colorPresets": []
+  },
+  "pages": {
+    "index.html": {
+      "styles": {},
+      "text": {},
+      "attrs": {},
+      "order": [],
+      "blocks": [],
+      "customCss": "",
+      "grid": {}
+    },
+    "proyectos/pdc-rebirth/index.html": {
+      "styles": {
+        "main>section.project-shell-title:nth-of-type(1)>div.container": {
+          "position": "relative"
+        },
+        "main>section.project-media-band:nth-of-type(2)>div.container>div.project-media-frame>img": {
+          "color": "rgb(244, 249, 255)",
+          "font-size": "16px",
+          "border-radius": "0px",
+          "padding": "0px",
+          "margin-top": "0px"
+        }
+      },
+      "text": {},
+      "attrs": {
+        "main>section.project-media-band:nth-of-type(2)>div.container>div.project-media-frame>img": {
+          "src": "https://mrlion303.github.io/NegativeStudiosWeb/assets/uploads/1790734033685-grande.png"
+        },
+        "main.dev-hover>section.project-media-band:nth-of-type(2)>div.container>div.project-media-frame>img": {
+          "src": "https://mrlion303.github.io/NegativeStudiosWeb/assets/uploads/1790734033685-grande.png"
+        }
+      },
+      "order": [],
+      "blocks": [],
+      "customCss": "",
+      "grid": {}
+    }
+  }
 }
