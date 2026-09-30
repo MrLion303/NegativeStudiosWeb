@@ -44,22 +44,28 @@ function removeTransformBox(){
  const d=frame?.contentDocument;if(!d)return;
  d.getElementById('ns-transform-box')?.remove();
 }
+function snap(v){return Math.round(v/8)*8}
 function makeTransformBox(el){
  const d=frame.contentDocument;if(!d)return;
  removeTransformBox();
  const box=d.createElement('div');box.id='ns-transform-box';
  box.innerHTML='<div class="ns-tb-label"></div>'+
-   '<i class="ns-h ns-h-nw"></i><i class="ns-h ns-h-n"></i><i class="ns-h ns-h-ne"></i>'+
-   '<i class="ns-h ns-h-e"></i><i class="ns-h ns-h-se"></i><i class="ns-h ns-h-s"></i>'+
-   '<i class="ns-h ns-h-sw"></i><i class="ns-h ns-h-w"></i>';
+ '<i class="ns-h ns-h-nw"></i><i class="ns-h ns-h-n"></i><i class="ns-h ns-h-ne"></i>'+
+ '<i class="ns-h ns-h-e"></i><i class="ns-h ns-h-se"></i><i class="ns-h ns-h-s"></i>'+
+ '<i class="ns-h ns-h-sw"></i><i class="ns-h ns-h-w"></i>';
  d.body.appendChild(box);
  const sync=()=>{
    if(!el.isConnected){removeTransformBox();return}
-   const r=el.getBoundingClientRect(),s=frame.contentWindow;
-   box.style.left=r.left+'px';box.style.top=r.top+'px';box.style.width=r.width+'px';box.style.height=r.height+'px';
-   const lab=box.querySelector('.ns-tb-label');lab.textContent=Math.round(r.width)+' × '+Math.round(r.height);
+   const r=el.getBoundingClientRect();box.style.left=r.left+'px';box.style.top=r.top+'px';box.style.width=r.width+'px';box.style.height=r.height+'px';
+   box.querySelector('.ns-tb-label').textContent=Math.round(r.width)+' × '+Math.round(r.height);
  };
  sync();
+ const save=(label)=>{
+   historyPush();const c=pageCfg(),s=sel(el);c.styles[s]=c.styles[s]||{};c.styles[s].position='relative';
+   if(el.style.left)c.styles[s].left=el.style.left;if(el.style.top)c.styles[s].top=el.style.top;
+   if(el.style.width)c.styles[s].width=el.style.width;if(el.style.height)c.styles[s].height=el.style.height;
+   dirty=true;msg(label);updateHistoryButtons();
+ };
  box.querySelectorAll('.ns-h').forEach(h=>{
    h.addEventListener('pointerdown',e=>{
      e.preventDefault();e.stopPropagation();
@@ -68,28 +74,26 @@ function makeTransformBox(el){
      const startW=r.width,startH=r.height,startX=e.clientX,startY=e.clientY;
      if(cs.position==='static')el.style.position='relative';
      const move=ev=>{
-       const dx=ev.clientX-startX,dy=ev.clientY-startY;
+       const dx=snap(ev.clientX-startX),dy=snap(ev.clientY-startY);
        let w=startW,hv=startH,left=baseLeft,top=baseTop;
-       if(dir.includes('e'))w=Math.max(24,startW+dx);
-       if(dir.includes('w')){w=Math.max(24,startW-dx);left=baseLeft+dx}
-       if(dir.includes('s'))hv=Math.max(24,startH+dy);
-       if(dir.includes('n')){hv=Math.max(24,startH-dy);top=baseTop+dy}
+       if(dir.includes('e'))w=Math.max(24,snap(startW+dx));
+       if(dir.includes('w')){w=Math.max(24,snap(startW-dx));left=snap(baseLeft+dx)}
+       if(dir.includes('s'))hv=Math.max(24,snap(startH+dy));
+       if(dir.includes('n')){hv=Math.max(24,snap(startH-dy));top=snap(baseTop+dy)}
        el.style.width=w+'px';el.style.height=hv+'px';el.style.left=left+'px';el.style.top=top+'px';sync();
      };
-     const up=()=>{
-       d.removeEventListener('pointermove',move);d.removeEventListener('pointerup',up);
-       historyPush();const c=pageCfg(),ss=sel(el);c.styles[ss]=c.styles[ss]||{};c.styles[ss].position='relative';c.styles[ss].width=el.style.width;c.styles[ss].height=el.style.height;c.styles[ss].left=el.style.left;c.styles[ss].top=el.style.top;dirty=true;msg('Tamaño actualizado');
-     };
+     const up=()=>{d.removeEventListener('pointermove',move);d.removeEventListener('pointerup',up);save('Tamaño actualizado')};
      d.addEventListener('pointermove',move);d.addEventListener('pointerup',up,{once:true});
    });
  });
- d.defaultView.addEventListener('scroll',sync,{passive:true});d.defaultView.addEventListener('resize',sync);box.addEventListener('pointerdown',e=>{
+ d.defaultView.addEventListener('scroll',sync,{passive:true});d.defaultView.addEventListener('resize',sync);
+ box.addEventListener('pointerdown',e=>{
    if(e.target!==box)return;
    e.preventDefault();e.stopPropagation();
    const cs=getComputedStyle(el),sx=e.clientX,sy=e.clientY,sl=parseFloat(cs.left)||0,st=parseFloat(cs.top)||0;
    if(cs.position==='static')el.style.position='relative';
-   const move=ev=>{el.style.left=(sl+ev.clientX-sx)+'px';el.style.top=(st+ev.clientY-sy)+'px';sync()};
-   const up=()=>{d.removeEventListener('pointermove',move);d.removeEventListener('pointerup',up);historyPush();const c=pageCfg(),ss=sel(el);c.styles[ss]=c.styles[ss]||{};c.styles[ss].position='relative';c.styles[ss].left=el.style.left;c.styles[ss].top=el.style.top;dirty=true;msg('Posición actualizada')};
+   const move=ev=>{el.style.left=snap(sl+ev.clientX-sx)+'px';el.style.top=snap(st+ev.clientY-sy)+'px';sync()};
+   const up=()=>{d.removeEventListener('pointermove',move);d.removeEventListener('pointerup',up);save('Posición actualizada')};
    d.addEventListener('pointermove',move);d.addEventListener('pointerup',up,{once:true});
  });
 }
@@ -230,6 +234,14 @@ async function uploadImage(el){const f=$('#ifile').files[0];if(!f)return alert('
 async function publish(){try{msg('Publicando…');const raw=JSON.stringify(config,null,2)+'\n',content=btoa(unescape(encodeURIComponent(raw)));const d=await api('assets/site-config.json',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:'Update site from visual editor',content,sha:configSha,branch:BRANCH})});configSha=d.content.sha;dirty=false;undoStack=[];redoStack=[];updateHistoryButtons();msg('Publicado correctamente');alert('Publicado. GitHub Pages puede tardar unos minutos en reflejarlo.')}catch(e){msg(e.message);alert('No se pudo publicar: '+e.message)}}
 async function resetUnsaved(){if(!dirty)return;if(!confirm('¿Reiniciar todos los cambios que todavía no has publicado?'))return;await loadConfig();undoStack=[];redoStack=[];dirty=false;updateHistoryButtons();loadPage(current);msg('Cambios sin publicar reiniciados')}
 async function createProject(){const title=prompt('Nombre del nuevo proyecto:');if(!title)return;const slug=prompt('Slug de la URL:',title.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,''));if(!slug)return;const label=prompt('Etiqueta:','Proyecto · Fase 2')||'Proyecto';const description=prompt('Descripción corta:','Nueva experiencia de NegativeStudios.')||'Nueva experiencia de NegativeStudios.';const image=prompt('URL de la portada:','assets/media/brand-logo.webp')||'assets/media/brand-logo.webp';try{msg('Creando proyecto…');const path='proyectos/'+slug+'/index.html';const html='<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>'+esc(title)+' — NegativeStudios</title><link rel="icon" href="../../assets/media/brand-icon.webp"><link rel="stylesheet" href="../../assets/styles.css"><link rel="stylesheet" href="../../assets/refresh.css?v=20260930"><link rel="stylesheet" href="../../assets/studio-wide.css?v=20260930"></head><body><main id="projectPage"></main><script>window.NS_CUSTOM_PROJECT='+JSON.stringify({title,label,description,image})+';<\\/script><script src="../../assets/project-template.js?v=2"></script><script src="../../assets/dev-runtime.js?v=2"></script></body></html>';await api(path,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:'Create project '+title,content:btoa(unescape(encodeURIComponent(html))),branch:BRANCH})});let registry=[],rsha=null;try{const r=await api('assets/project-registry.json?ref='+BRANCH);rsha=r.sha;registry=JSON.parse(decode(r.content))}catch(e){}registry=registry.filter(x=>x.slug!==slug);registry.push({id:slug,name:title,phase:label.replace(/^Proyecto\s*·\s*/i,''),type:'Proyecto',status:'En desarrollo',year:'2026+',summary:description,artwork:image,route:path});const body={message:'Register project '+title,content:btoa(unescape(encodeURIComponent(JSON.stringify(registry,null,2)+'\n'))),branch:BRANCH};if(rsha)body.sha=rsha;await api('assets/project-registry.json',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});if(!PAGES.some(p=>p[1]===path))PAGES.push([title,path]);buildPages();loadPage(path);msg('Proyecto creado');alert('Proyecto creado con la plantilla de proyectos.')}catch(e){msg(e.message);alert('No se pudo crear el proyecto: '+e.message)}}
+function initPanelToggles(){
+ const shell=document.querySelector('.dev-shell');
+ document.querySelectorAll('[data-panel-toggle]').forEach(b=>b.onclick=()=>{
+   const side=b.dataset.panelToggle;
+   shell?.classList.toggle('panel-'+side+'-collapsed');
+   b.setAttribute('aria-expanded',shell?.classList.contains('panel-'+side+'-collapsed')?'false':'true');
+ });
+}
 function initTabs(){
  document.querySelectorAll('.dev-tab').forEach(b=>b.onclick=()=>{
    document.querySelectorAll('.dev-tab').forEach(x=>x.classList.toggle('active',x===b));
@@ -238,7 +250,7 @@ function initTabs(){
  $('#templateSearch')?.addEventListener('input',e=>buildTemplateLibrary(e.target.value));
  buildTemplateLibrary();
 }
-function start(){if(innerWidth<901){alert('El Modo Desarrollador solo funciona en escritorio.');return}$('#editor').hidden=false;$('#tokenGate')?.remove();frame=$('#siteFrame');buildPages();document.querySelectorAll('[data-add]').forEach(b=>b.onclick=()=>{const t=b.dataset.add;t.startsWith('embed:')?addEmbed(t.split(':')[1]):addBlock(t)});$('#reload').onclick=()=>loadPage(current);$('#preview').onclick=()=>window.open(current,'_blank');$('#publish').onclick=publish;$('#reset').onclick=resetUnsaved;$('#undo').onclick=undo;$('#redo').onclick=redo;$('#exit').onclick=()=>location.href='anuncios.html';initTabs();$('#projectTemplate').onclick=createProject;$('#theme').onclick=colorTheme;document.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='z'){e.preventDefault();e.shiftKey?redo():undo()}else if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='y'){e.preventDefault();redo()}else if(e.key==='Delete'&&selected&&!['INPUT','TEXTAREA'].includes(document.activeElement.tagName))deleteElement(selected)});loadConfig().then(()=>{buildPages();updateHistoryButtons();loadPage(current)}).catch(e=>{msg(e.message);alert('No se pudo cargar la configuración: '+e.message)})}
+function start(){if(innerWidth<901){alert('El Modo Desarrollador solo funciona en escritorio.');return}$('#editor').hidden=false;$('#tokenGate')?.remove();frame=$('#siteFrame');buildPages();document.querySelectorAll('[data-add]').forEach(b=>b.onclick=()=>{const t=b.dataset.add;t.startsWith('embed:')?addEmbed(t.split(':')[1]):addBlock(t)});$('#reload').onclick=()=>loadPage(current);$('#preview').onclick=()=>window.open(current,'_blank');$('#publish').onclick=publish;$('#reset').onclick=resetUnsaved;$('#undo').onclick=undo;$('#redo').onclick=redo;$('#exit').onclick=()=>location.href='anuncios.html';initTabs();initPanelToggles();$('#projectTemplate').onclick=createProject;$('#theme').onclick=colorTheme;document.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='z'){e.preventDefault();e.shiftKey?redo():undo()}else if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='y'){e.preventDefault();redo()}else if(e.key==='Delete'&&selected&&!['INPUT','TEXTAREA'].includes(document.activeElement.tagName))deleteElement(selected)});loadConfig().then(()=>{buildPages();updateHistoryButtons();loadPage(current)}).catch(e=>{msg(e.message);alert('No se pudo cargar la configuración: '+e.message)})}
 async function login(){const t=$('#tokenInput').value.trim();if(!t)return;$('#tokenMsg').textContent='Verificando…';try{const h={Authorization:'Bearer '+t,Accept:'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28'},r=await fetch('https://api.github.com/repos/'+REPO,{headers:h}),d=await r.json().catch(()=>({}));if(!r.ok)throw Error(d.message||'Token inválido o sin acceso al repositorio');token=t;sessionStorage.setItem('ns_dev_token',t);start()}catch(e){$('#tokenMsg').textContent=e.message}}
 $('#tokenEnter').onclick=login;$('#tokenInput').addEventListener('keydown',e=>{if(e.key==='Enter')login()});if(innerWidth<901){$('#tokenMsg').textContent='Este editor solo funciona en escritorio.';$('#tokenEnter').disabled=true}else if(token)start();
 })();
