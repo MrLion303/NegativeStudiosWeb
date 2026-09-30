@@ -60,7 +60,7 @@ function bindInspector(el){
  $('#apply').onclick=()=>applyElement(el);
  $('#deleteEl').onclick=()=>deleteElement(el);
  $('#duplicateEl').onclick=()=>duplicateElement(el);
- $('#up').onclick=()=>move(el,-1);$('#down').onclick=()=>move(el,1);
+ 
  $('#gridOn').onclick=()=>toggleGrid(el,true);$('#gridOff').onclick=()=>toggleGrid(el,false);
  if(el.tagName==='IMG')$('#upload').onclick=()=>uploadImage(el);
  if(el.tagName==='IMG')$('#ialt').onchange=()=>{historyPush();el.alt=$('#ialt').value;saveAttr(el,'alt',el.alt);dirty=true};
