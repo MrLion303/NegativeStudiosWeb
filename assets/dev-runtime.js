@@ -25,6 +25,8 @@
     return p.join('/');
   }
   function apply(cfg){
+    var global=cfg.global||{};
+    if(global.customCss){var gst=document.getElementById('ns-global-custom-css');if(!gst){gst=document.createElement('style');gst.id='ns-global-custom-css';document.head.appendChild(gst)}gst.textContent=global.customCss}
     var pc=(cfg.pages||{})[pageKey()]||{};
     var styles=pc.styles||{},text=pc.text||{},attrs=pc.attrs||{};
     Object.keys(styles).forEach(function(s){try{document.querySelectorAll(s).forEach(function(el){Object.keys(styles[s]).forEach(function(k){el.style.setProperty(k,styles[s][k])})})}catch(e){}});
