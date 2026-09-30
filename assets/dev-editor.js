@@ -40,6 +40,27 @@ async function createProject(){
   }catch(e){msg(e.message);alert('No se pudo crear el proyecto: '+e.message)}
 }
 function start(){$('#editor').hidden=false;$('#tokenGate').remove();frame=$('#siteFrame');buildPages();document.querySelectorAll('[data-add]').forEach(b=>b.onclick=()=>addBlock(b.dataset.add));$('#reload').onclick=()=>loadPage(current);$('#preview').onclick=()=>window.open(current,'_blank');$('#publish').onclick=publish;$('#exit').onclick=()=>location.href='anuncios.html';$('#projectTemplate').onclick=createProject;loadConfig().then(()=>loadPage(current)).catch(e=>{msg(e.message);alert('No se pudo cargar la configuración: '+e.message)})}
-async function login(){const t=$('#tokenInput').value.trim();if(!t)return;$('#tokenMsg').textContent='Verificando…';try{const r=await fetch('https://api.github.com/repos/'+REPO,{headers:{Authorization:'Bearer '+t,Accept:'application/vnd.github+json'}});if(!r.ok)throw Error('Token inválido o sin acceso al repositorio');token=t;sessionStorage.setItem('ns_dev_token',t);start()}catch(e){$('#tokenMsg').textContent=e.message)}}
-$('#tokenEnter').onclick=login;if(innerWidth<901){$('#tokenMsg').textContent='Este editor solo funciona en escritorio.';$('#tokenEnter').disabled=true}else if(token)start();
+async function login(){
+  const input=$('#tokenInput'),button=$('#tokenEnter'),status=$('#tokenMsg'),t=input.value.trim();
+  if(!t){status.textContent='Introduce un token de GitHub.';input.focus();return}
+  button.disabled=true;status.textContent='Verificando token…';
+  const headers={Authorization:'Bearer '+t,Accept:'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28'};
+  try{
+    const me=await fetch('https://api.github.com/user',{headers});
+    const meData=await me.json().catch(()=>({}));
+    if(me.status===401)throw Error('El token es inválido, está expirado o fue revocado.');
+    if(!me.ok)throw Error('GitHub no pudo validar el token ('+me.status+').');
+    const repo=await fetch('https://api.github.com/repos/'+REPO,{headers});
+    const repoData=await repo.json().catch(()=>({}));
+    if(repo.status===404)throw Error('El token es válido, pero no tiene acceso a '+REPO+'. En un token fine-grained debes seleccionar este repositorio.');
+    if(repo.status===403)throw Error('GitHub rechazó el acceso (403). Revisa la autorización del token y sus permisos.');
+    if(!repo.ok)throw Error(repoData.message||('No se pudo acceder al repositorio ('+repo.status+').'));
+    token=t;sessionStorage.setItem('ns_dev_token',t);start();
+  }catch(e){
+    status.textContent=e.message;
+    button.disabled=false;
+  }
+}
+$('#tokenEnter').onclick=login;
+$('#tokenInput').addEventListener('keydown',e=>{if(e.key==='Enter')login()});if(innerWidth<901){$('#tokenMsg').textContent='Este editor solo funciona en escritorio.';$('#tokenEnter').disabled=true}else if(token)start();
 })();
