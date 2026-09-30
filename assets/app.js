@@ -38,7 +38,7 @@ document.addEventListener('DOMContentLoaded',()=>{
         if(!page||!page.attrs)return;
         for(const key of Object.keys(page.attrs)){
           const src=page.attrs[key]&&page.attrs[key].src;
-          if(src&&String(src).trim()&&/project-media-frame>img$/.test(key)){out[title]=String(src).trim();break}
+          if(src&&String(src).trim()){out[title]=String(src).trim();break}
         }
       });
       projectImageOverrides=out;
@@ -55,11 +55,11 @@ document.addEventListener('DOMContentLoaded',()=>{
         let image=media.querySelector('.card-media-img');
         if(!image){image=document.createElement('img');image.className='card-media-img';image.loading='lazy';media.prepend(image)}
         image.src=src;
-        image.alt=title?\`Arte oficial de \${title}\`:'';
+        image.alt=title?`Arte oficial de ${title}`:'';
         media.classList.add('has-image')
       }else{
         card.classList.add('archive-art-card');
-        card.style.setProperty('--archive-art',\`url("\${src}")\`)
+        card.style.setProperty('--archive-art',`url("${src}")`)
       }
     })
   };
