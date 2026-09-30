@@ -62,11 +62,12 @@ function wire(){const d=frame.contentDocument;if(!d)return;editorCanvasMode();ma
 function q(s){try{return [...frame.contentDocument.querySelectorAll(s)]}catch(e){return[]}}
 function applyPreview(){
  const c=pageCfg();
- Object.entries(c.styles||{}).forEach(([s,p])=>q(s).forEach(el=>Object.entries(p).forEach(([k,v])=>el.style.setProperty(k,v))));
+ Object.entries(c.styles||{}).forEach(([s,p])=>q(s).forEach(el=>{el.style.removeProperty('visibility');Object.entries(p).forEach(([k,v])=>el.style.setProperty(k,v))}));
  Object.entries(c.text||{}).forEach(([s,v])=>q(s).forEach(el=>el.innerHTML=v&&typeof v==='object'&&v.html!==undefined?v.html:String(v)));
  Object.entries(c.attrs||{}).forEach(([s,p])=>q(s).forEach(el=>Object.entries(p).forEach(([k,v])=>el.setAttribute(k,v))));
  (c.blocks||[]).forEach(b=>{const host=q(b.host)[0]||frame.contentDocument.querySelector('main')||frame.contentDocument.body;if(host&&!host.querySelector('[data-ns-editor-block="'+b.id+'"]')){const w=frame.contentDocument.createElement('div');w.dataset.nsEditorBlock=b.id;w.innerHTML=b.html;host.appendChild(w)}});
  (c.order||[]).forEach(g=>{const p=q(g.parent)[0];if(p)g.children.forEach(s=>{const n=[...p.children].find(x=>sel(x)===s);if(n)p.appendChild(n)})});
+ (c.deleted||[]).forEach(s=>q(s).forEach(el=>el.style.setProperty('visibility','hidden','important')));
  if(c.customCss){let st=frame.contentDocument.getElementById('ns-editor-css');if(!st){st=frame.contentDocument.createElement('style');st.id='ns-editor-css';frame.contentDocument.head.appendChild(st)}st.textContent=c.customCss}
 }
 function removeTransformBox(){
@@ -178,12 +179,13 @@ function applyElement(el){
 function saveAttr(el,k,v){const c=pageCfg(),s=sel(el);c.attrs[s]=c.attrs[s]||{};c.attrs[s][k]=v}
 function deleteElement(el){
  historyPush();const s=sel(el),c=pageCfg(),blockId=el.dataset.nsEditorBlock;
- el.remove();delete c.styles[s];delete c.text[s];delete c.attrs[s];
+ c.deleted=c.deleted||[];if(!c.deleted.includes(s))c.deleted.push(s);
+ delete c.styles[s];delete c.text[s];delete c.attrs[s];
  c.order.forEach(g=>g.children=(g.children||[]).filter(x=>x!==s));
  c.blocks=c.blocks.filter(b=>b.id!==blockId);
- selected=null;removeTransformBox();$('#selectedName').textContent='Selecciona un elemento.';
+ applyPreview();selected=null;removeTransformBox();$('#selectedName').textContent='Selecciona un elemento.';
  $('#inspectorBody').innerHTML='<p class="dev-muted">Elemento eliminado.</p>';
- dirty=true;msg('Elemento eliminado');
+ dirty=true;updateHistoryButtons();msg('Elemento eliminado; se conserva su espacio.');
 }
 function duplicateElement(el){historyPush();const clone=el.cloneNode(true);delete clone.dataset.nsEditorWired;el.parentElement.insertBefore(clone,el.nextSibling);markEditable();select(clone);dirty=true;msg('Elemento duplicado')}
 function move(el,dir){historyPush();const p=el.parentElement;if(!p)return;const kids=[...p.children],i=kids.indexOf(el),j=i+dir;if(j<0||j>=kids.length)return;if(dir<0)p.insertBefore(el,kids[j]);else p.insertBefore(kids[j],el);const c=pageCfg(),ps=sel(p),g=c.order.find(x=>x.parent===ps)||{parent:ps,children:[]};if(!c.order.includes(g))c.order.push(g);g.children=[...p.children].map(sel);dirty=true;msg('Orden actualizado')}
