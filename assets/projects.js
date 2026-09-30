@@ -14,16 +14,16 @@ document.addEventListener('DOMContentLoaded',async()=>{
       }
     }catch(e){}
     const pageRoutes={
-      overland:'proyectos/overland/index.html',proyecto-y:'proyectos/proyecto-y/index.html',parasites:'proyectos/parasites/index.html',
+      overland:'proyectos/overland/index.html','proyecto-y':'proyectos/proyecto-y/index.html',parasites:'proyectos/parasites/index.html',
       'jujutsu-kaisen':'proyectos/culling-games/index.html','pc-rebirth':'proyectos/pdc-rebirth/index.html','negative-awards':'proyectos/negative-awards/index.html',
-      'negativemc-ep3':'proyectos/negativemc-episodio-3/index.html','proyecto-x':'proyectos/proyecto-x/index.html',permamuerte:'proyectos/permamuerte/index.html',
+      'negativemc-ep3':'proyectos/negativemc-episodio-3/index.html','proyecto-x':'proyectos/proyecto-x/index.html','permamuerte':'proyectos/permamuerte/index.html',
       'pdc-final-chapter':'proyectos/pdc-final-chapter/index.html'
     };
     const artwork={
-      overland:'assets/media/overland.webp',proyecto-y:'assets/media/proyecto-y.webp',parasites:'assets/media/parasites.webp',
-      negative-awards:'assets/media/negative-awards.webp',negativemc-ep3:'assets/media/negativemc-ep3.webp','negativemc-2':'assets/media/negativemc-2.webp',
-      negativemc:'assets/media/negativemc.webp',proyecto-x:'assets/media/proyecto-x.webp',pc-rebirth:'assets/media/pdc-rebirth.webp',
-      permamuerte:'assets/media/pdc-final-chapter.webp','pdc-final-chapter':'assets/media/pdc-final-chapter.webp'
+      overland:'assets/media/overland.webp','proyecto-y':'assets/media/proyecto-y.webp',parasites:'assets/media/parasites.webp',
+      'negative-awards':'assets/media/negative-awards.webp','negativemc-ep3':'assets/media/negativemc-ep3.webp','negativemc-2':'assets/media/negativemc-2.webp',
+      negativemc:'assets/media/negativemc.webp','proyecto-x':'assets/media/proyecto-x.webp','pc-rebirth':'assets/media/pdc-rebirth.webp',
+      'permamuerte':'assets/media/pdc-final-chapter.webp','pdc-final-chapter':'assets/media/pdc-final-chapter.webp'
     };
     const hiddenProjects=new Set(['caos-games','guerra-nexus','the-200-rooms','the-100-rooms']);
     grid.innerHTML='';
