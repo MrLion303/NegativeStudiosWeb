@@ -33,7 +33,7 @@
     var nodes=[].slice.call(document.querySelectorAll('[data-ns-project-image]'));if(!nodes.length)return;
     nodes.forEach(function(img){
       var id=img.getAttribute('data-ns-project-image'),path=ART[id];
-      if(path)img.src=assetUrl(path);
+      if(path&&!img.getAttribute('src'))img.src=assetUrl(path);
     });
     fetch(assetUrl('assets/project-registry.json')+'?v='+Date.now(),{cache:'no-store'}).then(function(r){return r.ok?r.json():[]}).then(function(list){
       (list||[]).forEach(function(p){nodes.filter(function(n){return n.getAttribute('data-ns-project-image')===p.id}).forEach(function(n){if(p.artwork)n.src=assetUrl(p.artwork);if(p.name)n.alt='Portada de '+p.name})});
