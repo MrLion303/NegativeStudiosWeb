@@ -1,7 +1,7 @@
 <!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>Modo desarrollador — NegativeStudios</title><link rel="icon" href="assets/media/brand-icon.webp"><link rel="stylesheet" href="assets/dev-editor.css"></head><body>
 <div class="dev-token" id="tokenGate"><div class="dev-token-card"><h1>Modo desarrollador</h1><p>Tu sesión de GitHub ya debería estar autorizada desde la página de Anuncios. Si no lo está, puedes introducir el token aquí.</p><input id="tokenInput" type="password" autocomplete="off" placeholder="github_pat_…"><div id="tokenMsg" class="dev-status"></div><button class="dev-action dev-primary" id="tokenEnter">Entrar</button></div></div>
-<div class="dev-shell" id="editor" hidden>
-<aside class="dev-sidebar"><button class="dev-panel-toggle left-toggle" data-panel-toggle="left" aria-label="Contraer panel izquierdo" aria-expanded="true">‹</button>
+<div class="dev-shell" id="editor" hidden><button class="dev-panel-toggle left-toggle" data-panel-toggle="left" aria-label="Contraer panel izquierdo" aria-expanded="true">‹</button><button class="dev-panel-toggle right-toggle" data-panel-toggle="right" aria-label="Contraer panel derecho" aria-expanded="true">›</button>
+<aside class="dev-sidebar">
 <div class="dev-brand">NegativeStudios Editor</div>
 <div class="dev-section"><h3>Páginas</h3><div class="dev-page-list" id="pageList"></div></div>
 <div class="dev-section"><h3>Diseño</h3><button class="dev-tool" id="theme">Paleta y tema</button><button class="dev-tool" id="projectTemplate" style="margin-top:6px">Nueva página de proyecto</button></div>
@@ -10,7 +10,7 @@
 <div class="dev-toolbar"><button class="dev-action" id="exit">Salir</button><button class="dev-action toolbar-icon" id="undo" title="Deshacer (Ctrl+Z)">↶</button><button class="dev-action toolbar-icon" id="redo" title="Rehacer (Ctrl+Y)">↷</button><button class="dev-action" id="reset">Reiniciar sin guardar</button><button class="dev-action" id="reload">Recargar</button><span class="spacer"></span><span class="dev-status" id="status">Listo</span><button class="dev-action" id="preview">Vista previa</button><button class="dev-action dev-primary" id="publish">Publicar cambios</button></div>
 <div class="dev-canvas"><div class="dev-frame"><iframe id="siteFrame"></iframe></div></div>
 </main>
-<aside class="dev-inspector"><button class="dev-panel-toggle right-toggle" data-panel-toggle="right" aria-label="Contraer panel derecho" aria-expanded="true">›</button>
+<aside class="dev-inspector">
 <div class="dev-tabs"><button class="dev-tab active" data-tab="inspector">Inspector</button><button class="dev-tab" data-tab="templates">Plantillas</button></div>
 <section id="inspectorPanel"><div class="inspector-top"><h2>Inspector</h2><div class="dev-muted" id="selectedName">Selecciona un elemento.</div></div><div id="inspectorBody"><p class="dev-muted">Selecciona un elemento de la página para editarlo.</p></div></section>
 <section id="templatesPanel" hidden><div class="inspector-top"><h2>Plantillas</h2><p class="dev-muted">Componentes listos para usar con el estilo de NegativeStudios. No necesitas escribir HTML.</p></div><div class="template-filter"><input id="templateSearch" placeholder="Buscar plantilla…"></div><div class="dev-template-library" id="templateLibrary"></div></section>
