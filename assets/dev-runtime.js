@@ -21,8 +21,8 @@
   function pageKey(){
     var p=location.pathname.split('/').filter(Boolean);
     if(!p.length)return 'index.html';
-    if(p[p.length-1]==='index.html'&&p.length>1)return p[p.length-2]+'/index.html';
-    return p[p.length-1];
+    if(p[p.length-1]==='index.html'&&p.length>1)return p.join('/');
+    return p.join('/');
   }
   function apply(cfg){
     var pc=(cfg.pages||{})[pageKey()]||{};
