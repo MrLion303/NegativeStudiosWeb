@@ -33,7 +33,21 @@ function applyPreview(){
  (c.order||[]).forEach(g=>{const p=q(g.parent)[0];if(p)g.children.forEach(s=>{const n=[...p.children].find(x=>sel(x)===s);if(n)p.appendChild(n)})});
  if(c.customCss){let st=frame.contentDocument.getElementById('ns-editor-css');if(!st){st=frame.contentDocument.createElement('style');st.id='ns-editor-css';frame.contentDocument.head.appendChild(st)}st.textContent=c.customCss}
 }
-function select(el){if(selected)selected.classList.remove('dev-selection');selected=el;el.classList.add('dev-selection');$('#selectedName').textContent=sel(el);renderInspector(el)}
+function select(el){
+ if(selected)selected.classList.remove('dev-selection');
+ selected=el;el.classList.add('dev-selection');el.style.resize='both';el.style.overflow='auto';$('#selectedName').textContent=sel(el);renderInspector(el);enableCanvasDrag(el)
+}
+function enableCanvasDrag(el){
+ if(el.dataset.nsDragReady)return;el.dataset.nsDragReady='1';
+ let dragging=false,sx=0,sy=0,sl=0,st=0;
+ el.addEventListener('pointerdown',e=>{
+   if(e.button!==0||e.target.closest('a,button,input,textarea,select'))return;
+   dragging=true;sx=e.clientX;sy=e.clientY;const cs=getComputedStyle(el);sl=parseFloat(cs.left)||0;st=parseFloat(cs.top)||0;
+   if(cs.position==='static')el.style.position='relative';el.setPointerCapture?.(e.pointerId);
+ });
+ el.addEventListener('pointermove',e=>{if(!dragging)return;const dx=e.clientX-sx,dy=e.clientY-sy;el.style.left=(sl+dx)+'px';el.style.top=(st+dy)+'px'});
+ el.addEventListener('pointerup',e=>{if(!dragging)return;dragging=false;historyPush();const c=pageCfg(),s=sel(el);c.styles[s]=c.styles[s]||{};c.styles[s].position='relative';c.styles[s].left=el.style.left;c.styles[s].top=el.style.top;dirty=true;msg('Posición actualizada')});
+}
 function colorField(id,label,value){return '<div class="color-field"><label>'+label+'</label><div class="color-line"><input type="color" id="'+id+'Pick" value="'+(/^#[0-9a-f]{6}$/i.test(value||'')?value:'#ffffff')+'"><input id="'+id+'" value="'+esc(value||'')+'" placeholder="#66c2ff"><button type="button" class="swatch-btn" data-color="'+id+'">Paleta</button></div></div>'}
 function slider(id,label,value,min,max,step,unit){const n=parseFloat(value)||0;return '<div class="slider-field"><div><label>'+label+'</label><output id="'+id+'Out">'+(n||0)+unit+'</output></div><input type="range" id="'+id+'" min="'+min+'" max="'+max+'" step="'+step+'" value="'+n+'"></div>'}
 function renderInspector(el){
@@ -113,8 +127,13 @@ function addEmbed(type){
 }
 function colorTheme(){
  const palettes={Negativo:['#08090b','#0d1117','#66c2ff','#ffffff'],Nocturno:['#090b18','#15112b','#8b5cf6','#f5f3ff'],Bosque:['#07130e','#0d2418','#22c55e','#ecfdf5'],Atardecer:['#1a0c08','#32140c','#f59e0b','#fff7ed']};
- const name=prompt('Plantilla de colores: '+Object.keys(palettes).join(', '));if(!name||!palettes[name])return;
- historyPush();const p=palettes[name];config.global.theme={background:p[0],surface:p[1],accent:p[2],text:p[3]};config.global.customCss=':root{--ns-bg:'+p[0]+';--ns-surface:'+p[1]+';--ns-accent:'+p[2]+';--ns-text:'+p[3]+'}'+(config.global.customCss||'');dirty=true;msg('Paleta aplicada');loadPage(current)
+ const modal=document.createElement('div');modal.className='ns-theme-modal';modal.innerHTML='<div class="ns-theme-card"><div class="ns-theme-head"><div><h2>Paleta del sitio</h2><p>Elige una plantilla o crea tu propia paleta.</p></div><button id="themeClose">×</button></div><div class="ns-theme-grid">'+Object.keys(palettes).map(n=>'<button class="theme-preset" data-theme="'+n+'"><span>'+n+'</span><i style="background:'+palettes[n][0]+'"></i><i style="background:'+palettes[n][2]+'"></i><i style="background:'+palettes[n][3]+'"></i></button>').join('')+'</div><div class="ns-custom-theme"><h3>Colores personalizados</h3><div class="theme-color-row"><label>Fondo<input type="color" id="themeBg" value="#08090b"></label><label>Superficie<input type="color" id="themeSurface" value="#0d1117"></label><label>Acento<input type="color" id="themeAccent" value="#66c2ff"></label><label>Texto<input type="color" id="themeText" value="#ffffff"></label></div><div class="theme-hex-row"><input id="themeHex" placeholder="#66c2ff"><button id="savePreset">Guardar como preset</button><button class="dev-primary" id="applyCustom">Aplicar</button></div></div></div>';document.body.appendChild(modal);
+ const close=()=>modal.remove();modal.querySelector('#themeClose').onclick=close;
+ function apply(p){historyPush();config.global.theme={background:p[0],surface:p[1],accent:p[2],text:p[3]};config.global.customCss=':root{--ns-bg:'+p[0]+';--ns-surface:'+p[1]+';--ns-accent:'+p[2]+';--ns-text:'+p[3]+'}'+(config.global.customCss||'');dirty=true;close();msg('Paleta aplicada');loadPage(current)}
+ Object.entries(palettes).forEach(([n,p])=>modal.querySelector('[data-theme="'+n+'"]').onclick=()=>apply(p));
+ const vals=['themeBg','themeSurface','themeAccent','themeText'];const hex=modal.querySelector('#themeHex');vals.forEach(id=>modal.querySelector('#'+id).oninput=()=>hex.value=modal.querySelector('#themeAccent').value);
+ modal.querySelector('#applyCustom').onclick=()=>apply(vals.map(id=>modal.querySelector('#'+id).value));
+ modal.querySelector('#savePreset').onclick=()=>{const p=vals.map(id=>modal.querySelector('#'+id).value);config.global.colorPresets=config.global.colorPresets||[];config.global.colorPresets.push(p[2]);dirty=true;msg('Preset guardado');};
 }
 async function uploadImage(el){const f=$('#ifile').files[0];if(!f)return alert('Selecciona una imagen.');const base=await new Promise((ok,no)=>{const r=new FileReader();r.onload=()=>ok(String(r.result).split(',')[1]);r.onerror=no;r.readAsDataURL(f)});historyPush();msg('Subiendo imagen…');const path='assets/uploads/'+Date.now()+'-'+f.name.replace(/[^a-zA-Z0-9._-]/g,'_');await api(path,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:'Upload image from visual editor',content:base,branch:BRANCH})});const url='https://mrlion303.github.io/NegativeStudiosWeb/'+path;$('#isrc').value=url;el.src=url;saveAttr(el,'src',url);dirty=true;msg('Imagen subida')}
 async function publish(){try{msg('Publicando…');const raw=JSON.stringify(config,null,2)+'\n',content=btoa(unescape(encodeURIComponent(raw)));const d=await api('assets/site-config.json',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:'Update site from visual editor',content,sha:configSha,branch:BRANCH})});configSha=d.content.sha;dirty=false;undoStack=[];redoStack=[];updateHistoryButtons();msg('Publicado correctamente');alert('Publicado. GitHub Pages puede tardar unos minutos en reflejarlo.')}catch(e){msg(e.message);alert('No se pudo publicar: '+e.message)}}
