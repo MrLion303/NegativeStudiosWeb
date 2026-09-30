@@ -32,7 +32,7 @@ document.addEventListener('DOMContentLoaded',()=>{
     if(!href)return '';
     try{
       const u=new URL(href,location.href),p=u.pathname.replace(/^\\//,'');
-      const m=p.match(/proyectos\\/([^/]+)\\/index\\.html$/);
+      const m=p.match(/proyectos\/([^/]+)\\/index\\.html$/);
       return m?m[1]:'';
     }catch(e){return ''}
   };
@@ -41,7 +41,7 @@ document.addEventListener('DOMContentLoaded',()=>{
     try{
       const r=await fetch('assets/site-config.json?v='+Date.now(),{cache:'no-store'}),cfg=await r.json(),pages=cfg.pages||{},out={};
       Object.keys(pages).forEach(key=>{
-        const m=key.match(/^proyectos\\/([^/]+)\\/index\\.html$/),page=pages[key];
+        const m=key.match(/^proyectos\/([^/]+)\\/index\\.html$/),page=pages[key];
         if(!m||!page||!page.attrs)return;
         for(const selector of Object.keys(page.attrs)){
           const src=page.attrs[selector]&&page.attrs[selector].src;
