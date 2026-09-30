@@ -1,5 +1,5 @@
 (function(){
-  var CONFIG='assets/site-config.json';
+  var CONFIG=(document.currentScript?new URL('site-config.json',document.currentScript.src).href:'assets/site-config.json');
   function esc(v){return String(v).replace(/[^a-zA-Z0-9_-]/g,'\\$&')}
   function selector(el){
     if(!el||el.nodeType!==1)return '';
