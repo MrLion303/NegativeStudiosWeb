@@ -35,54 +35,17 @@ h1,h2,h3,h4,h5,h6,p,span,small,strong,em,li,label{pointer-events:auto!important;
 #ns-transform-box .ns-h-nw{left:-6px;top:-6px;cursor:nwse-resize}.ns-h-n{left:50%;top:-6px;margin-left:-5px;cursor:ns-resize}.ns-h-ne{right:-6px;top:-6px;cursor:nesw-resize}.ns-h-e{right:-6px;top:50%;margin-top:-5px;cursor:ew-resize}.ns-h-se{right:-6px;bottom:-6px;cursor:nwse-resize}.ns-h-s{left:50%;bottom:-6px;margin-left:-5px;cursor:ns-resize}.ns-h-sw{left:-6px;bottom:-6px;cursor:nesw-resize}.ns-h-w{left:-6px;top:50%;margin-top:-5px;cursor:ew-resize}
 #ns-transform-box .ns-tb-label{position:absolute;left:50%;top:-28px;transform:translateX(-50%);background:#66c2ff;color:#071019;border-radius:4px;padding:3px 7px;font:700 11px/1.2 Arial,sans-serif;white-space:nowrap;pointer-events:none}
 `;}
-const toolbarFns={savedRange:null};
-function ensureParentInlineToolbar(){
- let t=document.getElementById('ns-parent-inline-toolbar');
- if(t)return t;
- t=document.createElement('div');t.id='ns-parent-inline-toolbar';t.setAttribute('data-ns-editor-ui','1');
- t.innerHTML='<button type="button" data-cmd="bold" title="Negrita"><b>B</b></button><button type="button" data-cmd="italic" title="Cursiva"><i>I</i></button><button type="button" data-cmd="underline" title="Subrayado"><u>U</u></button><label class="ns-parent-color" title="Color de texto">A<input type="color" id="ns-parent-color-pick" value="#ffffff"></label><select id="ns-parent-size" title="Tamaño"><option value="">Tamaño</option><option value="1">Pequeño</option><option value="3">Mediano</option><option value="5">Grande</option><option value="7">Muy grande</option></select>';
- const st=document.createElement('style');st.id='ns-parent-inline-toolbar-style';
- st.textContent='#ns-parent-inline-toolbar{position:fixed;z-index:2147483647;display:none;align-items:center;gap:4px;padding:5px;background:#0b121a;border:1px solid #3b5d77;border-radius:9px;box-shadow:0 8px 30px rgba(0,0,0,.5);font:12px Arial,sans-serif;pointer-events:auto}#ns-parent-inline-toolbar button,#ns-parent-inline-toolbar select{height:28px;min-width:28px;border:1px solid #355068;background:#142330;color:#fff;border-radius:5px;cursor:pointer}#ns-parent-inline-toolbar button:hover,#ns-parent-inline-toolbar select:hover{background:#1c3447}#ns-parent-inline-toolbar .ns-parent-color{position:relative;width:28px;height:28px;display:grid;place-items:center;color:#fff;font-weight:bold;border:1px solid #355068;border-radius:5px;cursor:pointer;box-sizing:border-box}#ns-parent-inline-toolbar input[type=color]{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer}';
- document.head.appendChild(st);document.body.appendChild(t);
- const run=(cmd,value)=>{const d=frame?.contentDocument,w=frame?.contentWindow;if(!d||!w)return;const e=d.querySelector('[data-ns-editing="1"]');if(!e)return;w.getSelection()?.removeAllRanges();if(toolbarFns.savedRange){w.getSelection().addRange(toolbarFns.savedRange)}d.execCommand(cmd,false,value);e.focus();const c=pageCfg(),selEl=selected,s=selEl?sel(selEl):null;if(s){c.text[s]={html:e.innerHTML};dirty=true;updateHistoryButtons()}};
- t.querySelectorAll('[data-cmd]').forEach(b=>b.addEventListener('mousedown',e=>{e.preventDefault();run(b.dataset.cmd,null)}));
- t.querySelector('#ns-parent-color-pick').addEventListener('input',e=>run('foreColor',e.target.value));
- t.querySelector('#ns-parent-size').addEventListener('change',e=>{if(e.target.value)run('fontSize',e.target.value);e.target.value=''});
- return t;
-}
-function showParentInlineToolbar(){
- const d=frame?.contentDocument,w=frame?.contentWindow;if(!d||!w)return;
- const e=d.querySelector('[data-ns-editing="1"]'),selRange=w.getSelection();
- if(!e||!selRange||selRange.rangeCount===0||selRange.isCollapsed)return;
- toolbarFns.savedRange=selRange.getRangeAt(0).cloneRange();
- const r=selRange.getRangeAt(0).getBoundingClientRect(),t=ensureParentInlineToolbar();
- t.style.display='flex';
- const x=Math.max(8,Math.min(window.innerWidth-t.offsetWidth-8,(frame.getBoundingClientRect().left+r.left+(r.width/2))-(t.offsetWidth/2)));
- const y=Math.max(8,frame.getBoundingClientRect().top+r.top-t.offsetHeight-10);
- t.style.left=x+'px';t.style.top=y+'px';
-}
-function hideParentInlineToolbar(){const t=document.getElementById('ns-parent-inline-toolbar');if(t)t.style.display='none';toolbarFns.savedRange=null}
 function startInlineText(el){
  const d=frame.contentDocument;if(!d)return;
- hideParentInlineToolbar();
  if(el.dataset.nsEditing==='1')return;
  el.dataset.nsEditing='1';el.contentEditable='true';el.style.cursor='text';el.setAttribute('spellcheck','false');
  const finish=()=>{
    historyPush();const cfg=pageCfg(),s=sel(el);cfg.text[s]={html:el.innerHTML};dirty=true;delete el.dataset.nsEditing;
-   el.removeAttribute('contenteditable');el.style.cursor='';el.removeEventListener('blur',finish);d.removeEventListener('selectionchange',showParentInlineToolbar);hideParentInlineToolbar();
+   el.removeAttribute('contenteditable');el.style.cursor='';el.removeEventListener('blur',finish);
    msg('Texto actualizado');updateHistoryButtons();
  };
  el.addEventListener('blur',finish,{once:true});
  el.focus();
- setTimeout(showParentInlineToolbar,20);
- d.addEventListener('selectionchange',showParentInlineToolbar);
-}
-function applyInlineCommand(cmd,value){
- const d=frame.contentDocument;if(!d)return;
- const el=d.querySelector('[data-ns-editing="1"]');if(!el)return;
- d.execCommand(cmd,false,value);
- el.focus();
- const cfg=pageCfg(),s=sel(el);cfg.text[s]={html:el.innerHTML};dirty=true;updateHistoryButtons();
 }
 function markEditable(){const d=frame.contentDocument;if(!d)return;d.querySelectorAll('.dev-selection,.dev-hover').forEach(x=>x.classList.remove('dev-selection','dev-hover'));d.querySelectorAll('*').forEach(el=>{if(['HTML','HEAD','BODY','SCRIPT','STYLE','NOSCRIPT'].includes(el.tagName)||el.closest('[data-ns-editor-ui]'))return;if(el.dataset.nsEditorWired)return;el.dataset.nsEditorWired='1';el.addEventListener('mouseenter',()=>{if(el!==selected)el.classList.add('dev-hover')});el.addEventListener('mouseleave',()=>el.classList.remove('dev-hover'));el.addEventListener('dblclick',e=>{if(/^(H[1-6]|P|SPAN|A|BUTTON|LI|LABEL)$/i.test(el.tagName)){e.preventDefault();e.stopPropagation();startInlineText(el)}});
 el.addEventListener('keydown',e=>{if(e.key==='Escape'&&el.dataset.nsEditing){e.preventDefault();finishInlineText()}});
@@ -165,7 +128,10 @@ function slider(id,label,value,min,max,step,unit){const n=parseFloat(value)||0;r
 function renderInspector(el){
  const c=pageCfg(),s=sel(el),p=c.styles[s]||{},isText=/^(H[1-6]|P|SPAN|A|BUTTON|LI|LABEL)$/i.test(el.tagName);
  let h='<div class="dev-form"><div class="inspector-heading"><strong>Elemento seleccionado</strong><span>'+esc(el.tagName.toLowerCase())+'</span></div>';
- if(isText)h+='<div class="inline-edit-hint">Haz <b>doble clic sobre el texto en el lienzo</b> para editarlo directamente. Selecciona una parte del texto para darle un color distinto, negrita, cursiva, subrayado o tamaño.</div>';
+ if(isText){
+   h+='<div class="inline-edit-hint">Haz <b>doble clic sobre el texto en el lienzo</b> para editarlo directamente. Selecciona una parte del texto y usa los controles de formato de abajo.</div>';
+   h+='<details open><summary>Formato de texto seleccionado</summary><div class="inline-format-controls"><div class="segmented"><button type="button" data-inline-cmd="bold"><b>Negrita</b></button><button type="button" data-inline-cmd="italic"><i>Cursiva</i></button><button type="button" data-inline-cmd="underline"><u>Subrayado</u></button></div><label>Color</label><input id="inlineColorPick" type="color" value="#ffffff"><label>Tamaño</label><select id="inlineSizePick"><option value="">Seleccionar tamaño</option><option value="1">Pequeño</option><option value="3">Mediano</option><option value="5">Grande</option><option value="7">Muy grande</option></select></div></details>';
+ }
  h+='<div class="dev-quick-actions"><button id="deleteEl">Eliminar</button><button id="duplicateEl">Duplicar</button></div>';
  h+='<details open><summary>Color y apariencia</summary>'+colorField('icolor','Color',p.color||getComputedStyle(el).color)+colorField('ibg','Fondo',p['background-color']||'transparent')+'<div class="preset-row">'+colorPresets('icolor')+'</div></details>';
  h+='<details open><summary>Tamaño y espacio</summary>'+slider('isize','Tamaño de texto',parseFloat(p['font-size']||getComputedStyle(el).fontSize),8,100,1,'px')+slider('iradius','Radio',parseFloat(p['border-radius']||0),0,80,1,'px')+slider('ipadding','Padding',parseFloat(p.padding)||0,0,120,1,'px')+slider('imargin','Margen superior',parseFloat((p.marginTop||p.margin||'').toString())||0,0,160,1,'px')+'<label>Anchura</label><div class="input-unit"><input id="iwidth" value="'+esc(p.width||'')+'" placeholder="Auto / 100%"><span>px/%</span></div><label>Altura</label><div class="input-unit"><input id="iheight" value="'+esc(p.height||'')+'" placeholder="Auto"><span>px/%</span></div></details>';
@@ -182,9 +148,9 @@ function bindInspector(el){
  map.forEach(([id,k,u])=>{const x=$('#'+id),o=$('#'+id+'Out');if(x)x.oninput=()=>{if(o)o.textContent=x.value+u}});
  ['icolor','ibg'].forEach(id=>{const x=$('#'+id),p=$('#'+id+'Pick');if(x&&p){p.oninput=()=>{x.value=p.value};x.oninput=()=>{if(/^#[0-9a-f]{6}$/i.test(x.value))p.value=x.value}}});
  document.querySelectorAll('[data-color]').forEach(b=>b.onclick=()=>{const id=b.dataset.palette;$('#'+id).value=b.dataset.color;$('#'+id+'Pick').value=b.dataset.color});
- document.querySelectorAll('[data-inline-cmd]').forEach(b=>b.onclick=()=>applyInlineCommand(b.dataset.inlineCmd,null));
- const ic=$('#inlineColorPick');if(ic)ic.oninput=()=>applyInlineCommand('foreColor',ic.value);
- const is=$('#inlineSizePick');if(is)is.onchange=()=>applyInlineCommand('fontSize',is.value);
+ document.querySelectorAll('[data-inline-cmd]').forEach(b=>b.addEventListener('mousedown',e=>{e.preventDefault();applyInlineCommand(b.dataset.inlineCmd,null)}));
+ const ic=$('#inlineColorPick');if(ic){ic.addEventListener('mousedown',e=>e.preventDefault());ic.oninput=()=>applyInlineCommand('foreColor',ic.value)}
+ const is=$('#inlineSizePick');if(is){is.addEventListener('mousedown',e=>e.preventDefault());is.onchange=()=>{if(is.value)applyInlineCommand('fontSize',is.value);is.value=''}}
  document.querySelectorAll('[data-align]').forEach(b=>b.onclick=()=>{historyPush();const v=b.dataset.align;c=pageCfg();c.styles[sel(el)]=c.styles[sel(el)]||{};c.styles[sel(el)]['text-align']=v;el.style.textAlign=v;dirty=true});
  $('#apply').onclick=()=>applyElement(el);
  $('#deleteEl').onclick=()=>deleteElement(el);
