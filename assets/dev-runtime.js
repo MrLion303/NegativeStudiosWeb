@@ -19,10 +19,13 @@
     return parts.join('>');
   }
   function pageKey(){
-    var p=location.pathname.split('/').filter(Boolean);
-    if(!p.length)return 'index.html';
-    if(p[p.length-1]==='index.html'&&p.length>1)return p.join('/');
-    return p.join('/');
+    var root=new URL('.',CONFIG).pathname.replace(/\/$/,'');
+    var path=location.pathname;
+    if(root&&path.indexOf(root+'/')===0)path=path.slice(root.length+1);
+    else if(root&&path===root)path='';
+    path=path.replace(/^\\//,'');
+    if(!path)return 'index.html';
+    return path;
   }
   var ART={overland:'assets/media/overland.webp','proyecto-y':'assets/media/proyecto-y.webp',parasites:'assets/media/parasites.webp','pc-rebirth':'assets/media/pdc-rebirth.webp','negative-awards':'assets/media/negative-awards.webp','negativemc-ep3':'assets/media/negativemc-ep3.webp','proyecto-x':'assets/media/proyecto-x.webp','permamuerte':'assets/media/pdc-final-chapter.webp','pdc-final-chapter':'assets/media/pdc-final-chapter.webp',negativemc:'assets/media/negativemc.webp','negativemc-2':'assets/media/negativemc-2.webp'};
   function assetUrl(path){return new URL('../'+path,CONFIG).href;}
