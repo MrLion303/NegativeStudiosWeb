@@ -9,7 +9,8 @@ document.addEventListener('DOMContentLoaded',async()=>{try{const r=await fetch('
     'pc-rebirth':'proyectos/pdc-rebirth/index.html',
     'negative-awards':'proyectos/negative-awards/index.html',
     'negativemc-ep3':'proyectos/negativemc-episodio-3/index.html',
-    'proyecto-x':'proyectos/proyecto-x/index.html'
+    'proyecto-x':'proyectos/proyecto-x/index.html',
+    'permamuerte':'proyectos/permamuerte/index.html'
   };
   const artwork={
     'overland':'assets/media/overland.webp',
