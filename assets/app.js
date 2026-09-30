@@ -27,18 +27,25 @@ document.addEventListener('DOMContentLoaded',()=>{
   document.querySelectorAll('a[href^="proyecto.html?id="]').forEach(link=>{try{const u=new URL(link.getAttribute('href'),location.href);const id=u.searchParams.get('id');if(canonicalProjectRoutes[id])link.href=canonicalProjectRoutes[id]}catch(_){}});
 
   const projectArtwork={'OVERLAND':'assets/media/overland.webp','Proyecto Y':'assets/media/proyecto-y.webp','PARASITES':'assets/media/parasites.webp','Negative Awards':'assets/media/negative-awards.webp','NEGATIVE AWARDS':'assets/media/negative-awards.webp','NegativeMC Episodio 3':'assets/media/negativemc-ep3.webp','NegativeMC 2':'assets/media/negativemc-2.webp','NegativeMC':'assets/media/negativemc.webp','Proyecto X':'assets/media/proyecto-x.webp','Permadeath Casual: REBIRTH':'assets/media/pdc-rebirth.webp','PDC: REBIRTH':'assets/media/pdc-rebirth.webp','Permadeath Casual: Final Chapter':'assets/media/pdc-final-chapter.webp'};
-  const projectGalleryRoutes={'OVERLAND':'overland','Proyecto Y':'proyecto-y','PARASITES':'parasites','Negative Awards':'negative-awards','NEGATIVE AWARDS':'negative-awards','NegativeMC Episodio 3':'negativemc-ep3','Proyecto X':'proyecto-x','Permadeath Casual: REBIRTH':'pdc-rebirth','PDC: REBIRTH':'pdc-rebirth','Permadeath Casual: Final Chapter':'pdc-final-chapter','NegativeMC':'negativemc','NegativeMC 2':'negativemc-2'};
   let projectImageOverrides=null;
+  const normalizeProjectRoute=href=>{
+    if(!href)return '';
+    try{
+      const u=new URL(href,location.href),p=u.pathname.replace(/^\\//,'');
+      const m=p.match(/proyectos\\/([^/]+)\\/index\\.html$/);
+      return m?m[1]:'';
+    }catch(e){return ''}
+  };
   const loadProjectImageOverrides=async()=>{
     if(projectImageOverrides)return projectImageOverrides;
     try{
       const r=await fetch('assets/site-config.json?v='+Date.now(),{cache:'no-store'}),cfg=await r.json(),pages=cfg.pages||{},out={};
-      Object.keys(projectGalleryRoutes).forEach(title=>{
-        const id=projectGalleryRoutes[title],page=pages['proyectos/'+id+'/index.html'];
-        if(!page||!page.attrs)return;
-        for(const key of Object.keys(page.attrs)){
-          const src=page.attrs[key]&&page.attrs[key].src;
-          if(src&&String(src).trim()){out[title]=String(src).trim();break}
+      Object.keys(pages).forEach(key=>{
+        const m=key.match(/^proyectos\\/([^/]+)\\/index\\.html$/),page=pages[key];
+        if(!m||!page||!page.attrs)return;
+        for(const selector of Object.keys(page.attrs)){
+          const src=page.attrs[selector]&&page.attrs[selector].src;
+          if(src&&String(src).trim()){out[m[1]]=String(src).trim();break}
         }
       });
       projectImageOverrides=out;
@@ -48,18 +55,20 @@ document.addEventListener('DOMContentLoaded',()=>{
   const enhanceProjectCards=async()=>{
     const overrides=await loadProjectImageOverrides();
     document.querySelectorAll('.card').forEach(card=>{
-      const title=card.querySelector('h3')?.textContent?.trim(),src=overrides[title]||projectArtwork[title];
+      const title=card.querySelector('h3')?.textContent?.trim();
+      const route=normalizeProjectRoute(card.getAttribute('href'));
+      const src=overrides[route]||projectArtwork[title];
       if(!src)return;
       const media=card.querySelector('.card-media');
       if(media){
         let image=media.querySelector('.card-media-img');
         if(!image){image=document.createElement('img');image.className='card-media-img';image.loading='lazy';media.prepend(image)}
         image.src=src;
-        image.alt=title?`Arte oficial de ${title}`:'';
+        image.alt=title?'Arte oficial de '+title:'';
         media.classList.add('has-image')
       }else{
         card.classList.add('archive-art-card');
-        card.style.setProperty('--archive-art',`url("${src}")`)
+        card.style.setProperty('--archive-art','url("'+src+'")')
       }
     })
   };
