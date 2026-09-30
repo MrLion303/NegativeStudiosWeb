@@ -19,3 +19,4 @@ html,body{margin:0;background:#070a0f;color:#edf5ff;font-family:Inter,system-ui,
 .dev-selection{outline:2px solid #66c2ff!important;outline-offset:3px!important}
 .dev-hover{outline:1px dashed #66c2ff!important;outline-offset:2px!important}
 @media(max-width:900px){.dev-panel-toggle{display:none}}
+.inline-edit-hint{padding:11px 12px;border:1px solid #294158;background:#0d1822;color:#9eb1c4;border-radius:9px;font-size:.75rem;line-height:1.5}.inline-edit-hint b{color:#66c2ff}
