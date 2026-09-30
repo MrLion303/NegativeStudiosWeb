@@ -1,6 +1,6 @@
 (function(){
 const REPO='MrLion303/NegativeStudiosWeb',BRANCH='main',API='https://api.github.com/repos/'+REPO+'/contents/';
-const PAGES=[['Inicio','index.html'],['Proyectos','proyectos.html'],['Anuncios','anuncios.html'],['Equipo','equipo.html'],['Nosotros','acerca.html'],['Colaboradores','colaboradores.html'],['Contacto','contacto.html'],['Descargar','descargar.html']];
+const PAGES=[['Inicio','index.html'],['Proyectos','proyectos.html'],['Anuncios','anuncios.html'],['Equipo','equipo.html'],['Nosotros','acerca.html'],['Colaboradores','colaboradores.html'],['Contacto','contacto.html'],['Descargar','descargar.html'],['OVERLAND','proyectos/overland/index.html'],['Proyecto Y','proyectos/proyecto-y/index.html'],['PARASITES','proyectos/parasites/index.html'],['REBIRTH','proyectos/pdc-rebirth/index.html'],['Negative Awards','proyectos/negative-awards/index.html'],['Proyecto X','proyectos/proyecto-x/index.html'],['Final Chapter','proyectos/pdc-final-chapter/index.html']];
 let token=sessionStorage.getItem('ns_dev_token')||'',current='index.html',frame=null,selected=null,config={version:1,global:{customCss:''},pages:{}},configSha=null,dirty=false;
 const $=s=>document.querySelector(s);function msg(t){$('#status').textContent=t}function pageCfg(){return config.pages[current]||(config.pages[current]={styles:{},text:{},attrs:{},order:[],blocks:[],customCss:''})}
 function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
