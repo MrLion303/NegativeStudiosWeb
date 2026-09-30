@@ -133,7 +133,8 @@ function chooseProjectTemplate(){
  const projectId=projects[i][1].split('/')[1];
  const html='<section class="section ns-project-image-template" data-ns-project-id="'+esc(projectId)+'"><div class="container"><div class="project-media-frame"><img data-ns-project-image="'+esc(projectId)+'" src="" alt=""></div></div></section>';
  addBlock('project-image',{html});
-}\nfunction addBlock(type,data={}){
+}
+function addBlock(type,data={}){
  historyPush();const c=pageCfg(),id='b'+Date.now(),host=selected?sel(selected):'main';
  const templates={
  heading:'<section class="section"><div class="container"><h2 class="title">Nuevo título</h2></div></section>',
