@@ -155,6 +155,9 @@ function bindInspector(el){
  map.forEach(([id,k,u])=>{const x=$('#'+id),o=$('#'+id+'Out');if(x)x.oninput=()=>{if(o)o.textContent=x.value+u}});
  ['icolor','ibg'].forEach(id=>{const x=$('#'+id),p=$('#'+id+'Pick');if(x&&p){p.oninput=()=>{x.value=p.value};x.oninput=()=>{if(/^#[0-9a-f]{6}$/i.test(x.value))p.value=x.value}}});
  document.querySelectorAll('[data-color]').forEach(b=>b.onclick=()=>{const id=b.dataset.palette;$('#'+id).value=b.dataset.color;$('#'+id+'Pick').value=b.dataset.color});
+ document.querySelectorAll('[data-inline-cmd]').forEach(b=>b.onclick=()=>applyInlineCommand(b.dataset.inlineCmd,null));
+ const ic=$('#inlineColorPick');if(ic)ic.oninput=()=>applyInlineCommand('foreColor',ic.value);
+ const is=$('#inlineSizePick');if(is)is.onchange=()=>applyInlineCommand('fontSize',is.value);
  document.querySelectorAll('[data-align]').forEach(b=>b.onclick=()=>{historyPush();const v=b.dataset.align;c=pageCfg();c.styles[sel(el)]=c.styles[sel(el)]||{};c.styles[sel(el)]['text-align']=v;el.style.textAlign=v;dirty=true});
  $('#apply').onclick=()=>applyElement(el);
  $('#deleteEl').onclick=()=>deleteElement(el);
