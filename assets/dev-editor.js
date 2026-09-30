@@ -27,6 +27,8 @@ function buildPages(){const grouped=[...PAGES];$('#pageList').innerHTML=grouped.
 function loadPage(p){current=p;selected=null;document.querySelectorAll('.dev-page-btn').forEach(b=>b.classList.toggle('active',b.dataset.page===p));if(observer)observer.disconnect();frame.onload=()=>setTimeout(wire,350);frame.src=p+(p.includes('?')?'&':'?')+'editor='+Date.now()}
 function editorCanvasMode(){const d=frame.contentDocument;if(!d)return;let st=d.getElementById('ns-editor-canvas-mode');if(!st){st=d.createElement('style');st.id='ns-editor-canvas-mode';d.head.appendChild(st)}st.textContent=`
 a,button,input,textarea,select,iframe,video,audio,summary{pointer-events:none!important}
+a h1,a h2,a h3,a h4,a h5,a h6,a p,a span,a small,a strong,a em,a li,a label,
+h1,h2,h3,h4,h5,h6,p,span,small,strong,em,li,label{pointer-events:auto!important;user-select:text!important}
 [contenteditable="true"]{pointer-events:auto!important;outline:none!important}
 #ns-inline-toolbar{display:none;position:fixed;z-index:2147483647;align-items:center;gap:4px;padding:5px;background:#0b121a;border:1px solid #3b5d77;border-radius:9px;box-shadow:0 8px 30px rgba(0,0,0,.5);font:12px Arial,sans-serif}
 #ns-inline-toolbar button,#ns-inline-toolbar select{height:28px;min-width:28px;border:1px solid #355068;background:#142330;color:#fff;border-radius:5px;cursor:pointer}
