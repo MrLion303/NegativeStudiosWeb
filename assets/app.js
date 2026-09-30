@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded',()=>{
-  document.documentElement.classList.remove('ns-loading');document.documentElement.classList.add('ns-ready');if(!document.querySelector('script[src*="dev-runtime.js"]')){const ds=document.createElement('script');ds.src='assets/dev-runtime.js?v=1';document.head.appendChild(ds)}
+  document.documentElement.classList.remove('ns-loading');document.documentElement.classList.add('ns-ready');if(!document.querySelector('script[src*="dev-runtime.js"]')){const ds=document.createElement('script');ds.src='assets/dev-runtime.js?v=3';document.head.appendChild(ds)}
   const VERSION='20260929b';
   const icon=document.querySelector('link[rel="icon"]');if(icon)icon.href='assets/media/brand-icon.webp';
   if(!document.querySelector('link[href^="assets/extras.css"]')){const s=document.createElement('link');s.rel='stylesheet';s.href=`assets/extras.css?v=${VERSION}`;document.head.appendChild(s)}
