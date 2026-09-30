@@ -48,7 +48,9 @@
     Object.keys(text).forEach(function(s){try{document.querySelectorAll(s).forEach(function(el){var v=text[s];if(v&&typeof v==='object'&&v.html!==undefined)el.innerHTML=v.html;else el.textContent=String(v)})}catch(e){}});
     Object.keys(attrs).forEach(function(s){try{document.querySelectorAll(s).forEach(function(el){Object.keys(attrs[s]).forEach(function(k){el.setAttribute(k,attrs[s][k])})})}catch(e){}});
     if(pc.customCss){var st=document.getElementById('ns-site-custom-css');if(!st){st=document.createElement('style');st.id='ns-site-custom-css';document.head.appendChild(st)}st.textContent=pc.customCss}
-    (pc.blocks||[]).forEach(function(b){var host=b.host?document.querySelector(b.host):(document.querySelector('main')||document.body);if(!host||host.querySelector('[data-ns-block="'+b.id+'"]'))return;var w=document.createElement('div');w.dataset.nsBlock=b.id;w.innerHTML=b.html;host.appendChild(w)});
+    (pc.blocks||[]).forEach(function(b){var host=b.host?document.querySelector(b.host):(document.querySelector('main')||document.body);if(!host||host.querySelector('[data-ns-editor-block="'+b.id+'"],[data-ns-block="'+b.id+'"]'))return;var w=document.createElement('div');w.dataset.nsBlock=b.id;w.dataset.nsEditorBlock=b.id;w.innerHTML=b.html;host.appendChild(w)});
+    (pc.clones||[]).forEach(function(b){var host=b.host?document.querySelector(b.host):(document.querySelector('main')||document.body);if(!host||host.querySelector('[data-ns-editor-clone-id="'+b.id+'"]))return;var t=document.createElement('template');t.innerHTML=(b.html||'').trim();var n=t.content.firstElementChild;if(!n)return;n.dataset.nsEditorCloneId=b.id;var ref=host.children[b.index]||null;host.insertBefore(n,ref)});
+    (pc.deleted||[]).forEach(function(s){try{document.querySelectorAll(s).forEach(function(el){el.style.setProperty('visibility','hidden','important')})}catch(e){}});
     resolveProjectImages();
     (pc.order||[]).forEach(function(g){var par=document.querySelector(g.parent);if(!par)return;g.children.forEach(function(s){var n=par.querySelector(':scope>'+s);if(n)par.appendChild(n)})});
   }
