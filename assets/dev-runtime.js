@@ -23,7 +23,7 @@
     var path=location.pathname;
     if(root&&path.indexOf(root+'/')===0)path=path.slice(root.length+1);
     else if(root&&path===root)path='';
-    path=path.replace(/^\\//,'');
+    if(path.charAt(0)==='/')path=path.slice(1);
     if(!path)return 'index.html';
     return path;
   }
