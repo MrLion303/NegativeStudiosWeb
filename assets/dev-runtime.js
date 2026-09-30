@@ -25,7 +25,7 @@
     return p.join('/');
   }
   var ART={overland:'assets/media/overland.webp','proyecto-y':'assets/media/proyecto-y.webp',parasites:'assets/media/parasites.webp','pc-rebirth':'assets/media/pdc-rebirth.webp','negative-awards':'assets/media/negative-awards.webp','negativemc-ep3':'assets/media/negativemc-ep3.webp','proyecto-x':'assets/media/proyecto-x.webp','permamuerte':'assets/media/pdc-final-chapter.webp','pdc-final-chapter':'assets/media/pdc-final-chapter.webp',negativemc:'assets/media/negativemc.webp','negativemc-2':'assets/media/negativemc-2.webp'};
-  function assetUrl(path){return new URL(path,CONFIG).href.replace('/assets/site-config.json','/');}
+  function assetUrl(path){return new URL('../'+path,CONFIG).href;}
   function resolveProjectImages(){
     var nodes=[].slice.call(document.querySelectorAll('[data-ns-project-image]'));if(!nodes.length)return;
     nodes.forEach(function(img){
