@@ -35,12 +35,13 @@ document.addEventListener('DOMContentLoaded',async()=>{try{const r=await fetch('
     link.href=pageRoutes[p.id]||`proyecto.html?id=${encodeURIComponent(p.id)}`;
     link.dataset.phase=p.phase;
     link.dataset.status=p.status;
+    const art=artwork[p.id]||p.artwork||'';
     const media=document.createElement('div');
-    media.className=`card-media${artwork[p.id]?' has-image':''}`;
-    if(artwork[p.id]){
+    media.className=`card-media${art?' has-image':''}`;
+    if(art){
       const image=document.createElement('img');
       image.className='card-media-img';
-      image.src=artwork[p.id];
+      image.src=art;
       image.alt=`Portada de ${p.name}`;
       image.loading='lazy';
       media.appendChild(image);
