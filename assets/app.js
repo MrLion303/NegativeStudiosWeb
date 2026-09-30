@@ -27,42 +27,16 @@ document.addEventListener('DOMContentLoaded',()=>{
   document.querySelectorAll('a[href^="proyecto.html?id="]').forEach(link=>{try{const u=new URL(link.getAttribute('href'),location.href);const id=u.searchParams.get('id');if(canonicalProjectRoutes[id])link.href=canonicalProjectRoutes[id]}catch(_){}});
 
   const projectArtwork={'OVERLAND':'assets/media/overland.webp','Proyecto Y':'assets/media/proyecto-y.webp','PARASITES':'assets/media/parasites.webp','Negative Awards':'assets/media/negative-awards.webp','NEGATIVE AWARDS':'assets/media/negative-awards.webp','NegativeMC Episodio 3':'assets/media/negativemc-ep3.webp','NegativeMC 2':'assets/media/negativemc-2.webp','NegativeMC':'assets/media/negativemc.webp','Proyecto X':'assets/media/proyecto-x.webp','Permadeath Casual: REBIRTH':'assets/media/pdc-rebirth.webp','PDC: REBIRTH':'assets/media/pdc-rebirth.webp','Permadeath Casual: Final Chapter':'assets/media/pdc-final-chapter.webp'};
-  const projectGalleryRoutes={'OVERLAND':'overland','Proyecto Y':'proyecto-y','PARASITES':'parasites','Negative Awards':'negative-awards','NEGATIVE AWARDS':'negative-awards','NegativeMC Episodio 3':'negativemc-ep3','Proyecto X':'proyecto-x','Permadeath Casual: REBIRTH':'pdc-rebirth','PDC: REBIRTH':'pdc-rebirth','Permadeath Casual: Final Chapter':'pdc-final-chapter','NegativeMC':'negativemc','NegativeMC 2':'negativemc-2'};
-  let projectImageOverrides=null;
-  const loadProjectImageOverrides=async()=>{
-    if(projectImageOverrides)return projectImageOverrides;
-    try{
-      const r=await fetch('assets/site-config.json?v='+Date.now(),{cache:'no-store'}),cfg=await r.json(),pages=cfg.pages||{},out={};
-      Object.keys(projectGalleryRoutes).forEach(title=>{
-        const id=projectGalleryRoutes[title],page=pages['proyectos/'+id+'/index.html'];
-        if(!page||!page.attrs)return;
-        for(const key of Object.keys(page.attrs)){
-          const src=page.attrs[key]&&page.attrs[key].src;
-          if(src&&String(src).trim()){out[title]=String(src).trim();break}
-        }
-      });
-      projectImageOverrides=out;
-    }catch(e){projectImageOverrides={}}
-    return projectImageOverrides
-  };
-  const enhanceProjectCards=async()=>{
-    const overrides=await loadProjectImageOverrides();
-    document.querySelectorAll('.card').forEach(card=>{
-      const title=card.querySelector('h3')?.textContent?.trim(),src=overrides[title]||projectArtwork[title];
-      if(!src)return;
-      const media=card.querySelector('.card-media');
-      if(media){
-        let image=media.querySelector('.card-media-img');
-        if(!image){image=document.createElement('img');image.className='card-media-img';image.loading='lazy';media.prepend(image)}
-        image.src=src;
-        image.alt=title?'Arte oficial de '+title:'';
-        media.classList.add('has-image')
-      }else{
-        card.classList.add('archive-art-card');
-        card.style.setProperty('--archive-art','url("'+src+'")')
-      }
-    })
-  };
+  const enhanceProjectCards=()=>document.querySelectorAll('.card').forEach(card=>{
+    const title=card.querySelector('h3')?.textContent?.trim(),src=projectArtwork[title];
+    if(!src)return;
+    const media=card.querySelector('.card-media');
+    if(media&&!media.querySelector('.card-media-img')){
+      const image=document.createElement('img');image.className='card-media-img';image.src=src;image.alt=title?'Arte oficial de '+title:'';image.loading='lazy';media.prepend(image);media.classList.add('has-image')
+    }else if(!media){
+      card.classList.add('archive-art-card');card.style.setProperty('--archive-art','url("'+src+'")')
+    }
+  });
   enhanceProjectCards();document.addEventListener('projects-rendered',enhanceProjectCards);
 
   if(document.title.startsWith('Acerca de')&&!document.querySelector('#socialNetworks')){const faq=document.querySelector('.faq')?.closest('.section');const social=document.createElement('section');social.id='socialNetworks';social.className='section about-social-section';social.innerHTML=`<div class="container"><span class="eyebrow">Nuestra comunidad</span><div class="section-head"><div><h2 class="title" style="margin-top:14px">Encuéntranos<br>en internet.</h2></div><p class="muted">Twitter, YouTube, Patreon, Discord, Instagram, Facebook, Roblox y Spotify: las plataformas que forman parte de la presencia pública de NegativeStudios.</p></div><div class="about-social-grid">${socials.map(([name,url,img])=>`<a class="about-social-card reveal" href="${url}" target="_blank" rel="noreferrer"><img src="${img}" alt=""><span>${name}</span><b>↗</b></a>`).join('')}</div></div>`;faq?.insertAdjacentElement('beforebegin',social)}
