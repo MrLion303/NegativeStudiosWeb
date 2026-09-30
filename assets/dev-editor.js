@@ -313,7 +313,7 @@ async function uploadImage(el){
   });
   const d=await r.json().catch(()=>({}));
   if(!r.ok)throw Error(d.message||('GitHub '+r.status));
-  const url='https://mrlion303.github.io/NegativeStudiosWeb/'+path;
+  const url='https://raw.githubusercontent.com/'+REPO+'/main/'+path;
   $('#isrc').value=url;
   el.setAttribute('src',url);
   el.removeAttribute('srcset');
