@@ -27,8 +27,8 @@
     if(!path)return 'index.html';
     return path;
   }
-  var ART={overland:'assets/media/overland.webp','proyecto-y':'assets/media/proyecto-y.webp',parasites:'assets/media/parasites.webp','pc-rebirth':'assets/media/pdc-rebirth.webp','negative-awards':'assets/media/negative-awards.webp','negativemc-ep3':'assets/media/negativemc-ep3.webp','proyecto-x':'assets/media/proyecto-x.webp','permamuerte':'assets/media/pdc-final-chapter.webp','pdc-final-chapter':'assets/media/pdc-final-chapter.webp',negativemc:'assets/media/negativemc.webp','negativemc-2':'assets/media/negativemc-2.webp'};
-  function assetUrl(path){return new URL('../'+path,CONFIG).href;}
+  var ART=window.NS_PROJECT_ARTWORK||{};
+  function assetUrl(path){path=String(path||'');return path.indexOf('http://')===0||path.indexOf('https://')===0?path:new URL('../'+path,CONFIG).href;}
   function resolveProjectImages(){
     var nodes=[].slice.call(document.querySelectorAll('[data-ns-project-image]'));if(!nodes.length)return;
     function hasEditorImage(img){
@@ -61,7 +61,9 @@
     (pc.order||[]).forEach(function(g){var par=document.querySelector(g.parent);if(!par)return;g.children.forEach(function(s){var n=par.querySelector(':scope>'+s);if(n)par.appendChild(n)})});
   }
   function load(){
-    fetch(CONFIG+'?v='+Date.now(),{cache:'no-store'}).then(function(r){return r.json()}).then(function(cfg){window.NS_EDITOR_CONFIG=cfg;apply(cfg)}).catch(function(){});
+    function loadConfig(){fetch(CONFIG+'?v='+Date.now(),{cache:'no-store'}).then(function(r){return r.json()}).then(function(cfg){window.NS_EDITOR_CONFIG=cfg;apply(cfg)}).catch(function(){});}
+    if(window.NS_PROJECT_ARTWORK){Promise.resolve(window.NS_PROJECT_ARTWORK_READY).then(loadConfig);return;}
+    var artwork=document.createElement('script');artwork.src=new URL('project-artwork.js',CONFIG).href;artwork.onload=function(){ART=window.NS_PROJECT_ARTWORK||ART;Promise.resolve(window.NS_PROJECT_ARTWORK_READY).then(loadConfig);};artwork.onerror=loadConfig;document.head.appendChild(artwork);
   }
   window.NSApplyEditorConfig=load;
   window.NSGetEditorSelector=selector;
