@@ -33,10 +33,12 @@
     var delta=event.deltaY;
     if(event.deltaMode===1)delta*=32;
     else if(event.deltaMode===2)delta*=window.innerHeight;
-    if(!frame){targetY=window.scrollY;previousBehavior=root.style.scrollBehavior;root.style.scrollBehavior='auto';}
+    var starting=!frame;
+    if(starting){targetY=window.scrollY;previousBehavior=root.style.scrollBehavior;}
     var max=Math.max(0,root.scrollHeight-window.innerHeight);
     var next=Math.max(0,Math.min(max,targetY+delta*1.04));
     if(next===targetY)return;
+    if(starting)root.style.scrollBehavior='auto';
     event.preventDefault();targetY=next;
     if(!frame)frame=requestAnimationFrame(animate);
   },{passive:false});
