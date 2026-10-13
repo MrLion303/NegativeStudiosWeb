@@ -26,7 +26,7 @@
     'permamuerte':['permamuerte'],
     'pdc-final-chapter':['pdc-final-chapter']
   };
-  function imageUrl(path){return /^https?:\\/\\//i.test(String(path||''))?String(path):new URL(path,SITE_ROOT).href;}
+  function imageUrl(path){path=String(path||'');return path.indexOf('http://')===0||path.indexOf('https://')===0?path:new URL(path,SITE_ROOT).href;}
   function apply(root){
     (root||document).querySelectorAll('[data-ns-project-image]').forEach(function(image){
       var path=ARTWORK[image.getAttribute('data-ns-project-image')];
@@ -40,9 +40,9 @@
     .then(function(config){
       var pages=config&&config.pages||{};
       Object.keys(pages).forEach(function(page){
-        var match=page.match(/^proyectos\\/([^/]+)\\/index\\.html$/);
-        if(!match)return;
-        var ids=ROUTE_IDS[match[1]];
+        var parts=page.split('/');
+        if(parts.length!==3||parts[0]!=='proyectos'||parts[2]!=='index.html')return;
+        var ids=ROUTE_IDS[parts[1]];
         if(!ids)return;
         var attrs=pages[page]&&pages[page].attrs||{};
         var imageSource='';
