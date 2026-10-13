@@ -41,17 +41,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   set('#sidePhase',project.phase);
   set('#sidePeriod',project.dates||project.year);
 
-  const mediaById={
-    'negativemc':'assets/media/negativemc.webp',
-    'negativemc-2':'assets/media/negativemc-2.webp',
-    'negativemc-ep3':'assets/media/negativemc-ep3.webp',
-    'overland':'assets/media/overland.webp',
-    'proyecto-y':'assets/media/proyecto-y.webp',
-    'parasites':'assets/media/parasites.webp',
-    'negative-awards':'assets/media/negative-awards.webp',
-    'proyecto-x':'assets/media/proyecto-x.webp'
-  };
-  const mediaSrc=mediaById[id];
+  const mediaSrc=window.NS_PROJECT_ARTWORK?.[id];
   if(mediaSrc){
     const band=document.querySelector('#projectMediaBand');
     const image=document.querySelector('#projectMedia');
