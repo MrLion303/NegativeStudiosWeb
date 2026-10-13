@@ -1,6 +1,7 @@
 document.addEventListener('DOMContentLoaded',()=>{
   document.documentElement.classList.remove('ns-loading');document.documentElement.classList.add('ns-ready');if(!document.querySelector('script[src*="dev-runtime.js"]')){const ds=document.createElement('script');ds.src='assets/dev-runtime.js?v=8';document.head.appendChild(ds)}
-  const VERSION='20260929b';
+  const VERSION='20261012a';
+  const projectArtworkReady=window.NS_PROJECT_ARTWORK_READY||new Promise(resolve=>{const script=document.createElement('script');script.src='assets/project-artwork.js?v=20261012a';script.onload=()=>Promise.resolve(window.NS_PROJECT_ARTWORK_READY).then(resolve);script.onerror=resolve;document.head.appendChild(script)});
   const icon=document.querySelector('link[rel="icon"]');if(icon)icon.href='assets/media/brand-icon.webp';
   if(!document.querySelector('link[href^="assets/extras.css"]')){const s=document.createElement('link');s.rel='stylesheet';s.href=`assets/extras.css?v=${VERSION}`;document.head.appendChild(s)}
   if(!document.querySelector('link[href*="refresh.css"]')){const s=document.createElement('link');s.rel='stylesheet';s.href=`assets/refresh.css?v=${VERSION}`;document.head.appendChild(s)}
@@ -8,12 +9,12 @@ document.addEventListener('DOMContentLoaded',()=>{
   document.querySelectorAll('.brand img').forEach(img=>{img.src='assets/media/brand-logo.webp';img.alt='NegativeStudios'});
 
   const socials=[
-    ['YouTube','https://www.youtube.com/@NegativeStudios','https://cdn.simpleicons.org/youtube/ffffff'],
+    ['YouTube','https://www.youtube.com/@NegativeStudios_','https://cdn.simpleicons.org/youtube/ffffff'],
     ['X / Twitter','https://x.com/StudiosNegative','https://cdn.simpleicons.org/x/ffffff'],
     ['Patreon','https://www.patreon.com/NegativeStudios','https://cdn.simpleicons.org/patreon/ffffff'],
     ['Discord','https://discord.gg/nKxBA7qzAU','https://cdn.simpleicons.org/discord/ffffff'],
-    ['Instagram','https://www.instagram.com/negativestudios/','https://cdn.simpleicons.org/instagram/ffffff'],
-    ['Spotify','https://open.spotify.com/search/NegativeStudios','https://cdn.simpleicons.org/spotify/ffffff'],
+    ['Instagram','https://www.instagram.com/negativestudios_/?hl=es','https://cdn.simpleicons.org/instagram/ffffff'],
+    ['Spotify','https://open.spotify.com/intl-es/artist/6oYt0nvLVZoTrGCe9XXbcO?si=XOCONaPLQNiIi954FPzqrA','https://cdn.simpleicons.org/spotify/ffffff'],
     ['Facebook','https://www.facebook.com/NegativeStudios','https://cdn.simpleicons.org/facebook/ffffff'],
     ['Roblox','https://www.roblox.com/search/groups?keyword=NegativeStudios','https://cdn.simpleicons.org/roblox/ffffff']
   ];
@@ -21,22 +22,24 @@ document.addEventListener('DOMContentLoaded',()=>{
   const footerHTML=()=>`<footer class="footer banned-footer"><div class="container banned-footer-inner"><div class="banned-footer-top"><a class="footer-wordmark" href="index.html"><img src="assets/media/brand-logo.webp" alt="NegativeStudios"><span><b>NEGATIVE</b><br>STUDIOS<sup>®</sup></span></a><div class="footer-column"><h4>NOSOTROS</h4><a href="acerca.html">Sobre nosotros</a><a href="colaboradores.html">Colaboradores</a><a href="contacto.html">Contacto</a></div><div class="footer-column"><h4>LEGAL</h4><a href="legal.html#terminos">Términos &amp;<br>Condiciones</a><a href="legal.html#privacidad">Política de<br>Privacidad</a></div><div class="footer-column"><h4>COMMUNITY</h4><a href="https://discord.gg/nKxBA7qzAU" target="_blank" rel="noreferrer">Discord</a></div></div><div class="banned-footer-divider"></div><div class="banned-footer-bottom"><p>© Todos los derechos reservados. <a href="index.html">NegativeStudios</a>. Vigente desde 2022.</p>${socialIcons()}</div></div></footer>`;
   const footer=document.querySelector('.footer');if(footer)footer.outerHTML=footerHTML();
 
-  const oldCta=document.querySelector('.nav-cta');if(oldCta){const actions=document.createElement('div');actions.className='nav-actions';actions.innerHTML=`<div class="nav-socials"><a class="nav-social" href="https://x.com/StudiosNegative" target="_blank" rel="noreferrer">X</a><a class="nav-social" href="https://discord.gg/nKxBA7qzAU" target="_blank" rel="noreferrer">Discord</a></div><a class="client-download" href="descargar.html"><span class="client-download-label">Descargar Negative Client</span><svg class="client-download-icon" aria-hidden="true" viewBox="0 0 24 24" fill="none"><path d="M12 3v11"></path><path d="m7 10 5 5 5-5"></path><path d="M5 20h14"></path></svg></a>`;oldCta.replaceWith(actions)}
+  const oldCta=document.querySelector('.nav-cta');if(oldCta){const actions=document.createElement('div');actions.className='nav-actions';actions.innerHTML=`<a class="client-download" href="descargar.html"><span class="client-download-label">Descargar Negative Client</span><svg class="client-download-icon" aria-hidden="true" viewBox="0 0 24 24" fill="none"><path d="M12 3v11"></path><path d="m7 10 5 5 5-5"></path><path d="M5 20h14"></path></svg></a>`;oldCta.replaceWith(actions)}
 
   const canonicalProjectRoutes={'overland':'proyectos/overland/index.html','proyecto-y':'proyectos/proyecto-y/index.html','parasites':'proyectos/parasites/index.html','jujutsu-kaisen':'proyectos/culling-games/index.html','pc-rebirth':'proyectos/pdc-rebirth/index.html','negative-awards':'proyectos/negative-awards/index.html','negativemc-ep3':'proyectos/negativemc-episodio-3/index.html','proyecto-x':'proyectos/proyecto-x/index.html','pc-final':'proyectos/pdc-final-chapter/index.html','permamuerte':'proyectos/permamuerte/index.html'};
   document.querySelectorAll('a[href^="proyecto.html?id="]').forEach(link=>{try{const u=new URL(link.getAttribute('href'),location.href);const id=u.searchParams.get('id');if(canonicalProjectRoutes[id])link.href=canonicalProjectRoutes[id]}catch(_){}});
 
-  const projectArtwork={'OVERLAND':'assets/media/overland.webp','Proyecto Y':'assets/media/proyecto-y.webp','PARASITES':'assets/media/parasites.webp','Negative Awards':'assets/media/negative-awards.webp','NEGATIVE AWARDS':'assets/media/negative-awards.webp','NegativeMC Episodio 3':'assets/media/negativemc-ep3.webp','NegativeMC 2':'assets/media/negativemc-2.webp','NegativeMC':'assets/media/negativemc.webp','Proyecto X':'assets/media/proyecto-x.webp','Permadeath Casual: REBIRTH':'assets/media/pdc-rebirth.webp','PDC: REBIRTH':'assets/media/pdc-rebirth.webp','Permadeath Casual: Final Chapter':'assets/media/pdc-final-chapter.webp'};
-  const enhanceProjectCards=()=>document.querySelectorAll('.card').forEach(card=>{
-    const title=card.querySelector('h3')?.textContent?.trim(),src=projectArtwork[title];
+  const projectArtworkIds={'OVERLAND':'overland','Proyecto Y':'proyecto-y','PARASITES':'parasites','Negative Awards':'negative-awards','NEGATIVE AWARDS':'negative-awards','NegativeMC Episodio 3':'negativemc-ep3','NegativeMC 2':'negativemc-2','NegativeMC':'negativemc','Proyecto X':'proyecto-x','Permadeath Casual: REBIRTH':'pc-rebirth','PDC: REBIRTH':'pc-rebirth','Permadeath Casual: Final Chapter':'pdc-final-chapter'};
+  const enhanceProjectCards=()=>Promise.resolve(projectArtworkReady).then(()=>document.querySelectorAll('.card').forEach(card=>{
+    const title=card.querySelector('h3')?.textContent?.trim(),id=projectArtworkIds[title],src=window.NS_PROJECT_ARTWORK?.[id];
     if(!src)return;
     const media=card.querySelector('.card-media');
-    if(media&&!media.querySelector('.card-media-img')){
-      const image=document.createElement('img');image.className='card-media-img';image.src=src;image.alt=title?'Arte oficial de '+title:'';image.loading='lazy';media.prepend(image);media.classList.add('has-image')
-    }else if(!media){
+    if(media){
+      let image=media.querySelector('.card-media-img');
+      if(!image){image=document.createElement('img');image.className='card-media-img';media.prepend(image)}
+      image.src=src;image.alt=title?'Arte oficial de '+title:'';image.dataset.nsProjectImage=id;image.loading='lazy';media.classList.add('has-image');
+    }else{
       card.classList.add('archive-art-card');card.style.setProperty('--archive-art','url("'+src+'")')
     }
-  });
+  }));
   enhanceProjectCards();document.addEventListener('projects-rendered',enhanceProjectCards);
 
   if(document.title.startsWith('Acerca de')&&!document.querySelector('#socialNetworks')){const faq=document.querySelector('.faq')?.closest('.section');const social=document.createElement('section');social.id='socialNetworks';social.className='section about-social-section';social.innerHTML=`<div class="container"><span class="eyebrow">Nuestra comunidad</span><div class="section-head"><div><h2 class="title" style="margin-top:14px">Encuéntranos<br>en internet.</h2></div><p class="muted">Twitter, YouTube, Patreon, Discord, Instagram, Facebook, Roblox y Spotify: las plataformas que forman parte de la presencia pública de NegativeStudios.</p></div><div class="about-social-grid">${socials.map(([name,url,img])=>`<a class="about-social-card reveal" href="${url}" target="_blank" rel="noreferrer"><img src="${img}" alt=""><span>${name}</span><b>↗</b></a>`).join('')}</div></div>`;faq?.insertAdjacentElement('beforebegin',social)}

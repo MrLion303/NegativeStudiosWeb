@@ -1,5 +1,6 @@
 (function(){
   var CONFIG=(document.currentScript?new URL('site-config.json',document.currentScript.src).href:'assets/site-config.json');
+  if(!document.querySelector('script[data-ns-inertial-scroll]')){var motion=document.createElement('script');motion.src=new URL('inertial-scroll.js?v=20261012a',CONFIG).href;motion.setAttribute('data-ns-inertial-scroll','');document.head.appendChild(motion);}
   function esc(v){return String(v).replace(/[^a-zA-Z0-9_-]/g,'\\$&')}
   function selector(el){
     if(!el||el.nodeType!==1)return '';
