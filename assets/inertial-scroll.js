@@ -6,7 +6,8 @@
   var root=document.documentElement;
   function restoreBehavior(){root.style.scrollBehavior=previousBehavior;}
   function stop(){
-    if(frame){cancelAnimationFrame(frame);frame=0;}
+    if(!frame){targetY=window.scrollY;return;}
+    cancelAnimationFrame(frame);frame=0;
     targetY=window.scrollY;
     restoreBehavior();
   }
