@@ -28,7 +28,7 @@
     return path;
   }
   var ART=window.NS_PROJECT_ARTWORK||{};
-  function assetUrl(path){return /^https?:\\/\\//i.test(String(path||''))?String(path):new URL('../'+path,CONFIG).href;}
+  function assetUrl(path){path=String(path||'');return path.indexOf('http://')===0||path.indexOf('https://')===0?path:new URL('../'+path,CONFIG).href;}
   function resolveProjectImages(){
     var nodes=[].slice.call(document.querySelectorAll('[data-ns-project-image]'));if(!nodes.length)return;
     function hasEditorImage(img){
