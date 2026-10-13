@@ -28,7 +28,7 @@
     return path;
   }
   var ART=window.NS_PROJECT_ARTWORK||{};
-  function assetUrl(path){return new URL('../'+path,CONFIG).href;}
+  function assetUrl(path){return /^https?:\\/\\//i.test(String(path||''))?String(path):new URL('../'+path,CONFIG).href;}
   function resolveProjectImages(){
     var nodes=[].slice.call(document.querySelectorAll('[data-ns-project-image]'));if(!nodes.length)return;
     function hasEditorImage(img){
@@ -62,8 +62,8 @@
   }
   function load(){
     function loadConfig(){fetch(CONFIG+'?v='+Date.now(),{cache:'no-store'}).then(function(r){return r.json()}).then(function(cfg){window.NS_EDITOR_CONFIG=cfg;apply(cfg)}).catch(function(){});}
-    if(window.NS_PROJECT_ARTWORK){loadConfig();return;}
-    var artwork=document.createElement('script');artwork.src=new URL('project-artwork.js',CONFIG).href;artwork.onload=loadConfig;artwork.onerror=loadConfig;document.head.appendChild(artwork);
+    if(window.NS_PROJECT_ARTWORK){Promise.resolve(window.NS_PROJECT_ARTWORK_READY).then(loadConfig);return;}
+    var artwork=document.createElement('script');artwork.src=new URL('project-artwork.js',CONFIG).href;artwork.onload=function(){ART=window.NS_PROJECT_ARTWORK||ART;Promise.resolve(window.NS_PROJECT_ARTWORK_READY).then(loadConfig);};artwork.onerror=loadConfig;document.head.appendChild(artwork);
   }
   window.NSApplyEditorConfig=load;
   window.NSGetEditorSelector=selector;
