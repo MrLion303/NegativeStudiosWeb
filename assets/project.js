@@ -47,10 +47,12 @@ document.addEventListener('DOMContentLoaded',()=>{
     const image=document.querySelector('#projectMedia');
     if(image){
       image.src=mediaSrc;
+      image.dataset.nsProjectImage=id;
       image.alt=`Arte oficial de ${project.name}`;
       image.decoding='async';
     }
     if(band) band.hidden=false;
+    window.NS_PROJECT_ARTWORK_READY?.then(()=>window.NSApplyProjectArtwork?.(band||document));
   }
 
   const legacy=document.querySelector('#legacyLink');
