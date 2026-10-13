@@ -3,6 +3,7 @@ document.addEventListener('DOMContentLoaded',async()=>{
   if(!grid)return;
   try{
     if(!window.NS_DATA||!Array.isArray(window.NS_DATA.projects))return;
+    await window.NS_PROJECT_ARTWORK_READY;
     try{
       const r=await fetch('assets/project-registry.json?v='+Date.now(),{cache:'no-store'});
       if(r.ok){
@@ -20,30 +21,15 @@ document.addEventListener('DOMContentLoaded',async()=>{
       'pdc-final-chapter':'proyectos/pdc-final-chapter/index.html'
     };
     const hiddenProjects=new Set(['caos-games','guerra-nexus','the-200-rooms','the-100-rooms']);
-    let editorImageOverrides={};
-    try{
-      const er=await fetch('assets/site-config.json?v='+Date.now(),{cache:'no-store'});
-      if(er.ok){
-        const ec=await er.json(),pages=ec.pages||{};
-        Object.keys(pages).forEach(key=>{
-          const m=key.match(/^proyectos\/([^/]+)\/index\.html$/);
-          if(!m)return;
-          const attrs=pages[key]?.attrs||{};
-          for(const s of Object.keys(attrs)){
-            const src=attrs[s]?.src;
-            if(src&&String(src).trim()){editorImageOverrides[m[1]]=String(src).trim();break}
-          }
-        });
-      }
-    }catch(e){}
+
     grid.innerHTML='';
     let index=0;
     window.NS_DATA.projects.forEach(p=>{
       if(!p||hiddenProjects.has(p.id))return;
-      const original=window.NS_ORIGINAL_CONTENT?.[p.id],art=editorImageOverrides[p.id]||window.NS_PROJECT_ARTWORK?.[p.id]||p.artwork||'';
+      const original=window.NS_ORIGINAL_CONTENT?.[p.id],art=window.NS_PROJECT_ARTWORK?.[p.id]||p.artwork||'';
       const link=document.createElement('a');link.className='card project-card reveal';link.href=pageRoutes[p.id]||p.route||`proyecto.html?id=${encodeURIComponent(p.id)}`;link.dataset.phase=p.phase||'';link.dataset.status=p.status||'';link.dataset.projectId=p.id;link.dataset.editorSelectable='project-card';
       const media=document.createElement('div');media.className='card-media'+(art?' has-image':'');
-      if(art){const image=document.createElement('img');image.className='card-media-img';image.src=art;image.alt='Portada de '+p.name;image.loading='lazy';image.onerror=()=>{image.style.display='none'};media.appendChild(image)}
+      if(art){const image=document.createElement('img');image.className='card-media-img';image.src=art;image.alt='Portada de '+p.name;image.dataset.nsProjectImage=p.id;image.loading='lazy';image.onerror=()=>{image.style.display='none'};media.appendChild(image)}
       const number=document.createElement('span');number.className='card-index';number.textContent=String(++index).padStart(2,'0');media.appendChild(number);
       const body=document.createElement('div');body.className='card-body';
       const pill=document.createElement('span');pill.className=`pill ${/próx|activo|desarrollo|anunciado/i.test(p.status||'')?'upcoming':''}`;pill.textContent=p.status||'';
