@@ -803,22 +803,73 @@
       link.href = new URL('cuenta.html', SITE_ROOT).href; link.textContent = 'Iniciar sesión';
       panel.append(text, link); host.appendChild(panel); return;
     }
+
     const form = document.createElement('form'); form.className = 'community-composer';
-    const toolbar = document.createElement('div'); toolbar.className = 'community-toolbar'; toolbar.setAttribute('aria-label', 'Formato del texto');
+    const layout = document.createElement('div'); layout.className = 'community-composer-layout';
+    layout.appendChild(avatar(sessionProfile, 'community-avatar community-avatar--composer'));
+    const main = document.createElement('div'); main.className = 'community-composer-main';
     const editor = document.createElement('div'); editor.className = 'community-editor'; editor.contentEditable = 'true';
-    editor.setAttribute('role', 'textbox'); editor.setAttribute('aria-multiline', 'true'); editor.dataset.placeholder = '¿Qué quieres compartir con la comunidad?';
+    editor.setAttribute('role', 'textbox'); editor.setAttribute('aria-multiline', 'true'); editor.dataset.placeholder = '¿Qué está pasando?';
+    editor.setAttribute('aria-label', 'Escribe una publicación');
     editor.addEventListener('paste', event => {
       event.preventDefault();
       const text = event.clipboardData?.getData('text/plain') || '';
       document.execCommand('insertText', false, text);
     });
-    toolbar.append(
-      makeToolbarButton('B', 'Negrita', () => { editor.focus(); document.execCommand('bold'); }),
-      makeToolbarButton('I', 'Cursiva', () => { editor.focus(); document.execCommand('italic'); }),
-      makeToolbarButton('A+', 'Texto más grande', () => { editor.focus(); document.execCommand('fontSize', false, '5'); }),
-      makeToolbarButton('A−', 'Texto más pequeño', () => { editor.focus(); document.execCommand('fontSize', false, '2'); })
-    );
-    const imageInput = document.createElement('input'); imageInput.type = 'file'; imageInput.accept = 'image/png,image/jpeg,image/webp'; imageInput.hidden = true;
+
+    const toolbar = document.createElement('div'); toolbar.className = 'community-toolbar'; toolbar.setAttribute('aria-label', 'Formato del texto');
+    const bold = makeToolbarButton('B', 'Negrita', () => { editor.focus(); document.execCommand('bold'); }); bold.dataset.tool = 'bold';
+    const italic = makeToolbarButton('I', 'Cursiva', () => { editor.focus(); document.execCommand('italic'); }); italic.dataset.tool = 'italic';
+    const larger = makeToolbarButton('A+', 'Texto más grande', () => { editor.focus(); document.execCommand('fontSize', false, '5'); });
+    const smaller = makeToolbarButton('A−', 'Texto más pequeño', () => { editor.focus(); document.execCommand('fontSize', false, '2'); });
+    toolbar.append(bold, italic, larger, smaller);
+
+    const mentionSuggestions = document.createElement('div');
+    mentionSuggestions.className = 'community-mention-suggestions';
+    mentionSuggestions.hidden = true;
+    mentionSuggestions.setAttribute('role', 'listbox');
+    let mentionQueryVersion = 0;
+    const hideMentions = () => { mentionSuggestions.replaceChildren(); mentionSuggestions.hidden = true; };
+    const updateMentions = async () => {
+      const version = ++mentionQueryVersion;
+      const match = editor.innerText.match(/(?:^|\s)@([a-zA-Z0-9_]{0,24})$/);
+      if (!match) { hideMentions(); return; }
+      const query = (match[1] || '').toLowerCase();
+      let people = [];
+      try {
+        people = await loadProfiles(
+          'id,username,display_name,avatar_url,profile_badges(is_mod, is_verified)',
+          fields => {
+            let request = client.from('profiles').select(fields).neq('id', user.id).limit(6);
+            if (query) request = request.ilike('username', query + '%');
+            return request;
+          }
+        );
+      } catch (_) { hideMentions(); return; }
+      if (version !== mentionQueryVersion) return;
+      mentionSuggestions.replaceChildren();
+      if (!people.length) { hideMentions(); return; }
+      people.forEach(person => {
+        const option = document.createElement('button');
+        option.type = 'button'; option.className = 'community-mention-option'; option.setAttribute('role', 'option');
+        option.addEventListener('mousedown', event => event.preventDefault());
+        option.appendChild(avatar(person, 'community-avatar'));
+        const copy = document.createElement('span'); copy.className = 'community-mention-option-copy';
+        const name = document.createElement('strong'); name.textContent = person.display_name || person.username;
+        const handle = document.createElement('small'); handle.textContent = '@' + person.username;
+        copy.append(name, handle); option.appendChild(copy);
+        option.addEventListener('click', () => {
+          editor.focus();
+          document.execCommand('insertText', false, '@' + person.username + ' ');
+          hideMentions();
+          updateComposerCounter();
+        });
+        mentionSuggestions.appendChild(option);
+      });
+      mentionSuggestions.hidden = false;
+    };
+    const imageInput = document.createElement('input');
+    imageInput.type = 'file'; imageInput.accept = 'image/png,image/jpeg,image/webp'; imageInput.hidden = true;
     const imageButton = makeToolbarButton('＋ Imagen', 'Adjuntar una imagen', () => imageInput.click());
     toolbar.appendChild(imageButton);
     const imagePreview = document.createElement('div'); imagePreview.className = 'community-image-preview'; imagePreview.hidden = true;
@@ -837,13 +888,21 @@
         imagePreview.append(img, remove);
       }
     });
+
     const status = document.createElement('div'); status.className = 'community-status'; status.hidden = true;
-    const footer = document.createElement('div'); footer.className = 'community-composer-footer';
+    const footer = document.createElement('div'); footer.className = 'community-compose-bottom';
     const counter = document.createElement('span'); counter.className = 'community-muted'; counter.textContent = '0 / 5000';
-    editor.addEventListener('input', () => { counter.textContent = Math.min(editor.innerText.length, 5000) + ' / 5000'; });
     const submit = document.createElement('button'); submit.type = 'submit'; submit.className = 'community-button community-button--primary'; submit.textContent = 'Publicar';
-    footer.append(counter, submit);
-    form.append(toolbar, editor, imageInput, imagePreview, status, footer);
+    const footerGroup = document.createElement('div'); footerGroup.className = 'community-composer-footer'; footerGroup.appendChild(submit);
+    footer.append(counter, footerGroup);
+    function updateComposerCounter() {
+      counter.textContent = Math.min(editor.innerText.length, 5000) + ' / 5000';
+      updateMentions();
+    }
+    editor.addEventListener('input', updateComposerCounter);
+    main.append(editor, mentionSuggestions, toolbar, imageInput, imagePreview, status);
+    layout.appendChild(main);
+    form.append(layout, footer);
     form.addEventListener('submit', async event => {
       event.preventDefault();
       const contentText = editor.innerText.trim();
@@ -852,25 +911,41 @@
       if (contentText.length > 5000 || contentHtml.length > 15000) { showStatus(status, 'La publicación supera el límite permitido.', 'error'); return; }
       submit.disabled = true; submit.textContent = 'Publicando…'; showStatus(status, '', '');
       let uploadedPath = null;
+      let createdPostId = null;
       try {
         let imageUrl = null;
         if (selectedImage) {
           const ext = selectedImage.type === 'image/png' ? 'png' : selectedImage.type === 'image/webp' ? 'webp' : 'jpg';
-          uploadedPath = user.id + '/' + crypto.randomUUID() + '.' + ext;
+          uploadedPath = user.id + '/' + (crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36)) + '.' + ext;
           const upload = await client.storage.from('post-images').upload(uploadedPath, selectedImage, { contentType: selectedImage.type, upsert: false });
           if (upload.error) throw upload.error;
           imageUrl = client.storage.from('post-images').getPublicUrl(uploadedPath).data.publicUrl;
         }
         const result = await client.from('forum_posts').insert({
           user_id: user.id, content_html: contentHtml, content_text: contentText, image_url: imageUrl
-        });
+        }).select('id').single();
         if (result.error) throw result.error;
+        createdPostId = result.data?.id;
+        const matches = Array.from(contentText.matchAll(/(?:^|\s)@([a-zA-Z0-9_]{3,24})/g)).map(item => item[1].toLowerCase());
+        const usernames = Array.from(new Set(matches));
+        if (createdPostId && usernames.length) {
+          try {
+            const mentioned = await client.from('profiles').select('id,username').in('username', usernames);
+            if (!mentioned.error && mentioned.data?.length) {
+              const rows = mentioned.data.filter(person => person.id !== user.id).map(person => ({ post_id: createdPostId, mentioned_user_id: person.id }));
+              if (rows.length) {
+                const insertMentions = await client.from('forum_post_mentions').upsert(rows, { onConflict: 'post_id,mentioned_user_id', ignoreDuplicates: true });
+                if (insertMentions.error) showStatus(status, 'Publicación compartida; las menciones se activarán cuando actualices Supabase.', 'error');
+              }
+            }
+          } catch (_) {}
+        }
         editor.replaceChildren(); editor.innerHTML = '';
-        selectedImage = null; imageInput.value = ''; imagePreview.replaceChildren(); imagePreview.hidden = true; counter.textContent = '0 / 5000';
-        showStatus(status, 'Publicación compartida.', 'success');
+        selectedImage = null; imageInput.value = ''; imagePreview.replaceChildren(); imagePreview.hidden = true; counter.textContent = '0 / 5000'; hideMentions();
+        if (!status.dataset.kind || status.dataset.kind !== 'error') showStatus(status, 'Publicación compartida.', 'success');
         await loadForumFeed();
       } catch (error) {
-        if (uploadedPath) { try { await client.storage.from('post-images').remove([uploadedPath]); } catch (_) {} }
+        if (uploadedPath && !createdPostId) { try { await client.storage.from('post-images').remove([uploadedPath]); } catch (_) {} }
         showStatus(status, error?.message || 'No se pudo publicar. Comprueba la configuración de Supabase.', 'error');
       } finally { submit.disabled = false; submit.textContent = 'Publicar'; }
     });
