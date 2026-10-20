@@ -946,8 +946,8 @@
 
     const button = document.createElement('button');
     button.type = 'button';
-    button.className = 'btn ghost public-profile-admin-button';
-    button.textContent = 'Badges';
+    button.className = 'btn primary public-profile-admin-button';
+    button.innerHTML = '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l2.2 2.1 3-.1.8 2.9 2.5 1.7-1.2 2.8.7 2.9-2.8 1.1-1.5 2.6-3-.6-2.6 1.4-2.1-2.2-3 .1-.8-2.9-2.5-1.7 1.2-2.8-.7-2.9 2.8-1.1 1.5-2.6 3 .6z"/><path d="M9 12l2 2 4-4"/></svg>';
     button.setAttribute('aria-label', 'Administrar badges');
     button.title = 'Administrar badges';
     button.addEventListener('click', () => {
