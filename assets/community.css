@@ -104,3 +104,27 @@
  .public-profile-page{padding-top:26px}
  #publicProfileFriendAction{justify-content:flex-start;padding-top:10px}
 }
+
+
+/* Contador de amistades al estilo de las métricas de un perfil social. */
+.public-profile-friends-count{display:inline-flex;align-items:center;gap:5px;padding:0;border:0;background:transparent;color:var(--muted);font:inherit;font-size:.86rem;cursor:pointer;text-align:left}
+.public-profile-friends-count strong{font-weight:850;color:var(--text)}
+.public-profile-friends-count:hover strong,.public-profile-friends-count:focus-visible strong{color:#8feef3;text-decoration:underline}
+.public-profile-friends-count:disabled{opacity:.65;cursor:default}
+.public-profile-friends-count:focus-visible{outline:2px solid var(--accent);outline-offset:4px;border-radius:4px}
+.community-dialog{width:min(520px,calc(100% - 28px));max-width:520px;max-height:min(78vh,760px);padding:0;border:1px solid rgba(122,184,255,.25);border-radius:18px;background:#071321;color:var(--text);box-shadow:0 24px 90px rgba(0,0,0,.65)}
+.community-dialog::backdrop{background:rgba(0,5,12,.72);backdrop-filter:blur(4px)}
+.community-dialog-panel{display:grid;grid-template-rows:auto minmax(0,1fr);max-height:min(78vh,760px);padding:18px}
+.community-dialog-header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-bottom:14px;border-bottom:1px solid var(--line)}
+.community-dialog-header h2{font-size:1.12rem;margin:0;overflow-wrap:anywhere}
+.community-dialog-close{width:36px;height:36px;flex:0 0 36px;border:1px solid var(--line);border-radius:10px;background:rgba(255,255,255,.04);color:var(--text);font-size:1.55rem;line-height:1;cursor:pointer}
+.community-dialog-close:hover{background:rgba(255,255,255,.09)}
+.community-friend-list{display:grid;gap:0;overflow:auto;padding-top:6px}
+.community-friend-list-item{display:grid;grid-template-columns:42px minmax(0,1fr);align-items:center;gap:12px;padding:12px 2px;border-bottom:1px solid rgba(122,184,255,.1);min-width:0}
+.community-friend-avatar-link{display:block;width:42px;height:42px}
+.community-friend-avatar-link .community-avatar{width:42px;height:42px}
+.community-friend-copy{display:grid;gap:4px;min-width:0}
+.community-friend-list-item .community-name-line{gap:6px}
+.community-friend-list-item .community-name{font-size:.9rem}
+.community-friend-list-item .ns-badge{width:1.12em;height:1.12em}
+.community-friend-list .community-empty,.community-friend-list .community-status{margin-top:13px}
