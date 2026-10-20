@@ -140,7 +140,9 @@
   }
 
   function relationTo(profile, user, requests) {
-    if (!user || !profile || profile.id === user.id) return 'self';
+    if (!profile) return 'self';
+    if (!user) return 'none';
+    if (profile.id === user.id) return 'self';
     const match = requests.find(row =>
       row.status === 'accepted' &&
       ((row.requester_id === user.id && row.recipient_id === profile.id) ||
@@ -251,7 +253,8 @@
         'id, username, display_name, avatar_url, created_at, profile_badges(is_mod, is_verified)',
         fields => client.from('profiles').select(fields).order('created_at', { ascending: false }).limit(40)
       );
-      const requests = sessionUser ? await getFriendRequests(sessionUser) : [];
+      let requests = [];
+      if (sessionUser) { try { requests = await getFriendRequests(sessionUser); } catch (_) {} }
       const excluded = new Set([sessionUser?.id, ...(excludeIds || [])].filter(Boolean));
       const candidates = profiles.filter(p => {
         if (excluded.has(p.id)) return false;
@@ -472,7 +475,7 @@
         friendHost.replaceChildren();
         friendHost.hidden = !activeProfile || !sessionUser || activeProfile.id === sessionUser.id;
         if (activeProfile && activeProfile.id !== sessionUser?.id) {
-          profileRequests = await getFriendRequests(sessionUser);
+          if (sessionUser) { try { profileRequests = await getFriendRequests(sessionUser); } catch (_) { profileRequests = []; } }
           friendHost.hidden = false;
           friendHost.appendChild(friendControls(activeProfile, profileRequests, 'community-friend-actions'));
         }
