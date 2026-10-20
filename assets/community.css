@@ -195,3 +195,16 @@
 
 .community-overflow-menu button:disabled{opacity:.48;cursor:default}
 .community-overflow-menu button:disabled:hover,.project-comment-menu button:disabled:hover{background:transparent}
+
+
+/* Acceso de campana junto a las sugerencias, con contador compartido con la navegación. */
+.community-notification-shortcut h2{margin-bottom:12px}
+.community-notification-shortcut-link{display:grid;grid-template-columns:38px minmax(0,1fr) auto;align-items:center;gap:10px;padding:12px;border:1px solid rgba(122,184,255,.15);border-radius:12px;background:rgba(102,194,255,.035);color:var(--text);text-decoration:none;transition:background .15s,border-color .15s}
+.community-notification-shortcut-link[hidden]{display:none!important}
+.community-notification-shortcut-link:hover{background:rgba(102,194,255,.08);border-color:rgba(102,194,255,.35)}
+.community-notification-shortcut-icon{display:grid;place-items:center;width:38px;height:38px;border:1px solid rgba(122,184,255,.22);border-radius:50%;color:#8feef3;background:rgba(102,194,255,.06)}
+.community-notification-shortcut-link>span:nth-child(2){display:grid;gap:3px;min-width:0}
+.community-notification-shortcut-link strong{font-size:.85rem}
+.community-notification-shortcut-link small{color:var(--muted);font-size:.72rem;line-height:1.4}
+.community-mention-link{color:#8feef3;font-weight:800;text-decoration:none;border-radius:3px}
+.community-mention-link:hover{text-decoration:underline;color:#c7fbff}
