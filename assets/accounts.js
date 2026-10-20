@@ -349,12 +349,33 @@
       event.preventDefault();
       withBusy(event.currentTarget, async () => {
         if (!requireClient()) return;
-        const { data, error } = await client.auth.signInWithPassword({
-          email: $('#loginEmail').value.trim(),
-          password: $('#loginPassword').value
+        const identifier = $('#loginEmail').value.trim();
+        const password = $('#loginPassword').value;
+        if (!identifier) throw new Error('Escribe tu correo o nombre de usuario.');
+        if (identifier.includes('@')) {
+          const { data, error } = await client.auth.signInWithPassword({ email: identifier, password });
+          if (error) throw error;
+          if (data.user) location.assign(profileHref(null));
+          return;
+        }
+        const { data, error } = await client.functions.invoke('login-by-username', {
+          body: { username: normalizeUsername(identifier), password }
         });
-        if (error) throw error;
-        if (data.user) location.assign(profileHref(null));
+        if (error) {
+          const detail = error.context?.body?.error || error.message;
+          if (/not found|failed to send|fetch/i.test(String(detail))) {
+            throw new Error('El inicio con nombre de usuario necesita desplegar login-by-username en Supabase. También puedes entrar con tu correo.');
+          }
+          throw new Error(detail || 'No se pudo iniciar sesión.');
+        }
+        if (data?.error) throw new Error(data.error);
+        if (!data?.access_token || !data?.refresh_token) throw new Error('El servidor no devolvió una sesión válida.');
+        const { data: sessionData, error: sessionError } = await client.auth.setSession({
+          access_token: data.access_token,
+          refresh_token: data.refresh_token
+        });
+        if (sessionError) throw sessionError;
+        if (sessionData.user) location.assign(profileHref(null));
       });
     });
 
@@ -571,7 +592,158 @@
     message('settingsImageMessage', successText, 'success');
   }
 
+  function initSettingsTabs() {
+    const buttons = $('[data-settings-tab]');
+    const panels = $('[data-settings-panel]');
+    if (!buttons.length || !panels.length) return;
+    const activate = name => {
+      buttons.forEach(button => {
+        const selected = button.dataset.settingsTab === name;
+        button.classList.toggle('is-active', selected);
+        button.setAttribute('aria-selected', String(selected));
+        button.tabIndex = selected ? 0 : -1;
+      });
+      panels.forEach(panel => {
+        const selected = panel.dataset.settingsPanel === name;
+        panel.hidden = !selected;
+        panel.classList.toggle('is-active', selected);
+      });
+    };
+    buttons.forEach((button, index) => {
+      button.addEventListener('click', () => activate(button.dataset.settingsTab));
+      button.addEventListener('keydown', event => {
+        if (!['ArrowLeft','ArrowRight','Home','End'].includes(event.key)) return;
+        event.preventDefault();
+        let next = index;
+        if (event.key === 'ArrowRight') next = (index + 1) % buttons.length;
+        if (event.key === 'ArrowLeft') next = (index - 1 + buttons.length) % buttons.length;
+        if (event.key === 'Home') next = 0;
+        if (event.key === 'End') next = buttons.length - 1;
+        buttons[next].focus();
+        activate(buttons[next].dataset.settingsTab);
+      });
+    });
+    const requested = new URLSearchParams(location.search).get('connections');
+    if (requested) activate('connections');
+    else activate(buttons.find(button => button.classList.contains('is-active'))?.dataset.settingsTab || 'information');
+    if (requested === 'microsoft-linked') message('connectionsMessage', 'Cuenta Microsoft vinculada de forma segura.', 'success');
+    else if (requested?.startsWith('microsoft-error')) message('connectionsMessage', 'No se pudo vincular Microsoft. Comprueba las credenciales, permisos y URL de retorno en Supabase.', 'error');
+  }
+
+  async function refreshIdentityConnections() {
+    if (!client || !currentUser) return;
+    const { data, error } = await client.auth.getUser();
+    if (error) throw error;
+    const identities = data.user?.identities || [];
+    ['google','discord','twitch'].forEach(provider => {
+      const status = document.querySelector('[data-connection-status="' + provider + '"]');
+      const button = document.querySelector('[data-link-identity="' + provider + '"]');
+      const row = document.querySelector('[data-identity-provider="' + provider + '"]');
+      const identity = identities.find(item => item.provider === provider);
+      if (status) status.textContent = identity ? 'Vinculada' : 'No vinculada';
+      if (button) {
+        button.textContent = identity ? 'Desvincular' : 'Vincular';
+        button.dataset.connectionAction = identity ? 'unlink' : 'link';
+        button.disabled = Boolean(identity && identities.length <= 1);
+        button.title = identity && identities.length <= 1 ? 'No puedes desvincular tu único método de acceso.' : '';
+      }
+      if (row) row.classList.toggle('is-connected', Boolean(identity));
+    });
+  }
+
+  async function refreshMicrosoftConnections() {
+    const host = $('#microsoftConnectionSlots');
+    if (!host || !client || !currentUser) return;
+    const { data, error } = await client.functions.invoke('microsoft-link', { body: { action: 'list', slot: 1 } });
+    if (error || data?.error) {
+      host.querySelectorAll('.connection-row').forEach(row => {
+        const status = row.querySelector('.connection-copy .muted');
+        if (status) status.textContent = 'Requiere configurar microsoft-link en Supabase';
+      });
+      return;
+    }
+    const accounts = new Map((data.accounts || []).map(account => [Number(account.slot), account]));
+    host.querySelectorAll('[data-microsoft-slot]').forEach(button => {
+      const slot = Number(button.dataset.microsoftSlot);
+      const account = accounts.get(slot);
+      const row = button.closest('.connection-row');
+      const status = row?.querySelector('.connection-copy .muted');
+      if (status) status.textContent = account ? (account.display_name + (account.email ? ' · ' + account.email : '')) : 'No vinculada';
+      button.dataset.microsoftAction = account ? 'unlink' : 'start';
+      button.textContent = account ? 'Desvincular' : 'Vincular';
+      button.title = account ? 'Desvincular esta cuenta Microsoft' : 'Vincular una cuenta Microsoft diferente';
+      row?.classList.toggle('is-connected', Boolean(account));
+    });
+  }
+
+  function initConnectionControls() {
+    if (!$('#settingsConnectionsPanel')) return;
+    $('[data-link-identity]').forEach(button => {
+      button.addEventListener('click', async () => {
+        if (!client || !currentUser) { message('connectionsMessage', 'Inicia sesión para administrar conexiones.', 'error'); return; }
+        const provider = button.dataset.linkIdentity;
+        const action = button.dataset.connectionAction || 'link';
+        button.disabled = true;
+        try {
+          const { data, error } = await client.auth.getUser();
+          if (error) throw error;
+          const identity = (data.user?.identities || []).find(item => item.provider === provider);
+          if (action === 'unlink' && identity) {
+            const linked = data.user?.identities || [];
+            if (linked.length <= 1) throw new Error('No puedes quitar el único método de acceso. Vincula otra cuenta primero.');
+            const { error: unlinkError } = await client.auth.unlinkIdentity(identity);
+            if (unlinkError) throw unlinkError;
+            message('connectionsMessage', 'La cuenta ' + provider + ' se desvinculó.', 'success');
+            await refreshIdentityConnections();
+          } else {
+            const { error: linkError } = await client.auth.linkIdentity({
+              provider,
+              options: { redirectTo: new URL('configurar-perfil.html?connections=linked', SITE_ROOT).href }
+            });
+            if (linkError) throw linkError;
+          }
+        } catch (error) {
+          message('connectionsMessage', friendlyError(error), 'error');
+          button.disabled = false;
+        }
+      });
+    });
+
+    $('[data-microsoft-action]').forEach(button => {
+      button.addEventListener('click', async () => {
+        if (!client || !currentUser) { message('connectionsMessage', 'Inicia sesión para administrar conexiones.', 'error'); return; }
+        const slot = Number(button.dataset.microsoftSlot);
+        const action = button.dataset.microsoftAction || 'start';
+        button.disabled = true;
+        try {
+          if (action === 'unlink') {
+            if (!window.confirm('¿Desvincular la cuenta Microsoft de la posición ' + slot + '?')) return;
+          }
+          const { data, error } = await client.functions.invoke('microsoft-link', { body: { action, slot } });
+          if (error) {
+            const detail = error.context?.body?.error || error.message;
+            throw new Error(detail || 'No se pudo contactar con microsoft-link.');
+          }
+          if (data?.error) throw new Error(data.error);
+          if (action === 'start') {
+            if (!data?.authorization_url) throw new Error('Microsoft no devolvió la dirección de autorización.');
+            location.assign(data.authorization_url);
+            return;
+          }
+          await refreshMicrosoftConnections();
+          message('connectionsMessage', 'La cuenta Microsoft se desvinculó.', 'success');
+        } catch (error) {
+          message('connectionsMessage', friendlyError(error), 'error');
+        } finally { button.disabled = false; }
+      });
+    });
+    refreshIdentityConnections().catch(error => message('connectionsMessage', friendlyError(error), 'error'));
+    refreshMicrosoftConnections();
+  }
+
   function initSettingsEvents() {
+    initSettingsTabs();
+    initConnectionControls();
     $('#profileForm')?.addEventListener('submit', event => {
       event.preventDefault();
       withBusy(event.currentTarget, async () => {
