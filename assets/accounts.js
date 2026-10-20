@@ -752,6 +752,10 @@
         if (fresh.data) {
           renderNameBadges($('#publicProfileNameLine'), fresh.data);
           renderBadgeAdminControls(fresh.data, true);
+          const panelHost = $('#publicProfileBadgeAdmin');
+          if (panelHost) panelHost.hidden = false;
+          const adminButton = $('#publicProfileAdminActions button');
+          if (adminButton) adminButton.setAttribute('aria-expanded', 'true');
           const msg = $('#publicProfileBadgeAdmin .ns-badge-admin-status');
           if (msg) { msg.textContent = 'Los badges se actualizaron correctamente.'; msg.dataset.kind = 'success'; msg.hidden = false; }
         }
