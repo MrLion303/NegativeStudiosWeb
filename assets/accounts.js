@@ -686,11 +686,21 @@
   }
   function badgeNode(kind) {
     const config = kind === 'mod' ? { file: 'mod.png', label: 'Moderador', tooltip: 'Moderador' } : { file: 'verificado.png', label: 'Verificado', tooltip: 'Este usuario está verificado' };
+    const wrapper = document.createElement('span');
+    wrapper.className = 'ns-badge ns-badge-tooltip ns-badge--' + kind;
+    wrapper.dataset.tooltip = config.tooltip;
+    wrapper.tabIndex = 0;
+    wrapper.setAttribute('role', 'img');
+    wrapper.setAttribute('aria-label', config.tooltip);
+    wrapper.title = config.tooltip;
     const image = document.createElement('img');
-    image.className = 'ns-badge ns-badge--' + kind;
+    image.className = 'ns-badge-image';
     image.src = new URL('assets/badges/' + config.file, SITE_ROOT).href;
-    image.alt = config.label; image.title = config.tooltip; image.setAttribute('aria-label', config.tooltip); image.loading = 'lazy';
-    return image;
+    image.alt = '';
+    image.loading = 'lazy';
+    image.draggable = false;
+    wrapper.appendChild(image);
+    return wrapper;
   }
   function badgeListNode(profile, className) {
     const badges = normalizedBadges(profile);
@@ -727,7 +737,12 @@
     const actions = $('#publicProfileOwnerActions');
     if (actions) actions.hidden = !owner;
     const custom = $('#customizeProfileButton');
-    if (custom) custom.href = new URL('configurar-perfil.html', SITE_ROOT).href;
+    if (custom) {
+      custom.href = new URL('configurar-perfil.html', SITE_ROOT).href;
+      custom.hidden = !owner;
+      custom.setAttribute('aria-hidden', String(!owner));
+      custom.tabIndex = owner ? 0 : -1;
+    }
     renderBadgeAdminControls(profile, Boolean(admin));
     document.title = (profile.display_name || profile.username) + ' (@' + profile.username + ') — NegativeStudios';
   }
