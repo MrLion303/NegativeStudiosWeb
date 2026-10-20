@@ -56,26 +56,25 @@
     const node = document.createElement('span');
     node.className = 'ns-badges ' + (className || '');
     node.setAttribute('aria-label', 'Emblemas del usuario');
-    if (relation?.is_verified) {
+    const addBadge = (kind, file, label) => {
+      const wrapper = document.createElement('span');
+      wrapper.className = 'ns-badge ns-badge-tooltip ns-badge--' + kind;
+      wrapper.dataset.tooltip = label;
+      wrapper.title = label;
+      wrapper.tabIndex = 0;
+      wrapper.setAttribute('role', 'img');
+      wrapper.setAttribute('aria-label', label);
       const img = document.createElement('img');
-      img.className = 'ns-badge ns-badge--verified';
-      img.src = new URL('assets/badges/verificado.png', SITE_ROOT).href;
-      img.alt = 'Verificado';
-      img.title = 'Este usuario está verificado';
-      img.setAttribute('aria-label', img.title);
+      img.className = 'ns-badge-image';
+      img.src = new URL('assets/badges/' + file, SITE_ROOT).href;
+      img.alt = '';
       img.loading = 'lazy';
-      node.appendChild(img);
-    }
-    if (relation?.is_mod) {
-      const img = document.createElement('img');
-      img.className = 'ns-badge ns-badge--mod';
-      img.src = new URL('assets/badges/mod.png', SITE_ROOT).href;
-      img.alt = 'Moderador';
-      img.title = 'Moderador';
-      img.setAttribute('aria-label', img.title);
-      img.loading = 'lazy';
-      node.appendChild(img);
-    }
+      img.draggable = false;
+      wrapper.appendChild(img);
+      node.appendChild(wrapper);
+    };
+    if (relation?.is_verified) addBadge('verified', 'verificado.png', 'Este usuario está verificado');
+    if (relation?.is_mod) addBadge('mod', 'mod.png', 'Moderador');
     node.hidden = !node.childElementCount;
     return node;
   }
@@ -138,6 +137,140 @@
       .order('created_at', { ascending: false }).limit(200);
     if (result.error) throw result.error;
     return result.data || [];
+  }
+
+  async function getAcceptedFriendships(profileId) {
+    const result = await client.from('friend_requests')
+      .select('id, requester_id, recipient_id, status, created_at')
+      .eq('status', 'accepted')
+      .or('requester_id.eq.' + profileId + ',recipient_id.eq.' + profileId)
+      .order('created_at', { ascending: false }).limit(1000);
+    if (result.error) throw result.error;
+    return result.data || [];
+  }
+
+  function friendIdsForProfile(profileId, friendships) {
+    return Array.from(new Set(friendships.map(row =>
+      row.requester_id === profileId ? row.recipient_id : row.requester_id
+    ).filter(id => id && id !== profileId)));
+  }
+
+  function ensureFriendsDialog() {
+    let dialog = $('#profileFriendsDialog');
+    if (dialog) return dialog;
+    dialog = document.createElement('dialog');
+    dialog.id = 'profileFriendsDialog';
+    dialog.className = 'community-dialog';
+    dialog.setAttribute('aria-labelledby', 'profileFriendsDialogTitle');
+    const panel = document.createElement('div');
+    panel.className = 'community-dialog-panel';
+    const header = document.createElement('header');
+    header.className = 'community-dialog-header';
+    const title = document.createElement('h2');
+    title.id = 'profileFriendsDialogTitle';
+    title.textContent = 'Amigos';
+    const close = document.createElement('button');
+    close.type = 'button'; close.className = 'community-dialog-close';
+    close.textContent = '×'; close.setAttribute('aria-label', 'Cerrar lista de amigos');
+    close.addEventListener('click', () => dialog.close());
+    const list = document.createElement('div');
+    list.id = 'profileFriendsDialogList';
+    list.className = 'community-friend-list';
+    header.append(title, close);
+    panel.append(header, list);
+    dialog.appendChild(panel);
+    dialog.addEventListener('click', event => { if (event.target === dialog) dialog.close(); });
+    document.body.appendChild(dialog);
+    return dialog;
+  }
+
+  function renderFriendListItem(profile) {
+    const row = document.createElement('article');
+    row.className = 'community-friend-list-item';
+    const link = document.createElement('a');
+    link.className = 'community-friend-avatar-link';
+    link.href = profileUrl(profile);
+    link.setAttribute('aria-label', 'Ver perfil de ' + (profile.display_name || profile.username || 'usuario'));
+    link.appendChild(avatar(profile, 'community-avatar'));
+    const copy = document.createElement('div');
+    copy.className = 'community-friend-copy';
+    const nameLine = document.createElement('div');
+    nameLine.className = 'community-name-line';
+    const name = document.createElement('a');
+    name.className = 'community-name'; name.href = profileUrl(profile);
+    name.textContent = profile.display_name || profile.username || 'Usuario';
+    nameLine.append(name, badges(profile, 'community-name-badges'));
+    const handle = document.createElement('a');
+    handle.className = 'community-handle'; handle.href = profileUrl(profile);
+    handle.textContent = '@' + (profile.username || 'usuario');
+    copy.append(nameLine, handle);
+    row.append(link, copy);
+    return row;
+  }
+
+  async function openProfileFriends(profile) {
+    const dialog = ensureFriendsDialog();
+    const list = dialog.querySelector('#profileFriendsDialogList');
+    const title = dialog.querySelector('#profileFriendsDialogTitle');
+    title.textContent = 'Amigos de ' + (profile.display_name || profile.username || 'este usuario');
+    list.replaceChildren();
+    const loading = document.createElement('p');
+    loading.className = 'community-muted';
+    loading.textContent = 'Cargando amigos…';
+    list.appendChild(loading);
+    if (!dialog.open) dialog.showModal();
+    try {
+      const friendships = await getAcceptedFriendships(profile.id);
+      const ids = friendIdsForProfile(profile.id, friendships);
+      const count = $('#publicProfileFriendsCountNumber');
+      if (count && $('#publicProfileFriendsCount')?.dataset.profileId === profile.id) count.textContent = String(ids.length);
+      list.replaceChildren();
+      if (!ids.length) {
+        const empty = document.createElement('p');
+        empty.className = 'community-empty';
+        empty.textContent = 'Este perfil todavía no tiene amigos.';
+        list.appendChild(empty);
+        return;
+      }
+      const people = await loadProfiles(
+        'id, username, display_name, avatar_url, created_at, profile_badges(is_mod, is_verified)',
+        fields => client.from('profiles').select(fields).in('id', ids)
+      );
+      const byId = new Map(people.map(person => [person.id, person]));
+      ids.forEach(id => { const person = byId.get(id); if (person) list.appendChild(renderFriendListItem(person)); });
+      if (!list.childElementCount) {
+        const empty = document.createElement('p');
+        empty.className = 'community-empty';
+        empty.textContent = 'No se pudieron mostrar los perfiles de esta lista.';
+        list.appendChild(empty);
+      }
+    } catch (error) {
+      list.replaceChildren();
+      const status = document.createElement('p');
+      status.className = 'community-status community-status--error';
+      status.textContent = 'No se pudo cargar la lista de amigos. Si acabas de activar esta función, ejecuta el SQL actualizado de Supabase.';
+      list.appendChild(status);
+    }
+  }
+
+  async function renderProfileFriendCount(profile) {
+    const button = $('#publicProfileFriendsCount');
+    const number = $('#publicProfileFriendsCountNumber');
+    if (!button || !number || !profile) return;
+    button.dataset.profileId = profile.id;
+    button.disabled = false;
+    button.onclick = () => openProfileFriends(profile);
+    button.title = 'Ver la lista de amigos de este perfil';
+    number.textContent = '…';
+    try {
+      const friendships = await getAcceptedFriendships(profile.id);
+      number.textContent = String(friendIdsForProfile(profile.id, friendships).length);
+      button.setAttribute('aria-label', 'Ver amigos: ' + number.textContent);
+    } catch (_) {
+      number.textContent = '—';
+      button.title = 'La lista de amigos estará disponible cuando se actualice Supabase';
+      button.setAttribute('aria-label', 'Lista de amigos no disponible');
+    }
   }
 
   function relationTo(profile, user, requests) {
@@ -498,6 +631,7 @@
     if ($('#publicProfileCard')) {
       const param = new URLSearchParams(location.search).get('username');
       activeProfile = param ? await getProfileByUsername(param) : await getCurrentProfile(sessionUser);
+      if (activeProfile) await renderProfileFriendCount(activeProfile);
       const friendHost = $('#publicProfileFriendAction');
       if (friendHost) {
         friendHost.replaceChildren();
