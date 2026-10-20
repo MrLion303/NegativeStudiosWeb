@@ -9,7 +9,7 @@
   <title>Personalizar perfil — NegativeStudios</title>
   <link rel="icon" href="assets/media/brand-icon.webp">
   <link rel="stylesheet" href="assets/styles.css?v=20261013c">
-  <link rel="stylesheet" href="assets/account.css?v=20261020j">
+  <link rel="stylesheet" href="assets/account.css?v=20261020m">
 </head>
 <body>
 <header class="nav">
@@ -37,6 +37,14 @@
   </section>
 
   <div id="settingsWorkspace" class="account-settings-grid" hidden>
+    <nav class="settings-tabs" role="tablist" aria-label="Secciones de ajustes">
+      <button type="button" class="settings-tab is-active" role="tab" aria-selected="true" aria-controls="settingsInformationPanel" data-settings-tab="information"><span aria-hidden="true">◉</span> Información</button>
+      <button type="button" class="settings-tab" role="tab" aria-selected="false" aria-controls="settingsSecurityPanel" data-settings-tab="security"><span aria-hidden="true">⌑</span> Seguridad</button>
+      <button type="button" class="settings-tab" role="tab" aria-selected="false" aria-controls="settingsConnectionsPanel" data-settings-tab="connections"><span aria-hidden="true">↔</span> Conexiones</button>
+      <button type="button" class="settings-tab settings-tab--danger" role="tab" aria-selected="false" aria-controls="settingsDangerPanel" data-settings-tab="danger"><span aria-hidden="true">!</span> Peligro</button>
+    </nav>
+    <div class="settings-tab-content">
+    <section id="settingsInformationPanel" class="settings-panel is-active" data-settings-panel="information" role="tabpanel">
     <section class="account-settings-preview">
       <div class="account-settings-banner" id="settingsBannerPreview"></div>
       <div class="account-settings-preview-bottom">
@@ -83,6 +91,8 @@
       </form>
     </section>
 
+    </section>
+    <section id="settingsSecurityPanel" class="settings-panel" data-settings-panel="security" role="tabpanel" hidden>
     <section class="account-card">
       <div class="account-card-heading">
         <span class="eyebrow">Seguridad</span>
@@ -116,6 +126,45 @@
       <button class="account-logout-button" id="signOutButton" type="button">Cerrar sesión</button>
     </section>
 
+    </section>
+    <section id="settingsConnectionsPanel" class="settings-panel" data-settings-panel="connections" role="tabpanel" hidden>
+      <section class="account-card">
+        <div class="account-card-heading">
+          <span class="eyebrow">Cuentas vinculadas</span>
+          <h2>Conexiones</h2>
+          <p class="muted">Vincula tus cuentas de Twitch, Discord, Google y hasta tres cuentas Microsoft. Las conexiones Microsoft se guardan de forma privada para poder integrarlas con el launcher más adelante.</p>
+        </div>
+        <div id="connectionsMessage" class="account-message" role="status" aria-live="polite" hidden></div>
+        <div class="connection-list">
+          <article class="connection-row" data-identity-provider="google">
+            <span class="connection-logo connection-logo--google" aria-hidden="true">G</span>
+            <div class="connection-copy"><strong>Google</strong><span class="muted" data-connection-status="google">No vinculado</span></div>
+            <button class="btn ghost" type="button" data-link-identity="google">Vincular</button>
+          </article>
+          <article class="connection-row" data-identity-provider="discord">
+            <span class="connection-logo connection-logo--discord" aria-hidden="true">D</span>
+            <div class="connection-copy"><strong>Discord</strong><span class="muted" data-connection-status="discord">No vinculado</span></div>
+            <button class="btn ghost" type="button" data-link-identity="discord">Vincular</button>
+          </article>
+          <article class="connection-row" data-identity-provider="twitch">
+            <span class="connection-logo connection-logo--twitch" aria-hidden="true">T</span>
+            <div class="connection-copy"><strong>Twitch</strong><span class="muted" data-connection-status="twitch">No vinculado</span></div>
+            <button class="btn ghost" type="button" data-link-identity="twitch">Vincular</button>
+          </article>
+        </div>
+        <div class="account-separator"></div>
+        <div class="account-card-heading">
+          <h3>Microsoft / Minecraft</h3>
+          <p class="muted">Puedes reservar hasta tres posiciones independientes. El inicio de sesión y la obtención de tokens requieren configurar la aplicación Microsoft en Supabase Edge Functions.</p>
+        </div>
+        <div id="microsoftConnectionSlots" class="microsoft-connection-slots">
+          <div class="connection-row"><span class="connection-slot-number">1</span><div class="connection-copy"><strong>Cuenta Microsoft 1</strong><span class="muted">Cargando conexión…</span></div><button type="button" class="btn ghost" data-microsoft-action="start" data-microsoft-slot="1">Vincular</button></div>
+          <div class="connection-row"><span class="connection-slot-number">2</span><div class="connection-copy"><strong>Cuenta Microsoft 2</strong><span class="muted">Cargando conexión…</span></div><button type="button" class="btn ghost" data-microsoft-action="start" data-microsoft-slot="2">Vincular</button></div>
+          <div class="connection-row"><span class="connection-slot-number">3</span><div class="connection-copy"><strong>Cuenta Microsoft 3</strong><span class="muted">Cargando conexión…</span></div><button type="button" class="btn ghost" data-microsoft-action="start" data-microsoft-slot="3">Vincular</button></div>
+        </div>
+      </section>
+    </section>
+    <section id="settingsDangerPanel" class="settings-panel" data-settings-panel="danger" role="tabpanel" hidden>
     <section class="account-card account-danger-zone">
       <div class="account-card-heading">
         <span class="eyebrow">Zona de peligro</span>
@@ -125,10 +174,12 @@
       <div class="account-message" id="deleteAccountMessage" hidden role="status" aria-live="polite"></div>
       <button class="account-delete-button" id="deleteAccountButton" type="button">Eliminar cuenta permanentemente</button>
     </section>
+    </section>
+    </div>
   </div>
 </main>
 
 <footer class="footer"><div class="container"><div class="footer-bottom"><span>© 2026 NegativeStudios. Desde 2022.</span><span>Forjamos mundos, creamos experiencias.</span></div></div></footer>
-<script src="assets/app.js?v=20261020l"></script>
+<script src="assets/app.js?v=20261020m"></script>
 </body>
 </html>
