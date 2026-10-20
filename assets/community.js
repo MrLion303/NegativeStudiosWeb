@@ -7,6 +7,7 @@
   const $ = selector => document.querySelector(selector);
   let client = null;
   let sessionUser = null;
+  let sessionProfile = null;
   let activeProfile = null;
   let profileRequests = [];
 
@@ -394,6 +395,12 @@
     return button;
   }
 
+  function viewerIsModerator() {
+    let relation = sessionProfile?.profile_badges;
+    if (Array.isArray(relation)) relation = relation[0] || {};
+    return Boolean(relation?.is_mod);
+  }
+
   function renderPostCard(post, user) {
     const profile = postProfile(post);
     const card = document.createElement('article');
@@ -425,17 +432,30 @@
     const actions = document.createElement('div'); actions.className = 'community-post-actions';
     const likes = Array.isArray(post.forum_post_likes) ? post.forum_post_likes : [];
     actions.appendChild(renderHeartButton('forum_post_likes', 'post_id', post, user, likes));
+    const removePost = async (button, moderator) => {
+      if (!window.confirm(moderator ? '¿Eliminar esta publicación como moderador? Esta acción no se puede deshacer.' : '¿Eliminar esta publicación?')) return;
+      button.disabled = true;
+      try {
+        let result;
+        if (moderator) result = await client.rpc('moderator_delete_forum_post', { target_post_id: post.id });
+        else result = await client.from('forum_posts').delete().eq('id', post.id).eq('user_id', user.id);
+        if (result.error) throw result.error;
+        if ($('#forumFeed')) await loadForumFeed();
+        if ($('#publicProfilePosts') && activeProfile?.id) await loadPostsForProfile(activeProfile.id, $('#publicProfilePosts'));
+      } catch (error) {
+        alert(error?.message || 'No se pudo eliminar la publicación.');
+        button.disabled = false;
+      }
+    };
     if (user && user.id === post.user_id) {
       const remove = document.createElement('button'); remove.type = 'button'; remove.className = 'community-button community-button--quiet';
       remove.textContent = 'Eliminar publicación';
-      remove.addEventListener('click', async () => {
-        if (!window.confirm('¿Eliminar esta publicación?')) return;
-        remove.disabled = true;
-        const result = await client.from('forum_posts').delete().eq('id', post.id).eq('user_id', user.id);
-        if (result.error) { alert(result.error.message); remove.disabled = false; }
-        else if ($('#forumFeed')) await loadForumFeed();
-        else if ($('#publicProfilePosts')) await loadPostsForProfile(user.id, $('#publicProfilePosts'));
-      });
+      remove.addEventListener('click', () => removePost(remove, false));
+      actions.appendChild(remove);
+    } else if (user && viewerIsModerator()) {
+      const remove = document.createElement('button'); remove.type = 'button'; remove.className = 'community-button community-button--quiet';
+      remove.textContent = 'Eliminar como moderador';
+      remove.addEventListener('click', () => removePost(remove, true));
       actions.appendChild(remove);
     }
     card.appendChild(actions);
@@ -474,6 +494,7 @@
     if (!client) return;
     const session = await client.auth.getSession();
     sessionUser = session.data?.session?.user || null;
+    sessionProfile = sessionUser ? await getCurrentProfile(sessionUser).catch(() => null) : null;
     if ($('#publicProfileCard')) {
       const param = new URLSearchParams(location.search).get('username');
       activeProfile = param ? await getProfileByUsername(param) : await getCurrentProfile(sessionUser);
@@ -496,6 +517,8 @@
     if ($('#forumComposer')) {
       mountForumComposer(sessionUser);
       await loadForumFeed();
+      await renderFriendInbox();
+      await renderSuggestions([]);
     }
   }
 
@@ -633,10 +656,13 @@
     }
     const session = await client.auth.getSession();
     sessionUser = session.data?.session?.user || null;
+    sessionProfile = sessionUser ? await getCurrentProfile(sessionUser).catch(() => null) : null;
     if ($('#publicProfileCard')) await refreshCommunityProfile();
     if ($('#forumComposer')) {
       mountForumComposer(sessionUser);
       await loadForumFeed();
+      await renderFriendInbox();
+      await renderSuggestions([]);
     }
     client.auth.onAuthStateChange(() => {
       window.setTimeout(() => refreshCommunityProfile().catch(() => {}), 0);
