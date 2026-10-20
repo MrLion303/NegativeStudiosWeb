@@ -818,7 +818,7 @@
             .select('id, username, display_name, bio, avatar_url, banner_url, created_at')
             .eq('id', targetProfile.id).maybeSingle();
           if (fresh.error) throw fresh.error;
-          if (fresh.data && targetProfile.id === currentViewedProfileId()) renderNameBadges($('#publicProfileNameLine'), fresh.data);
+          if (fresh.data) renderNameBadges($('#publicProfileNameLine'), fresh.data);
           status.textContent = 'Los badges se actualizaron correctamente.';
           status.dataset.kind = 'success'; status.hidden = false;
           save.textContent = 'Guardado';
@@ -833,12 +833,6 @@
       if (!dialog.open) dialog.showModal();
     });
     actions.appendChild(button);
-  }
-
-  function currentViewedProfileId() {
-    const username = normalizeUsername(new URLSearchParams(location.search).get('username'));
-    if (username) return $('#publicProfileUsername')?.textContent?.replace(/^@/, '') === username ? lastProfile?.id : null;
-    return currentUser?.id || null;
   }
 
   async function initPublicProfilePage(userFromSession) {
