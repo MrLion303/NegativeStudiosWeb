@@ -4,120 +4,70 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#07111e">
-  <meta name="description" content="Gestiona tu perfil, foto, nombre de usuario y preferencias de privacidad de NegativeStudios.">
-  <meta name="robots" content="noindex,nofollow">
-  <title>Mi perfil — NegativeStudios</title>
+  <meta name="description" content="Perfil público de la comunidad de NegativeStudios.">
+  <title>Perfil — NegativeStudios</title>
   <link rel="icon" href="assets/media/brand-icon.webp">
   <link rel="stylesheet" href="assets/styles.css?v=20261013c">
-  <link rel="stylesheet" href="assets/account.css?v=20261019c">
+  <link rel="stylesheet" href="assets/account.css?v=20261020a">
 </head>
 <body>
 <header class="nav">
   <div class="container nav-inner">
     <a class="brand" href="index.html"><img src="assets/media/brand-logo.webp" alt="NegativeStudios" width="36" height="36"><span>NegativeStudios</span></a>
-    <nav class="nav-links" id="navLinks">
-      <a href="index.html">Inicio</a><a href="proyectos.html">Proyectos</a><a href="anuncios.html">Anuncios</a><a href="equipo.html">Equipo</a><a href="acerca.html">Nosotros</a>
-    </nav>
+    <nav class="nav-links" id="navLinks"><a href="index.html">Inicio</a><a href="proyectos.html">Proyectos</a><a href="anuncios.html">Anuncios</a><a href="equipo.html">Equipo</a><a href="acerca.html">Nosotros</a></nav>
     <a class="nav-cta" href="descargar.html">Descargar Negative Client</a>
     <button class="menu-btn" aria-label="Abrir navegación" aria-controls="navLinks" aria-expanded="false">☰</button>
   </div>
 </header>
 
-<main class="account-page account-profile-page" data-account-page="profile">
-  <section class="account-intro">
+<main class="public-profile-page" data-account-page="public-profile">
+  <section id="publicProfileLoading" class="public-profile-state">
+    <span class="eyebrow">Comunidad NegativeStudios</span>
+    <h1>Cargando perfil…</h1>
+    <p>Estamos buscando la información pública de este usuario.</p>
+  </section>
+
+  <section id="publicProfileGuest" class="public-profile-state" hidden>
     <span class="eyebrow">Tu cuenta</span>
-    <h1 class="title">Mi <span class="gradient-text">perfil.</span></h1>
-    <p class="lead">Administra cómo apareces en NegativeStudios y controla las preferencias básicas de tu cuenta.</p>
+    <h1>Inicia sesión para ver tu perfil</h1>
+    <p>También puedes abrir directamente el perfil público de otra persona usando su nombre de usuario.</p>
+    <a class="btn primary" href="cuenta.html">Registrar / Iniciar sesión <span aria-hidden="true">→</span></a>
   </section>
 
-  <section id="profileConfigNotice" class="account-message account-config-message" data-account-config-notice hidden role="status"></section>
-  <section id="profileGuest" class="account-card account-centered-card" hidden>
-    <div class="account-step-icon"><span aria-hidden="true">◉</span></div>
-    <h2>Inicia sesión para ver tu perfil</h2>
-    <p class="muted">Tu perfil personal estará disponible cuando hayas iniciado sesión.</p>
-    <a class="btn primary account-submit" href="cuenta.html">Registrar / Iniciar sesión <span aria-hidden="true">→</span></a>
+  <section id="publicProfileMissing" class="public-profile-state" hidden>
+    <span class="eyebrow">Perfil público</span>
+    <h1>No encontramos este perfil.</h1>
+    <p>Comprueba que el nombre de usuario esté escrito correctamente.</p>
+    <a class="btn ghost" href="index.html">Volver al inicio</a>
   </section>
 
-  <section id="profileWorkspace" hidden>
-    <div class="account-profile-grid">
-      <aside class="account-card account-profile-preview">
-        <div class="account-avatar-large" id="profileAvatarPreview" aria-label="Foto de perfil">
-          <img id="profileAvatarImage" alt="Tu foto de perfil" hidden>
-          <span id="profileAvatarFallback">N</span>
+  <article id="publicProfileCard" class="public-profile-card" hidden>
+    <div class="public-profile-banner" id="publicProfileBanner" role="img" aria-label="Banner del perfil"></div>
+    <div class="public-profile-main">
+      <div class="public-profile-topline">
+        <div class="public-profile-avatar" id="publicProfileAvatar"><img id="publicProfileAvatarImage" alt="" hidden><span id="publicProfileAvatarFallback">N</span></div>
+        <div class="public-profile-actions" id="publicProfileOwnerActions" hidden>
+          <a class="btn primary" id="customizeProfileButton" href="configurar-perfil.html">Personalizar perfil</a>
         </div>
-        <h2 id="profileDisplayNamePreview">Tu nombre</h2>
-        <p id="profileUsernamePreview" class="account-handle">@usuario</p>
-        <p id="profileBioPreview" class="muted">Tu biografía aparecerá aquí.</p>
-        <p class="account-field-hint" id="profileMemberSince"></p>
-        <label class="btn ghost account-upload-button" for="avatarFile">Cambiar foto de perfil</label>
-        <input id="avatarFile" type="file" accept="image/png,image/jpeg,image/webp" hidden>
-        <p class="account-field-hint">PNG, JPG o WebP. Máximo 3 MB.</p>
-        <div class="account-message" id="avatarMessage" hidden role="status" aria-live="polite"></div>
-      </aside>
-
-      <div class="account-settings-column">
-        <section class="account-card">
-          <div class="account-card-heading">
-            <span class="eyebrow">Información pública</span>
-            <h2>Editar perfil</h2>
-            <p class="muted">Estos datos podrán utilizarse en las futuras funciones de comunidad.</p>
-          </div>
-          <div class="account-message" id="profileMessage" hidden role="status" aria-live="polite"></div>
-          <form id="profileForm" class="account-form">
-            <label for="profileUsername">Nombre de usuario</label>
-            <input id="profileUsername" type="text" minlength="3" maxlength="24" pattern="[A-Za-z0-9_]{3,24}" autocomplete="username" required>
-            <small class="account-field-hint">Entre 3 y 24 caracteres: letras, números y guion bajo.</small>
-            <label for="profileDisplayName">Nombre a mostrar</label>
-            <input id="profileDisplayName" type="text" maxlength="32" autocomplete="nickname" required>
-            <label for="profileBio">Biografía</label>
-            <textarea id="profileBio" rows="3" maxlength="180" placeholder="Cuéntale algo a la comunidad sobre ti."></textarea>
-            <label class="account-check-row" for="profilePrivate">
-              <input id="profilePrivate" type="checkbox">
-              <span><strong>Perfil privado</strong><small>Oculta la información de tu perfil en consultas públicas de la base de datos.</small></span>
-            </label>
-            <button class="btn primary account-submit" type="submit">Guardar cambios <span aria-hidden="true">→</span></button>
-          </form>
-        </section>
-
-        <section class="account-card">
-          <div class="account-card-heading">
-            <span class="eyebrow">Seguridad</span>
-            <h2>Correo y contraseña</h2>
-            <p class="muted">Los cambios sensibles se gestionan a través de Supabase Auth y pueden requerir confirmación por correo.</p>
-          </div>
-          <div class="account-message" id="securityMessage" hidden role="status" aria-live="polite"></div>
-          <form id="changeEmailForm" class="account-form" data-message-target="securityMessage">
-            <label for="currentEmail">Correo actual</label>
-            <input id="currentEmail" type="email" readonly>
-            <label for="newEmail">Nuevo correo electrónico</label>
-            <input id="newEmail" type="email" autocomplete="email" placeholder="nuevo@correo.com" required>
-            <button class="btn ghost account-submit" type="submit">Cambiar correo</button>
-          </form>
-          <div class="account-separator"></div>
-          <form id="changePasswordForm" class="account-form" data-message-target="securityMessage">
-            <label for="changePassword">Nueva contraseña</label>
-            <input id="changePassword" type="password" autocomplete="new-password" minlength="8" placeholder="Mínimo 8 caracteres" required>
-            <label for="changePasswordConfirm">Repite la contraseña</label>
-            <input id="changePasswordConfirm" type="password" autocomplete="new-password" minlength="8" required>
-            <button class="btn ghost account-submit" type="submit">Actualizar contraseña</button>
-          </form>
-        </section>
-
-        <section class="account-card account-danger-zone">
-          <div class="account-card-heading">
-            <span class="eyebrow">Sesión</span>
-            <h2>Tu acceso</h2>
-            <p class="muted">Puedes cerrar sesión en este dispositivo cuando quieras.</p>
-          </div>
-          <button class="account-logout-button" id="signOutButton" type="button">Cerrar sesión</button>
-        </section>
       </div>
+      <div class="public-profile-copy">
+        <h1 class="public-profile-name" id="publicProfileDisplayName">Usuario</h1>
+        <p class="public-profile-handle" id="publicProfileUsername">@usuario</p>
+        <p class="public-profile-bio" id="publicProfileBio"></p>
+        <div class="public-profile-meta">
+          <span id="publicProfileJoined"></span>
+        </div>
+      </div>
+      <div class="public-profile-divider"></div>
     </div>
-  </section>
-  <p class="account-privacy-note">La foto de perfil se almacena en un bucket público para poder mostrarla en la web; marcar el perfil como privado no vuelve privada una imagen que ya tenga una URL pública.</p>
+    <section class="public-profile-timeline">
+      <h2>Actividad</h2>
+      <p>Este perfil está preparado para las próximas funciones de comunidad de NegativeStudios.</p>
+    </section>
+  </article>
 </main>
 
 <footer class="footer"><div class="container"><div class="footer-bottom"><span>© 2026 NegativeStudios. Desde 2022.</span><span>Forjamos mundos, creamos experiencias.</span></div></div></footer>
-<script src="assets/app.js?v=20261019c"></script>
+<script src="assets/app.js?v=20261020a"></script>
 </body>
 </html>
