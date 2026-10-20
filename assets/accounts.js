@@ -675,11 +675,11 @@
     return { is_mod: Boolean(badges.is_mod), is_verified: Boolean(badges.is_verified) };
   }
   function badgeNode(kind) {
-    const config = kind === 'mod' ? { file: 'mod.png', label: 'Moderador' } : { file: 'verificado.png', label: 'Verificado' };
+    const config = kind === 'mod' ? { file: 'mod.png', label: 'Moderador', tooltip: 'Moderador' } : { file: 'verificado.png', label: 'Verificado', tooltip: 'Este usuario está verificado' };
     const image = document.createElement('img');
     image.className = 'ns-badge ns-badge--' + kind;
     image.src = new URL('assets/badges/' + config.file, SITE_ROOT).href;
-    image.alt = config.label; image.title = config.label; image.loading = 'lazy';
+    image.alt = config.label; image.title = config.tooltip; image.setAttribute('aria-label', config.tooltip); image.loading = 'lazy';
     return image;
   }
   function badgeListNode(profile, className) {
@@ -687,8 +687,8 @@
     const list = document.createElement('span');
     list.className = 'ns-badges' + (className ? ' ' + className : '');
     list.setAttribute('aria-label', 'Emblemas del usuario');
-    if (badges.is_mod) list.appendChild(badgeNode('mod'));
     if (badges.is_verified) list.appendChild(badgeNode('verified'));
+    if (badges.is_mod) list.appendChild(badgeNode('mod'));
     list.hidden = !list.childElementCount;
     return list;
   }
@@ -844,7 +844,9 @@
     form.addEventListener('submit', event => {
       event.preventDefault();
       const content = textarea.value.trim();
-      if (!content || !currentUser || !client) return;
+      if (!content) { textarea.focus(); return; }
+      if (!currentUser) { message('projectCommentsMessage', 'Inicia sesión para publicar comentarios y responder.', 'error'); return; }
+      if (!client) { message('projectCommentsMessage', 'No se pudo conectar con el sistema de comentarios. Recarga la página e inténtalo de nuevo.', 'error'); return; }
       withBusy(form, async () => {
         const { error } = await client.from('project_comments').insert({
           project_slug: slug,
@@ -890,12 +892,42 @@
     author.append(nameLine, handle);
     header.appendChild(author);
     article.appendChild(header);
+
     const content = document.createElement('div');
     content.className = 'project-comment-content';
     content.textContent = comment.content;
     article.appendChild(content);
+
     const actions = document.createElement('div');
     actions.className = 'project-comment-actions';
+    const likes = Array.isArray(comment.project_comment_likes) ? comment.project_comment_likes : [];
+    const liked = Boolean(currentUser && likes.some(item => item.user_id === currentUser.id));
+    const like = document.createElement('button');
+    like.type = 'button';
+    like.className = 'project-comment-action project-comment-like' + (liked ? ' is-liked' : '');
+    like.setAttribute('aria-label', liked ? 'Quitar corazón' : 'Dar corazón');
+    like.textContent = '♥ ' + likes.length;
+    like.addEventListener('click', async () => {
+      if (!currentUser) {
+        message('projectCommentsMessage', 'Inicia sesión para dar corazones a los comentarios.', 'error');
+        return;
+      }
+      like.disabled = true;
+      try {
+        if (like.classList.contains('is-liked')) {
+          const result = await client.from('project_comment_likes').delete().eq('comment_id', comment.id).eq('user_id', currentUser.id);
+          if (result.error) throw result.error;
+        } else {
+          const result = await client.from('project_comment_likes').insert({ comment_id: comment.id, user_id: currentUser.id });
+          if (result.error) throw result.error;
+        }
+        await loadProjectComments(slug);
+      } catch (error) {
+        message('projectCommentsMessage', friendlyError(error), 'error');
+        like.disabled = false;
+      }
+    });
+    actions.appendChild(like);
     if (currentUser) {
       const reply = document.createElement('button');
       reply.type = 'button';
@@ -904,7 +936,7 @@
       reply.addEventListener('click', () => {
         const existing = article.querySelector(':scope > .project-reply-form');
         if (existing) { existing.remove(); return; }
-        const form = makeCommentForm(slug, comment.id, 'Escribe tu respuesta…');
+        const form = makeCommentForm(slug, comment.id, 'Responde a este comentario…');
         actions.insertAdjacentElement('afterend', form);
       });
       actions.appendChild(reply);
@@ -916,8 +948,8 @@
       remove.textContent = 'Eliminar';
       remove.addEventListener('click', async () => {
         if (!window.confirm('¿Eliminar este comentario y sus respuestas?')) return;
-        const { error } = await client.from('project_comments').delete().eq('id', comment.id).eq('user_id', currentUser.id);
-        if (error) message('projectCommentsMessage', friendlyError(error), 'error');
+        const result = await client.from('project_comments').delete().eq('id', comment.id).eq('user_id', currentUser.id);
+        if (result.error) message('projectCommentsMessage', friendlyError(result.error), 'error');
         else await loadProjectComments(slug);
       });
       actions.appendChild(remove);
@@ -937,7 +969,7 @@
       });
       actions.appendChild(moderatorDelete);
     }
-    if (actions.childElementCount) article.appendChild(actions);
+    article.appendChild(actions);
     if (children.length) {
       const nested = document.createElement('div');
       nested.className = 'project-comment-children';
@@ -961,25 +993,28 @@
       feed.appendChild(loading);
     }
 
-    // Intenta cargar los badges, pero no bloquea los comentarios si esa tabla aún no está activa.
+    const baseSelect = 'id, project_slug, parent_comment_id, user_id, content, created_at';
+    const profileRelation = 'profiles!project_comments_user_id_fkey(username, display_name, avatar_url';
     let response = await client.from('project_comments')
-      .select('id, project_slug, parent_comment_id, user_id, content, created_at, profiles!project_comments_user_id_fkey(username, display_name, avatar_url, profile_badges(is_mod, is_verified))')
+      .select(baseSelect + ', ' + profileRelation + ', profile_badges(is_mod, is_verified)), project_comment_likes(user_id))')
       .eq('project_slug', slug).order('created_at', { ascending: true }).limit(1000);
     if (response.error) {
-      const fallback = await client.from('project_comments')
-        .select('id, project_slug, parent_comment_id, user_id, content, created_at, profiles!project_comments_user_id_fkey(username, display_name, avatar_url)')
+      response = await client.from('project_comments')
+        .select(baseSelect + ', ' + profileRelation + ', profile_badges(is_mod, is_verified))')
         .eq('project_slug', slug).order('created_at', { ascending: true }).limit(1000);
-      if (!fallback.error) response = fallback;
-      else response = fallback;
     }
-
+    if (response.error) {
+      response = await client.from('project_comments')
+        .select(baseSelect + ', profiles!project_comments_user_id_fkey(username, display_name, avatar_url)')
+        .eq('project_slug', slug).order('created_at', { ascending: true }).limit(1000);
+    }
     const { data, error } = response;
     if (error) {
       if (feed) {
         feed.replaceChildren();
         const errorText = document.createElement('p');
         errorText.className = 'project-comment-empty';
-        errorText.textContent = 'No se pudieron cargar los comentarios. Inténtalo de nuevo más tarde.';
+        errorText.textContent = 'No se pudieron cargar los comentarios. Recarga la página o comprueba la configuración de Supabase.';
         feed.appendChild(errorText);
       }
       message('projectCommentsMessage', friendlyError(error), 'error');
@@ -1066,6 +1101,9 @@
     client = window.supabase.createClient(config.url, config.publishableKey, {
       auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
     });
+    window.NS_SUPABASE_CLIENT = client;
+    initProjectComments();
+    try { await loadScript(new URL('assets/community.js?v=20261020a', SITE_ROOT).href, 'data-ns-community-script'); } catch (error) { console.warn('No se pudo cargar el módulo de comunidad.', error); }
 
     if (pageType === 'auth') initAuthPage();
     if (pageType === 'settings') initSettingsEvents();
