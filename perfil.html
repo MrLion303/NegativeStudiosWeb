@@ -8,7 +8,7 @@
   <title>Perfil — NegativeStudios</title>
   <link rel="icon" href="assets/media/brand-icon.webp">
   <link rel="stylesheet" href="assets/styles.css?v=20261013c">
-  <link rel="stylesheet" href="assets/account.css?v=20261020j">
+  <link rel="stylesheet" href="assets/account.css?v=20261020m">
 </head>
 <body>
 <header class="nav">
@@ -46,10 +46,12 @@
     <div class="public-profile-main">
       <div class="public-profile-topline">
         <div class="public-profile-avatar" id="publicProfileAvatar"><img id="publicProfileAvatarImage" alt="" hidden><span id="publicProfileAvatarFallback">N</span></div>
+        <div class="public-profile-actions public-profile-admin-actions" id="publicProfileAdminActions" hidden></div>
         <div class="public-profile-actions" id="publicProfileOwnerActions" hidden>
-          <a class="btn primary" id="customizeProfileButton" href="configurar-perfil.html">Personalizar perfil</a>
+          <a class="btn ghost public-profile-edit-icon" id="customizeProfileButton" href="configurar-perfil.html" title="Personalizar perfil" aria-label="Personalizar perfil">
+            <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L8 18l-4 1 1-4Z"/></svg>
+          </a>
         </div>
-        <div class="public-profile-actions" id="publicProfileAdminActions" hidden></div>
         <div id="publicProfileFriendAction" hidden></div>
       </div>
       <div class="public-profile-copy">
@@ -79,6 +81,6 @@
 </main>
 
 <footer class="footer"><div class="container"><div class="footer-bottom"><span>© 2026 NegativeStudios. Desde 2022.</span><span>Forjamos mundos, creamos experiencias.</span></div></div></footer>
-<script src="assets/app.js?v=20261020l"></script>
+<script src="assets/app.js?v=20261020m"></script>
 </body>
 </html>
