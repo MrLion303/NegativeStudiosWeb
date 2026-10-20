@@ -1,0 +1,7 @@
+# Las funciones validan el acceso en su propio código. microsoft-link necesita
+# aceptar el callback OAuth de Microsoft, que no lleva un JWT de Supabase.
+[functions.login-by-username]
+verify_jwt = false
+
+[functions.microsoft-link]
+verify_jwt = false
