@@ -24,7 +24,7 @@ document.addEventListener('DOMContentLoaded',()=>{
 
   const oldCta=document.querySelector('.nav-cta');if(oldCta){const actions=document.createElement('div');actions.className='nav-actions';actions.innerHTML=`<a class="client-download" href="descargar.html"><span class="client-download-label">Descargar Negative Client</span><svg class="client-download-icon" aria-hidden="true" viewBox="0 0 24 24" fill="none"><path d="M12 3v11"></path><path d="m7 10 5 5 5-5"></path><path d="M5 20h14"></path></svg></a>`;oldCta.replaceWith(actions)}
   const accountScript=document.createElement('script');
-  accountScript.src=new URL('accounts.js?v=20261020o',(document.querySelector('script[src*="assets/app.js"]')||{}).src||location.href).href;
+  accountScript.src=new URL('accounts.js?v=20261020p',(document.querySelector('script[src*="assets/app.js"]')||{}).src||location.href).href;
   accountScript.dataset.nsAccountScript='true';
   document.head.appendChild(accountScript);
 
