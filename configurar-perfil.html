@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#07111e">
+  <meta name="description" content="Personaliza tu perfil público de NegativeStudios.">
+  <meta name="robots" content="noindex,nofollow">
+  <title>Personalizar perfil — NegativeStudios</title>
+  <link rel="icon" href="assets/media/brand-icon.webp">
+  <link rel="stylesheet" href="assets/styles.css?v=20261013c">
+  <link rel="stylesheet" href="assets/account.css?v=20261020a">
+</head>
+<body>
+<header class="nav">
+  <div class="container nav-inner">
+    <a class="brand" href="index.html"><img src="assets/media/brand-logo.webp" alt="NegativeStudios" width="36" height="36"><span>NegativeStudios</span></a>
+    <nav class="nav-links" id="navLinks"><a href="index.html">Inicio</a><a href="proyectos.html">Proyectos</a><a href="anuncios.html">Anuncios</a><a href="equipo.html">Equipo</a><a href="acerca.html">Nosotros</a></nav>
+    <a class="nav-cta" href="descargar.html">Descargar Negative Client</a>
+    <button class="menu-btn" aria-label="Abrir navegación" aria-controls="navLinks" aria-expanded="false">☰</button>
+  </div>
+</header>
+
+<main class="account-page account-settings-page" data-account-page="settings">
+  <section class="account-intro">
+    <span class="eyebrow">Tu espacio · NegativeStudios</span>
+    <h1 class="title">Personaliza tu <span class="gradient-text">perfil.</span></h1>
+    <p class="lead">Así te verá el resto de la comunidad. Tu perfil siempre será público.</p>
+  </section>
+
+  <section id="settingsConfigNotice" class="account-message account-config-message" data-account-config-notice hidden role="status"></section>
+  <section id="settingsGuest" class="account-card account-centered-card" hidden>
+    <div class="account-step-icon" aria-hidden="true">◉</div>
+    <h2>Inicia sesión para personalizar tu perfil</h2>
+    <p class="muted">Necesitas una cuenta para editar tus datos públicos.</p>
+    <a class="btn primary account-submit" href="cuenta.html">Registrar / Iniciar sesión <span aria-hidden="true">→</span></a>
+  </section>
+
+  <div id="settingsWorkspace" class="account-settings-grid" hidden>
+    <section class="account-settings-preview">
+      <div class="account-settings-banner" id="settingsBannerPreview"></div>
+      <div class="account-settings-preview-bottom">
+        <div class="public-profile-avatar" id="settingsAvatarPreview"><img id="settingsAvatarImage" alt="" hidden><span id="settingsAvatarFallback">N</span></div>
+        <div class="account-settings-preview-name"><strong id="settingsDisplayNamePreview">Tu nombre</strong><span id="settingsUsernamePreview">@usuario</span></div>
+      </div>
+    </section>
+
+    <section class="account-card">
+      <div class="account-card-heading">
+        <span class="eyebrow">Apariencia</span>
+        <h2>Fotos del perfil</h2>
+        <p class="muted">Tu banner aparece en la parte superior del perfil. Se aceptan PNG, JPG y WebP.</p>
+      </div>
+      <div class="account-message" id="settingsImageMessage" hidden role="status" aria-live="polite"></div>
+      <div class="account-form">
+        <label for="avatarFile">Foto de perfil</label>
+        <div class="account-upload-row"><label class="btn ghost" for="avatarFile">Elegir foto</label><span class="account-field-hint">Máximo 3 MB</span></div>
+        <input id="avatarFile" type="file" accept="image/png,image/jpeg,image/webp" hidden>
+        <label for="bannerFile">Banner</label>
+        <div class="account-upload-row"><label class="btn ghost" for="bannerFile">Elegir banner</label><span class="account-field-hint">Máximo 6 MB</span></div>
+        <input id="bannerFile" type="file" accept="image/png,image/jpeg,image/webp" hidden>
+        <p class="account-field-hint">Las imágenes son públicas porque forman parte de tu perfil.</p>
+      </div>
+    </section>
+
+    <section class="account-card">
+      <div class="account-card-heading">
+        <span class="eyebrow">Información pública</span>
+        <h2>Datos del perfil</h2>
+        <p class="muted">El nombre a mostrar puedes cambiarlo cuando quieras. El nombre de usuario tiene un intervalo obligatorio de 14 días entre cambios.</p>
+      </div>
+      <div class="account-message" id="settingsProfileMessage" hidden role="status" aria-live="polite"></div>
+      <form id="profileForm" class="account-form">
+        <label for="profileUsername">Nombre de usuario</label>
+        <input id="profileUsername" type="text" minlength="3" maxlength="24" pattern="[A-Za-z0-9_]{3,24}" autocomplete="username" required>
+        <p id="usernameCooldownNote" class="account-cooldown-note">Entre 3 y 24 caracteres: letras, números y guion bajo.</p>
+        <label for="profileDisplayName">Nombre a mostrar</label>
+        <input id="profileDisplayName" type="text" maxlength="32" autocomplete="nickname" required>
+        <label for="profileBio">Biografía</label>
+        <textarea id="profileBio" rows="4" maxlength="180" placeholder="Cuéntale algo a la comunidad sobre ti."></textarea>
+        <button class="btn primary account-submit" type="submit">Guardar cambios <span aria-hidden="true">→</span></button>
+        <a class="btn ghost account-submit" id="viewPublicProfileButton" href="perfil.html">Ver mi perfil público</a>
+      </form>
+    </section>
+
+    <section class="account-card">
+      <div class="account-card-heading">
+        <span class="eyebrow">Seguridad</span>
+        <h2>Correo y contraseña</h2>
+        <p class="muted">Los cambios sensibles se gestionan mediante Supabase Auth y pueden requerir confirmación por correo.</p>
+      </div>
+      <div class="account-message" id="securityMessage" hidden role="status" aria-live="polite"></div>
+      <form id="changeEmailForm" class="account-form" data-message-target="securityMessage">
+        <label for="currentEmail">Correo actual</label>
+        <input id="currentEmail" type="email" readonly>
+        <label for="newEmail">Nuevo correo electrónico</label>
+        <input id="newEmail" type="email" autocomplete="email" placeholder="nuevo@correo.com" required>
+        <button class="btn ghost account-submit" type="submit">Cambiar correo</button>
+      </form>
+      <div class="account-separator"></div>
+      <form id="changePasswordForm" class="account-form" data-message-target="securityMessage">
+        <label for="changePassword">Nueva contraseña</label>
+        <input id="changePassword" type="password" autocomplete="new-password" minlength="8" placeholder="Mínimo 8 caracteres" required>
+        <label for="changePasswordConfirm">Repite la contraseña</label>
+        <input id="changePasswordConfirm" type="password" autocomplete="new-password" minlength="8" required>
+        <button class="btn ghost account-submit" type="submit">Actualizar contraseña</button>
+      </form>
+    </section>
+
+    <section class="account-card">
+      <div class="account-card-heading">
+        <span class="eyebrow">Sesión</span>
+        <h2>Tu acceso</h2>
+        <p class="muted">Puedes cerrar la sesión en este dispositivo.</p>
+      </div>
+      <button class="account-logout-button" id="signOutButton" type="button">Cerrar sesión</button>
+    </section>
+
+    <section class="account-card account-danger-zone">
+      <div class="account-card-heading">
+        <span class="eyebrow">Zona de peligro</span>
+        <h2>Eliminar mi cuenta</h2>
+        <p class="muted">Esta acción es permanente. Se borrarán tu perfil, comentarios, foto y banner asociados a esta cuenta.</p>
+      </div>
+      <div class="account-message" id="deleteAccountMessage" hidden role="status" aria-live="polite"></div>
+      <button class="account-delete-button" id="deleteAccountButton" type="button">Eliminar cuenta permanentemente</button>
+    </section>
+  </div>
+</main>
+
+<footer class="footer"><div class="container"><div class="footer-bottom"><span>© 2026 NegativeStudios. Desde 2022.</span><span>Forjamos mundos, creamos experiencias.</span></div></div></footer>
+<script src="assets/app.js?v=20261020a"></script>
+</body>
+</html>
