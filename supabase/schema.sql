@@ -92,6 +92,8 @@ begin
   base_name := lower(regexp_replace(
     coalesce(
       nullif(new.raw_user_meta_data ->> 'username', ''),
+      nullif(new.raw_user_meta_data ->> 'preferred_username', ''),
+      nullif(new.raw_user_meta_data ->> 'user_name', ''),
       split_part(coalesce(new.email, ''), '@', 1),
       'usuario'
     ),
@@ -112,6 +114,7 @@ begin
     nullif(trim(new.raw_user_meta_data ->> 'display_name'), ''),
     nullif(trim(new.raw_user_meta_data ->> 'full_name'), ''),
     nullif(trim(new.raw_user_meta_data ->> 'name'), ''),
+    nullif(trim(new.raw_user_meta_data ->> 'preferred_username'), ''),
     nullif(split_part(coalesce(new.email, ''), '@', 1), ''),
     'Usuario'
   ), 32);
@@ -123,7 +126,10 @@ begin
     visible_name,
     coalesce(
       nullif(new.raw_user_meta_data ->> 'avatar_url', ''),
-      nullif(new.raw_user_meta_data ->> 'picture', '')
+      nullif(new.raw_user_meta_data ->> 'picture', ''),
+      nullif(new.raw_user_meta_data ->> 'profile_image_url', ''),
+      nullif(new.raw_user_meta_data ->> 'profile_image', ''),
+      nullif(new.raw_user_meta_data ->> 'avatar', '')
     )
   )
   on conflict (id) do nothing;
