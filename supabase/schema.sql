@@ -474,6 +474,25 @@ grant select on public.forum_post_comments to anon,authenticated;
 grant insert,delete on public.forum_post_comments to authenticated;
 grant usage,select on sequence public.forum_post_comments_id_seq to authenticated;
 
+create or replace function public.validate_forum_post_comment_parent()
+returns trigger language plpgsql set search_path=''
+as $
+declare parent_post bigint;
+begin
+  new.content := trim(new.content);
+  if new.parent_comment_id is not null then
+    select post_id into parent_post from public.forum_post_comments where id=new.parent_comment_id;
+    if parent_post is null or parent_post <> new.post_id then
+      raise exception 'A reply must belong to the same forum post as its parent comment';
+    end if;
+  end if;
+  return new;
+end;
+$;
+drop trigger if exists validate_forum_post_comment_parent on public.forum_post_comments;
+create trigger validate_forum_post_comment_parent before insert or update on public.forum_post_comments
+for each row execute function public.validate_forum_post_comment_parent();
+
 insert into storage.buckets(id,name,public,file_size_limit,allowed_mime_types)
 values('post-images','post-images',true,5242880,array['image/png','image/jpeg','image/webp'])
 on conflict(id) do update set public=true,file_size_limit=5242880,allowed_mime_types=array['image/png','image/jpeg','image/webp'];
