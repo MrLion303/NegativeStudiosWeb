@@ -151,6 +151,8 @@ Ejecuta **todo** `supabase/schema.sql` en Supabase → SQL Editor. Esta actualiz
 - Formato de texto en publicaciones: negrita, cursiva y texto más grande o pequeño.
 - Adjuntos PNG, JPG o WebP de hasta 5 MB.
 - Reacciones de corazón en comentarios y publicaciones.
+
+La cuenta con badge de moderador también puede eliminar publicaciones ajenas del foro; Supabase comprueba el permiso mediante una función protegida.
 - Políticas de acceso para solicitudes, publicaciones, corazones e imágenes.
 
 El esquema crea el bucket público `post-images`. Los perfiles, publicaciones e imágenes adjuntas son públicos por diseño; no publiques información privada.
