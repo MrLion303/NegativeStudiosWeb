@@ -949,12 +949,10 @@
 
   async function loadProjectComments(slug) {
     if (!client) return;
-    const roots = Array.from(document.querySelectorAll('[data-project-comments][data-project-slug="' + slug + '"]'));
-    const root = roots[0];
-    const sidebar = document.querySelector('[data-project-sidebar-comments][data-project-slug="' + slug + '"]');
-    if (!root && !sidebar) return;
-    const feed = root?.querySelector('[data-project-comments-feed]');
-    const count = root?.querySelector('[data-project-comments-count]');
+    const root = document.querySelector('[data-project-comments][data-project-slug="' + slug + '"]');
+    if (!root) return;
+    const feed = root.querySelector('[data-project-comments-feed]');
+    const count = root.querySelector('[data-project-comments-count]');
     if (feed) {
       feed.replaceChildren();
       const loading = document.createElement('p');
@@ -962,28 +960,33 @@
       loading.textContent = 'Cargando comentarios…';
       feed.appendChild(loading);
     }
-    const { data, error } = await client.from('project_comments')
+
+    // Intenta cargar los badges, pero no bloquea los comentarios si esa tabla aún no está activa.
+    let response = await client.from('project_comments')
       .select('id, project_slug, parent_comment_id, user_id, content, created_at, profiles!project_comments_user_id_fkey(username, display_name, avatar_url, profile_badges(is_mod, is_verified))')
       .eq('project_slug', slug).order('created_at', { ascending: true }).limit(1000);
+    if (response.error) {
+      const fallback = await client.from('project_comments')
+        .select('id, project_slug, parent_comment_id, user_id, content, created_at, profiles!project_comments_user_id_fkey(username, display_name, avatar_url)')
+        .eq('project_slug', slug).order('created_at', { ascending: true }).limit(1000);
+      if (!fallback.error) response = fallback;
+      else response = fallback;
+    }
+
+    const { data, error } = response;
     if (error) {
       if (feed) {
         feed.replaceChildren();
         const errorText = document.createElement('p');
         errorText.className = 'project-comment-empty';
-        errorText.textContent = 'No se pudieron cargar los comentarios. Comprueba que hayas ejecutado el esquema actualizado de Supabase.';
+        errorText.textContent = 'No se pudieron cargar los comentarios. Inténtalo de nuevo más tarde.';
         feed.appendChild(errorText);
-      }
-      if (sidebar) {
-        const preview = sidebar.querySelector('[data-project-sidebar-feed]');
-        if (preview) preview.textContent = 'No se pudieron cargar los comentarios.';
       }
       message('projectCommentsMessage', friendlyError(error), 'error');
       return;
     }
     const rows = data || [];
     if (count) count.textContent = rows.length + (rows.length === 1 ? ' comentario' : ' comentarios');
-    const sidebarCount = sidebar?.querySelector('[data-project-sidebar-count]');
-    if (sidebarCount) sidebarCount.textContent = String(rows.length);
     const byId = new Map();
     rows.forEach(row => byId.set(row.id, { row, children: [] }));
     const top = [];
@@ -994,7 +997,10 @@
       else top.push(node);
     });
     top.reverse();
-    const sortChildren = node => { node.children.sort((a,b) => new Date(a.row.created_at) - new Date(b.row.created_at)); node.children.forEach(sortChildren); };
+    const sortChildren = node => {
+      node.children.sort((a, b) => new Date(a.row.created_at) - new Date(b.row.created_at));
+      node.children.forEach(sortChildren);
+    };
     top.forEach(sortChildren);
     if (feed) {
       feed.replaceChildren();
@@ -1007,60 +1013,9 @@
         top.forEach(node => feed.appendChild(renderCommentNode(node.row, node.children, slug)));
       }
     }
-
-    if (sidebar) {
-      const preview = sidebar.querySelector('[data-project-sidebar-feed]');
-      if (preview) {
-        preview.replaceChildren();
-        const recent = top.slice(0, 3);
-        if (!recent.length) {
-          const empty = document.createElement('p');
-          empty.className = 'project-sidebar-comments-empty';
-          empty.textContent = 'Todavía no hay comentarios.';
-          preview.appendChild(empty);
-        } else {
-          recent.forEach(node => {
-            const profile = commentProfile(node.row);
-            const item = document.createElement('article');
-            item.className = 'project-sidebar-comment';
-            item.appendChild(avatarNode(profile.avatar_url, profile.display_name || profile.username));
-            const copy = document.createElement('div');
-            copy.className = 'project-sidebar-comment-copy';
-            const author = document.createElement('strong');
-            author.textContent = profile.display_name || profile.username || 'Usuario';
-            const nameLine = document.createElement('span'); nameLine.className = 'ns-name-badges';
-            nameLine.append(author, badgeListNode(profile, 'ns-badges--sidebar'));
-            const date = document.createElement('time');
-            date.dateTime = node.row.created_at || '';
-            date.textContent = formatCommentTimestamp(node.row.created_at);
-            const body = document.createElement('p');
-            body.textContent = node.row.content;
-            copy.append(nameLine, date, body);
-            item.appendChild(copy);
-            preview.appendChild(item);
-          });
-        }
-      }
-    }
-  }
-
-  function setupProjectSidebarVisibility() {
-    const sidebar = document.querySelector('.project-sidebar');
-    const comments = document.querySelector('#projectComments[data-project-comments]');
-    if (!sidebar || !comments || sidebar.dataset.commentsObserverReady === 'true') return;
-    sidebar.dataset.commentsObserverReady = 'true';
-    if (!('IntersectionObserver' in window)) return;
-    const observer = new IntersectionObserver(entries => {
-      if (!entries[0]?.isIntersecting) return;
-      sidebar.classList.add('is-comments-bottom');
-      observer.unobserve(comments);
-      observer.disconnect();
-    }, { root: null, rootMargin: '0px 0px -20% 0px', threshold: 0 });
-    observer.observe(comments);
   }
 
   function initProjectComments() {
-    setupProjectSidebarVisibility();
     if (!client) return;
     $('[data-project-comments][data-project-slug]').forEach(root => {
       const slug = root.dataset.projectSlug;
