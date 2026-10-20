@@ -333,7 +333,7 @@
         const token = $('#verifyCode').value.trim();
         const email = verifyEmail || $('#registerEmail').value.trim() || $('#loginEmail').value.trim();
         if (!email) throw new Error('Escribe tu correo electrónico e intenta solicitar un código nuevo.');
-        const { data, error } = await client.auth.verifyOtp({ email, token, type: 'signup' });
+        const { data, error } = await client.auth.verifyOtp({ email, token, type: 'email' });
         if (error) throw error;
         if (data.session) location.assign(new URL('perfil.html', SITE_ROOT).href);
         else {
@@ -382,8 +382,8 @@
         const { error } = await client.auth.updateUser({ password });
         if (error) throw error;
         history.replaceState(null, '', new URL('cuenta.html', SITE_ROOT).href);
-        message('authMessage', 'La contraseña se actualizó. Ya puedes iniciar sesión con ella.', 'success');
-        showAuthTab('login');
+        message('authMessage', 'La contraseña se actualizó correctamente. Te llevaremos a tu perfil.', 'success');
+        location.assign(new URL('perfil.html', SITE_ROOT).href);
       });
     });
   }
