@@ -53,17 +53,20 @@
   }
 
   async function updateNotificationCount() {
-    const link = $('a[data-ns-notifications-link]');
-    const badge = link?.querySelector('.ns-notification-count');
-    if (!link || !badge) return;
-    link.hidden = !sessionUser;
-    if (!sessionUser || !client) { badge.hidden = true; return; }
+    const navLink = $('a[data-ns-notifications-link]');
+    const links = Array.from(document.querySelectorAll('a[data-ns-notifications-link]'));
+    const badges = Array.from(document.querySelectorAll('.ns-notification-count'));
+    if (!links.length || !badges.length) return;
+    links.forEach(link => { link.hidden = !sessionUser; });
+    if (!sessionUser || !client) { badges.forEach(badge => { badge.hidden = true; }); return; }
     try {
       const { count, error } = await client.from('notifications').select('id', { count: 'exact', head: true }).is('read_at', null);
       if (error) throw error;
-      badge.textContent = count > 99 ? '99+' : String(count || 0);
-      badge.hidden = !count;
-    } catch (_) { badge.hidden = true; }
+      badges.forEach(badge => {
+        badge.textContent = count > 99 ? '99+' : String(count || 0);
+        badge.hidden = !count;
+      });
+    } catch (_) { badges.forEach(badge => { badge.hidden = true; }); }
   }
 
   function avatar(profile, className) {
