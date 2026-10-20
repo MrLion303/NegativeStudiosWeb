@@ -559,7 +559,11 @@
       drawSettings(user, await loadCurrentProfile(user));
       await refreshIdentityConnections().catch(error => message('connectionsMessage', friendlyError(error), 'error'));
       await refreshMicrosoftConnections();
-    } catch (error) { message('settingsProfileMessage', friendlyError(error), 'error'); }
+    } catch (error) {
+      if ($('#settingsWorkspace')) $('#settingsWorkspace').hidden = true;
+      if ($('#settingsGuest')) $('#settingsGuest').hidden = true;
+      message('settingsConfigNotice', 'No se pudo cargar el editor de perfil: ' + friendlyError(error), 'error');
+    }
   }
 
   function uploadExtension(file) {
@@ -1454,7 +1458,11 @@
   initialize().catch(error => {
     const text = 'No se pudo inicializar el sistema de cuentas: ' + friendlyError(error);
     if (pageType === 'auth') message('authMessage', text, 'error');
-    if (pageType === 'settings') message('settingsProfileMessage', text, 'error');
+    if (pageType === 'settings') {
+      if ($('#settingsWorkspace')) $('#settingsWorkspace').hidden = true;
+      if ($('#settingsGuest')) $('#settingsGuest').hidden = true;
+      message('settingsConfigNotice', text, 'error');
+    }
     if (pageType === 'public-profile') {
       showPublicProfileState('publicProfileMissing');
     }
