@@ -615,6 +615,40 @@
     return root.innerHTML;
   }
 
+  function linkifyPostMentions(root) {
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+    const nodes = [];
+    while (walker.nextNode()) {
+      const node = walker.currentNode;
+      if (!node.parentElement?.closest('a,button,script,style,textarea')) nodes.push(node);
+    }
+    const pattern = /(^|\s)@([a-zA-Z0-9_]{3,24})\b/g;
+    nodes.forEach(node => {
+      const text = node.nodeValue || '';
+      pattern.lastIndex = 0;
+      if (!pattern.test(text)) return;
+      pattern.lastIndex = 0;
+      const fragment = document.createDocumentFragment();
+      let last = 0, match;
+      while ((match = pattern.exec(text))) {
+        const wholeStart = match.index;
+        const mentionStart = wholeStart + match[1].length;
+        if (wholeStart > last) fragment.appendChild(document.createTextNode(text.slice(last, wholeStart)));
+        if (match[1]) fragment.appendChild(document.createTextNode(match[1]));
+        const username = match[2];
+        const link = document.createElement('a');
+        link.className = 'community-mention-link';
+        link.href = new URL('perfil.html?username=' + encodeURIComponent(username), SITE_ROOT).href;
+        link.textContent = '@' + username;
+        link.title = 'Ver perfil de @' + username;
+        fragment.appendChild(link);
+        last = mentionStart + username.length;
+      }
+      if (last < text.length) fragment.appendChild(document.createTextNode(text.slice(last)));
+      node.replaceWith(fragment);
+    });
+  }
+
   function postProfile(post) {
     let profile = post.profiles || {};
     if (Array.isArray(profile)) profile = profile[0] || {};
@@ -760,6 +794,7 @@
     if (post.content_html || post.content_text) {
       const body = document.createElement('div'); body.className = 'community-post-body';
       body.innerHTML = safePostHtml(post.content_html || String(post.content_text || '').replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])));
+      linkifyPostMentions(body);
       card.appendChild(body);
     }
     if (post.image_url && /^https?:\/\//i.test(post.image_url)) {
@@ -880,7 +915,7 @@
     const hideMentions = () => { mentionSuggestions.replaceChildren(); mentionSuggestions.hidden = true; };
     const updateMentions = async () => {
       const version = ++mentionQueryVersion;
-      const match = editor.innerText.match(/(?:^|\s)@([a-zA-Z0-9_]{0,24})$/);
+      const match = editor.innerText.trimEnd().match(/(?:^|\s)@([a-zA-Z0-9_]{0,24})$/);
       if (!match) { hideMentions(); return; }
       const query = (match[1] || '').toLowerCase();
       let people = [];
