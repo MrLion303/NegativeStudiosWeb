@@ -178,3 +178,6 @@
  .ns-account-link.client-download{max-width:160px!important;white-space:normal!important;text-align:center;font-size:.72rem!important;padding:0 8px!important}
  .ns-account-link--profile.client-download{max-width:none!important}
 }
+
+#settingsWorkspace[hidden],#settingsGuest[hidden]{display:none!important}
+@media(max-width:620px){.ns-account-link.client-download:not(.ns-account-link--profile){max-width:124px!important;font-size:.68rem!important;line-height:1.12!important;padding:0 7px!important}}
