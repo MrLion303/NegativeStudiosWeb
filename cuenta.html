@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#07111e">
+  <meta name="description" content="Registra tu cuenta de NegativeStudios o inicia sesión para acceder a tu perfil.">
+  <title>Registrar / Iniciar sesión — NegativeStudios</title>
+  <link rel="icon" href="assets/media/brand-icon.webp">
+  <link rel="stylesheet" href="assets/styles.css?v=20261013c">
+  <link rel="stylesheet" href="assets/account.css?v=20261019a">
+</head>
+<body>
+<header class="nav">
+  <div class="container nav-inner">
+    <a class="brand" href="index.html"><img src="assets/media/brand-logo.webp" alt="NegativeStudios" width="36" height="36"><span>NegativeStudios</span></a>
+    <nav class="nav-links" id="navLinks">
+      <a href="index.html">Inicio</a><a href="proyectos.html">Proyectos</a><a href="anuncios.html">Anuncios</a><a href="equipo.html">Equipo</a><a href="acerca.html">Nosotros</a>
+    </nav>
+    <a class="nav-cta" href="descargar.html">Descargar Negative Client</a>
+    <button class="menu-btn" aria-label="Abrir navegación" aria-controls="navLinks" aria-expanded="false">☰</button>
+  </div>
+</header>
+
+<main class="account-page" data-account-page="auth">
+  <section class="account-intro">
+    <span class="eyebrow">NegativeStudios · Cuenta</span>
+    <h1 class="title">Tu espacio en<br><span class="gradient-text">NegativeStudios.</span></h1>
+    <p class="lead">Inicia sesión o crea tu cuenta para preparar tu perfil y las futuras funciones de comunidad.</p>
+  </section>
+
+  <section class="account-card" aria-labelledby="accountTitle">
+    <div class="account-card-heading">
+      <span class="eyebrow">Bienvenido</span>
+      <h2 id="accountTitle">Tu cuenta</h2>
+      <p class="muted">Usa Google o continúa con tu correo electrónico.</p>
+    </div>
+
+    <div class="account-message account-config-message" data-account-config-notice hidden role="status"></div>
+    <div class="account-message" id="authMessage" hidden role="status" aria-live="polite"></div>
+
+    <div id="authMainView">
+      <div class="account-tabs" role="tablist" aria-label="Tipo de acceso">
+        <button class="account-tab is-active" id="authTabLogin" type="button" role="tab" aria-selected="true" aria-controls="authLoginPanel" data-auth-tab="login">Iniciar sesión</button>
+        <button class="account-tab" id="authTabRegister" type="button" role="tab" aria-selected="false" aria-controls="authRegisterPanel" data-auth-tab="register">Crear cuenta</button>
+      </div>
+
+      <button class="account-google-button" id="googleLoginButton" type="button">
+        <svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z" transform="translate(0 4)"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.74 7.18l7.64 5.92c4.46-4.12 7.14-10.2 7.14-17.57z" transform="translate(0 0)"/><path fill="#FBBC05" d="M10.53 28.59A14.4 14.4 0 0 1 9.75 24c0-1.59.27-3.13.76-4.59l-7.98-6.19A23.9 23.9 0 0 0 0 24c0 3.87.93 7.52 2.56 10.78l7.97-6.19z" transform="translate(0 0)"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.91-5.78l-7.64-5.92c-2.12 1.42-4.84 2.27-8.27 2.27-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z" transform="translate(0 0)"/></svg>
+        <span>Continuar con Google</span>
+      </button>
+
+      <div class="account-divider"><span>o con tu correo</span></div>
+
+      <section id="authLoginPanel" class="account-form-panel" role="tabpanel" aria-labelledby="authTabLogin">
+        <form id="loginForm" class="account-form">
+          <label for="loginEmail">Correo electrónico</label>
+          <input id="loginEmail" name="email" type="email" autocomplete="email" placeholder="tu@correo.com" required>
+          <label for="loginPassword">Contraseña</label>
+          <input id="loginPassword" name="password" type="password" autocomplete="current-password" placeholder="Tu contraseña" required>
+          <button class="btn primary account-submit" type="submit">Iniciar sesión <span aria-hidden="true">→</span></button>
+        </form>
+        <button class="account-text-button" type="button" data-open-recovery>¿Olvidaste tu contraseña?</button>
+      </section>
+
+      <section id="authRegisterPanel" class="account-form-panel" role="tabpanel" aria-labelledby="authTabRegister" hidden>
+        <form id="registerForm" class="account-form">
+          <label for="registerDisplayName">Nombre a mostrar</label>
+          <input id="registerDisplayName" name="display_name" type="text" autocomplete="name" maxlength="32" placeholder="Cómo te verá la comunidad" required>
+          <label for="registerUsername">Nombre de usuario</label>
+          <input id="registerUsername" name="username" type="text" autocomplete="username" minlength="3" maxlength="24" pattern="[A-Za-z0-9_]{3,24}" placeholder="tu_usuario" aria-describedby="usernameHint">
+          <small class="account-field-hint" id="usernameHint">Entre 3 y 24 caracteres: letras, números y guion bajo. Si lo dejas vacío, se sugerirá uno a partir de tu correo.</small>
+          <label for="registerEmail">Correo electrónico</label>
+          <input id="registerEmail" name="email" type="email" autocomplete="email" placeholder="tu@correo.com" required>
+          <label for="registerPassword">Contraseña</label>
+          <input id="registerPassword" name="password" type="password" autocomplete="new-password" minlength="8" placeholder="Mínimo 8 caracteres" required>
+          <button class="btn primary account-submit" type="submit">Crear cuenta <span aria-hidden="true">→</span></button>
+        </form>
+        <p class="account-field-hint account-bottom-note">Al crear una cuenta recibirás un código para verificar tu correo electrónico.</p>
+      </section>
+    </div>
+
+    <section id="authVerifyPanel" class="account-form-panel" hidden>
+      <div class="account-step-icon"><span aria-hidden="true">✉</span></div>
+      <h3>Verifica tu correo</h3>
+      <p class="muted">Enviamos un código de seis dígitos a <strong id="verifyEmailLabel"></strong>. Revisa también la carpeta de correo no deseado.</p>
+      <form id="verifyForm" class="account-form">
+        <label for="verifyCode">Código de verificación</label>
+        <input id="verifyCode" name="token" type="text" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" minlength="6" maxlength="6" placeholder="000000" required>
+        <button class="btn primary account-submit" type="submit">Verificar correo <span aria-hidden="true">→</span></button>
+      </form>
+      <button class="account-text-button" id="resendCodeButton" type="button">Enviar otro código</button>
+      <button class="account-text-button" id="backToRegisterButton" type="button">Volver al registro</button>
+    </section>
+
+    <section id="authRecoveryRequest" class="account-form-panel" hidden>
+      <h3>Recuperar contraseña</h3>
+      <p class="muted">Te enviaremos un correo con los pasos para elegir una nueva contraseña.</p>
+      <form id="recoveryRequestForm" class="account-form">
+        <label for="recoveryEmail">Correo electrónico</label>
+        <input id="recoveryEmail" name="email" type="email" autocomplete="email" placeholder="tu@correo.com" required>
+        <button class="btn primary account-submit" type="submit">Enviar instrucciones <span aria-hidden="true">→</span></button>
+      </form>
+      <button class="account-text-button" type="button" data-back-to-login>Volver a iniciar sesión</button>
+    </section>
+
+    <section id="authRecoveryPassword" class="account-form-panel" hidden>
+      <h3>Elige una nueva contraseña</h3>
+      <p class="muted">Usa una contraseña nueva de al menos ocho caracteres.</p>
+      <form id="recoveryPasswordForm" class="account-form">
+        <label for="recoveryNewPassword">Nueva contraseña</label>
+        <input id="recoveryNewPassword" name="password" type="password" autocomplete="new-password" minlength="8" required>
+        <label for="recoveryNewPasswordConfirm">Repite la contraseña</label>
+        <input id="recoveryNewPasswordConfirm" name="password_confirm" type="password" autocomplete="new-password" minlength="8" required>
+        <button class="btn primary account-submit" type="submit">Guardar contraseña <span aria-hidden="true">→</span></button>
+      </form>
+    </section>
+
+    <section id="authAlreadySignedIn" class="account-form-panel" hidden>
+      <div class="account-step-icon"><span aria-hidden="true">✓</span></div>
+      <h3>Ya has iniciado sesión</h3>
+      <p class="muted">Tu cuenta está lista. Puedes ir a tu perfil para personalizarla.</p>
+      <a class="btn primary account-submit" href="perfil.html">Ir a mi perfil <span aria-hidden="true">→</span></a>
+    </section>
+    <p class="account-footnote">Al continuar, tu cuenta se gestiona de forma segura mediante el proveedor de autenticación de NegativeStudios.</p>
+  </section>
+</main>
+
+<footer class="footer"><div class="container"><div class="footer-bottom"><span>© 2026 NegativeStudios. Desde 2022.</span><span>Forjamos mundos, creamos experiencias.</span></div></div></footer>
+<script src="assets/app.js?v=20261012a"></script>
+</body>
+</html>
