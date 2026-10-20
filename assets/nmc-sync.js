@@ -23,7 +23,7 @@
     const scriptUrl=source||ownScript?.src;
     if(!scriptUrl)return;
     const accountScript=document.createElement('script');
-    accountScript.src=new URL('accounts.js?v=20261020o',scriptUrl).href;
+    accountScript.src=new URL('accounts.js?v=20261020p',scriptUrl).href;
     accountScript.dataset.nsAccountScript='true';
     document.body.appendChild(accountScript);
   }
