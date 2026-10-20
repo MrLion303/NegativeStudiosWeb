@@ -139,3 +139,20 @@ Después de ejecutar el nuevo `supabase/schema.sql`, abre una página de proyect
 Después de añadir los emblemas, vuelve a ejecutar **todo** `supabase/schema.sql` en Supabase → SQL Editor. Esto crea la tabla de badges y las funciones protegidas para asignarlos y moderar comentarios. La cuenta `mrlion303` se registra como administradora si su perfil ya existe al ejecutar el esquema; si creas esa cuenta después, vuelve a ejecutar el esquema para registrarla.
 
 Los emblemas se cargan desde `assets/badges/mod.png` y `assets/badges/verificado.png`. La interfaz no es la autoridad de los permisos: Supabase valida que solo la cuenta administradora pueda asignar badges y que solo las cuentas con badge de moderador puedan eliminar comentarios ajenos.
+
+
+## Foro, amistades, publicaciones y corazones
+
+Ejecuta **todo** `supabase/schema.sql` en Supabase → SQL Editor. Esta actualización añade:
+
+- Solicitudes de amistad, aceptación/rechazo y eliminación de amistades.
+- En los perfiles, sugerencias de hasta tres personas y solicitudes recibidas.
+- Un foro en `foro.html`, cuyas publicaciones también aparecen en el perfil de su autor.
+- Formato de texto en publicaciones: negrita, cursiva y texto más grande o pequeño.
+- Adjuntos PNG, JPG o WebP de hasta 5 MB.
+- Reacciones de corazón en comentarios y publicaciones.
+- Políticas de acceso para solicitudes, publicaciones, corazones e imágenes.
+
+El esquema crea el bucket público `post-images`. Los perfiles, publicaciones e imágenes adjuntas son públicos por diseño; no publiques información privada.
+
+Después de ejecutar el SQL, prueba con dos cuentas distintas: envía una solicitud desde una, acéptala desde la otra, crea una publicación con formato e imagen y comprueba los corazones. El código ya está preparado, pero estas tablas y políticas no se activan en Supabase hasta ejecutar el esquema.
