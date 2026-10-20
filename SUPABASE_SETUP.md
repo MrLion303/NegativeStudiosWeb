@@ -74,7 +74,7 @@ La web usa Google como proveedor social inicial; pueden añadirse otros proveedo
 
 ## Nota sobre privacidad
 
-El perfil privado restringe el acceso a la fila de perfil a través de la API de la base de datos, pero los avatares se guardan en el bucket público para permitir mostrarlos en la web. Si después quieres privacidad estricta de imágenes o una red social con seguidores, mensajes y publicaciones privadas, habrá que diseñar esas reglas específicamente.
+Los perfiles, avatares, banners y comentarios son públicos por diseño, incluso cuando alguien no ha iniciado sesión. El nombre de usuario tiene un límite de cambio de 14 días aplicado en la base de datos. No añadas datos personales sensibles a la biografía ni publiques información privada en los comentarios. Si en el futuro se quiere añadir contenido privado, habrá que diseñar políticas de acceso específicas para esa función.
 
 
 ## 7. Activar la eliminación de cuentas
