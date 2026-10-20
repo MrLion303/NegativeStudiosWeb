@@ -285,3 +285,27 @@
 .public-profile-card{overflow:visible}
 .public-profile-banner{border-radius:19px 19px 0 0}
 @media(prefers-reduced-motion:reduce){.ns-badge-tooltip::after{transition:none}}
+
+
+/* Pestañas y conexiones de los ajustes. */
+.settings-tabs{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin:0 0 22px;padding:7px;border:1px solid var(--line);border-radius:15px;background:rgba(3,10,18,.58)}
+.settings-tab{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:42px;padding:9px 15px;border:1px solid transparent;border-radius:10px;background:transparent;color:var(--muted);font:inherit;font-size:.88rem;font-weight:800;cursor:pointer;transition:background .15s ease,color .15s ease,border-color .15s ease}
+.settings-tab:hover{background:rgba(255,255,255,.045);color:var(--text)}
+.settings-tab.is-active{color:#eaf7ff;border-color:rgba(102,194,255,.32);background:rgba(45,138,255,.13)}
+.settings-tab--danger.is-active{border-color:rgba(255,126,126,.32);background:rgba(220,65,65,.11);color:#ffd0d0}
+.settings-tab-content{min-width:0}
+.settings-panel{display:grid;gap:20px;min-width:0;animation:settingsPanelIn .18s ease both}
+.settings-panel[hidden]{display:none!important}
+.settings-tab:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+@keyframes settingsPanelIn{from{opacity:.3;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+.connection-list,.microsoft-connection-slots{display:grid;gap:10px}
+.connection-row{display:grid;grid-template-columns:44px minmax(0,1fr) auto;align-items:center;gap:13px;padding:13px;border:1px solid var(--line);border-radius:13px;background:rgba(0,0,0,.12);min-width:0}
+.connection-row.is-connected{border-color:rgba(100,215,160,.24);background:rgba(66,180,125,.04)}
+.connection-logo,.connection-slot-number{display:grid;place-items:center;width:40px;height:40px;border-radius:12px;background:rgba(255,255,255,.06);font-weight:900;font-size:1.05rem}
+.connection-logo--google{color:#65a8ff}.connection-logo--discord{color:#a79bff}.connection-logo--twitch{color:#c4a0ff}
+.connection-copy{display:grid;gap:4px;min-width:0}
+.connection-copy strong{overflow-wrap:anywhere}
+.connection-copy .muted{font-size:.8rem;line-height:1.4;overflow-wrap:anywhere}
+.connection-slot-number{color:var(--accent);border:1px solid rgba(102,194,255,.2)}
+.connection-row .btn{min-width:100px;white-space:nowrap}
+@media(max-width:620px){.settings-tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px}.settings-tab{padding:9px 8px;font-size:.79rem}.connection-row{grid-template-columns:36px minmax(0,1fr);gap:10px;padding:11px}.connection-logo,.connection-slot-number{width:34px;height:34px}.connection-row .btn{grid-column:2;justify-self:start;min-width:0}.settings-panel{gap:14px}}
