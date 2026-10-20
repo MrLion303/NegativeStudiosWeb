@@ -262,6 +262,9 @@
 
   function initAuthPage() {
     if (!$('#loginForm')) return;
+    try { verifyEmail = sessionStorage.getItem('ns_pending_verification_email') || ''; } catch (_) {}
+    const pendingEmailLabel = $('#verifyEmailLabel');
+    if (pendingEmailLabel && verifyEmail) pendingEmailLabel.textContent = verifyEmail;
     const loginTab = $('#authTabLogin');
     const registerTab = $('#authTabRegister');
     loginTab?.addEventListener('click', () => showAuthTab('login'));
@@ -315,6 +318,7 @@
         });
         if (error) throw error;
         verifyEmail = email;
+        try { sessionStorage.setItem('ns_pending_verification_email', email); } catch (_) {}
         const label = $('#verifyEmailLabel');
         if (label) label.textContent = email;
         if (data.session && data.user) {
@@ -331,10 +335,11 @@
       withBusy(event.currentTarget, async () => {
         if (!requireClient()) return;
         const token = $('#verifyCode').value.trim();
-        const email = verifyEmail || $('#registerEmail').value.trim() || $('#loginEmail').value.trim();
+        const email = verifyEmail || sessionStorage.getItem('ns_pending_verification_email') || $('#registerEmail').value.trim() || $('#loginEmail').value.trim();
         if (!email) throw new Error('Escribe tu correo electrónico e intenta solicitar un código nuevo.');
         const { data, error } = await client.auth.verifyOtp({ email, token, type: 'email' });
         if (error) throw error;
+        try { sessionStorage.removeItem('ns_pending_verification_email'); } catch (_) {}
         if (data.session) location.assign(new URL('perfil.html', SITE_ROOT).href);
         else {
           showAuthTab('login');
@@ -346,7 +351,7 @@
     $('#resendCodeButton')?.addEventListener('click', async () => {
       if (!requireClient()) return;
       try {
-        const email = verifyEmail || $('#registerEmail').value.trim();
+        const email = verifyEmail || sessionStorage.getItem('ns_pending_verification_email') || $('#registerEmail').value.trim();
         if (!email) throw new Error('Escribe el correo con el que intentaste registrarte.');
         const { error } = await client.auth.resend({
           type: 'signup',
@@ -621,6 +626,10 @@
         showAuthOnly('authRecoveryPassword');
       } else if (user) {
         showAuthOnly('authAlreadySignedIn');
+      } else if (verifyEmail) {
+        const label = $('#verifyEmailLabel');
+        if (label) label.textContent = verifyEmail;
+        showAuthOnly('authVerifyPanel');
       } else if (new URLSearchParams(location.search).get('verified') === '1') {
         showAuthTab('login');
         message('authMessage', 'Tu correo quedó verificado. Ya puedes iniciar sesión.', 'success');
