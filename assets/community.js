@@ -357,32 +357,38 @@
 
   function renderHeartButton(table, keyName, post, user, likes) {
     const button = document.createElement('button');
-    const liked = Boolean(user && likes.some(row => row.user_id === user.id));
+    let liked = Boolean(user && likes.some(row => row.user_id === user.id));
+    let count = likes.length;
     button.type = 'button';
     button.className = 'community-heart' + (liked ? ' is-liked' : '');
     button.setAttribute('aria-label', liked ? 'Quitar corazón' : 'Dar corazón');
-    button.textContent = '♥ ' + likes.length;
+    button.textContent = '♥ ' + count;
     button.addEventListener('click', async () => {
       if (!sessionUser) {
         location.assign(new URL('cuenta.html', SITE_ROOT).href);
         return;
       }
       button.disabled = true;
+      const nextLiked = !liked;
       try {
         const query = client.from(table);
         const filter = keyName === 'post_id' ? 'post_id' : 'comment_id';
-        if (button.classList.contains('is-liked')) {
-          const result = await query.delete().eq(filter, post.id).eq('user_id', sessionUser.id);
-          if (result.error) throw result.error;
-        } else {
+        if (nextLiked) {
           const result = await query.insert({ [filter]: post.id, user_id: sessionUser.id });
           if (result.error) throw result.error;
+        } else {
+          const result = await query.delete().eq(filter, post.id).eq('user_id', sessionUser.id);
+          if (result.error) throw result.error;
         }
-        if (table === 'forum_post_likes') await loadForumFeed();
-        else document.querySelector('[data-project-comments][data-project-slug]')?.dispatchEvent(new CustomEvent('ns-comments-refresh'));
+        liked = nextLiked;
+        count = Math.max(0, count + (liked ? 1 : -1));
+        button.classList.toggle('is-liked', liked);
+        button.setAttribute('aria-label', liked ? 'Quitar corazón' : 'Dar corazón');
+        button.textContent = '♥ ' + count;
       } catch (error) {
-        button.disabled = false;
         alert(error?.message || 'No se pudo guardar el corazón. Comprueba que hayas actualizado Supabase.');
+      } finally {
+        button.disabled = false;
       }
     });
     return button;
