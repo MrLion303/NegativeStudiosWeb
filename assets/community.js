@@ -433,7 +433,8 @@
         remove.disabled = true;
         const result = await client.from('forum_posts').delete().eq('id', post.id).eq('user_id', user.id);
         if (result.error) { alert(result.error.message); remove.disabled = false; }
-        else await loadForumFeed();
+        else if ($('#forumFeed')) await loadForumFeed();
+        else if ($('#publicProfilePosts')) await loadPostsForProfile(user.id, $('#publicProfilePosts'));
       });
       actions.appendChild(remove);
     }
