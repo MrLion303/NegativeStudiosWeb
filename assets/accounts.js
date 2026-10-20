@@ -555,8 +555,11 @@
       $('#settingsGuest').hidden = false;
       return;
     }
-    try { drawSettings(user, await loadCurrentProfile(user)); }
-    catch (error) { message('settingsProfileMessage', friendlyError(error), 'error'); }
+    try {
+      drawSettings(user, await loadCurrentProfile(user));
+      await refreshIdentityConnections().catch(error => message('connectionsMessage', friendlyError(error), 'error'));
+      await refreshMicrosoftConnections();
+    } catch (error) { message('settingsProfileMessage', friendlyError(error), 'error'); }
   }
 
   function uploadExtension(file) {
