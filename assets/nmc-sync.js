@@ -16,5 +16,17 @@
     document.querySelector('.nmc-content-wrap')?.classList.add('project-shell-content');
     const oldFooter=document.querySelector('.footer');if(oldFooter)oldFooter.outerHTML=footer();else document.body.insertAdjacentHTML('beforeend',footer());
   }
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>requestAnimationFrame(sync));else requestAnimationFrame(sync);
+  function loadAccountUI(){
+    if(document.querySelector('script[data-ns-account-script]'))return;
+    const source=document.currentScript?.src;
+    const ownScript=[...document.scripts].find(script=>script.src.includes('/assets/nmc-sync.js'));
+    const scriptUrl=source||ownScript?.src;
+    if(!scriptUrl)return;
+    const accountScript=document.createElement('script');
+    accountScript.src=new URL('accounts.js?v=20261019a',scriptUrl).href;
+    accountScript.dataset.nsAccountScript='true';
+    document.body.appendChild(accountScript);
+  }
+  const syncAndLoadAccounts=()=>{sync();loadAccountUI()};
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>requestAnimationFrame(syncAndLoadAccounts));else requestAnimationFrame(syncAndLoadAccounts);
 })();
