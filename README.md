@@ -36,7 +36,7 @@ La estructura toma referencias generales de estudios creativos contemporáneos �
 
 ## Cuentas y perfiles
 
-La estructura de autenticación se prepara con Supabase Auth para registro con correo y contraseña, confirmación por código, acceso con Google, recuperación de acceso y perfiles personales.
+La estructura de autenticación se prepara con Supabase Auth para registro con correo y contraseña, confirmación por código, acceso con Google, Discord y Twitch, recuperación de acceso y perfiles personales.
 
 - `cuenta.html` — registro e inicio de sesión.
 - `perfil.html` — perfil público con avatar y banner.
@@ -46,6 +46,6 @@ La estructura de autenticación se prepara con Supabase Auth para registro con c
 - `assets/supabase-config.js` — URL y clave publicable del proyecto.
 - `supabase/schema.sql` — perfiles públicos, límite de cambio de usuario de 14 días, comentarios, políticas RLS y almacenamiento de avatares/banners.
 - `supabase/functions/delete-account/index.ts` — función de servidor para borrar cuentas sin exponer la clave administrativa.
-- `SUPABASE_SETUP.md` — guía para conectar Supabase y Google OAuth.
+- `SUPABASE_SETUP.md` — guía para conectar Supabase y configurar Google, Discord y Twitch OAuth.
 
 La web requiere Supabase configurado. Cuando actualices funciones de perfiles o comentarios, vuelve a ejecutar `supabase/schema.sql`. Para borrar cuentas, también despliega la función `delete-account` siguiendo `SUPABASE_SETUP.md`. No publiques nunca una clave `service_role`.
