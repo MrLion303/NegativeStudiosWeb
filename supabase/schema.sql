@@ -104,9 +104,12 @@ create trigger on_auth_user_created_profile
 
 -- Almacenamiento de avatares. Los archivos tienen nombres únicos y se guardan
 -- en una carpeta por usuario: <auth.uid()>/<nombre-aleatorio>.<extensión>.
-insert into storage.buckets (id, name, public)
-values ('avatars', 'avatars', true)
-on conflict (id) do update set public = true;
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values ('avatars', 'avatars', true, 3145728, array['image/png', 'image/jpeg', 'image/webp'])
+on conflict (id) do update set
+  public = true,
+  file_size_limit = 3145728,
+  allowed_mime_types = array['image/png', 'image/jpeg', 'image/webp'];
 
 drop policy if exists "Avatar images are publicly readable" on storage.objects;
 create policy "Avatar images are publicly readable"
