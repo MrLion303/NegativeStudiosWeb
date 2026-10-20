@@ -222,7 +222,7 @@
 .community-compose-bottom .community-muted{font-size:.75rem}
 .community-composer-footer .community-button--primary,.community-post-reply-form .community-button--primary{min-height:36px;padding:8px 18px;border-radius:999px;background:#2386f4;border-color:#2386f4;color:#fff;font-weight:800}
 .community-post-replies{margin-top:13px;padding-top:12px;border-top:1px solid rgba(122,184,255,.12)}
-.community-post-replies-toggle{border:0;padding:4px 0;background:transparent;color:#80bfff;font:700 .83rem/1.4 inherit;cursor:pointer}
+.community-post-replies-toggle{border:0;padding:4px 0;background:transparent;color:#80bfff;font-family:inherit;font-size:.83rem;font-weight:700;line-height:1.4;cursor:pointer}
 .community-post-reply-list{display:grid;gap:12px;margin-top:10px}
 .community-post-reply{display:grid;grid-template-columns:30px minmax(0,1fr);gap:9px;min-width:0}
 .community-avatar--reply{width:30px;height:30px;flex:0 0 30px;font-size:.72rem}
