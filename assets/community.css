@@ -191,3 +191,7 @@
 .project-comment-menu button{display:block;width:100%;padding:10px;border:0;border-radius:8px;background:transparent;text-align:left;color:var(--text);font:inherit;font-size:.83rem;cursor:pointer}
 .project-comment-menu button:hover{background:rgba(255,255,255,.06)}
 .project-comment-menu button.is-danger{color:#ffb0b0}
+
+
+.community-overflow-menu button:disabled{opacity:.48;cursor:default}
+.community-overflow-menu button:disabled:hover,.project-comment-menu button:disabled:hover{background:transparent}
