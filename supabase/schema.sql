@@ -31,10 +31,10 @@ create policy "All profiles are public"
   on public.profiles for select
   using (true);
 
+-- Los perfiles nuevos se crean desde el trigger de auth.users; el navegador
+-- no necesita insertar filas ni modificar columnas internas del perfil.
 drop policy if exists "Users can create their own profile" on public.profiles;
-create policy "Users can create their own profile"
-  on public.profiles for insert to authenticated
-  with check (id = (select auth.uid()));
+revoke insert, update on public.profiles from authenticated;
 
 drop policy if exists "Users can update their own profile" on public.profiles;
 create policy "Users can update their own profile"
@@ -43,7 +43,8 @@ create policy "Users can update their own profile"
   with check (id = (select auth.uid()));
 
 grant select on public.profiles to anon, authenticated;
-grant insert, update on public.profiles to authenticated;
+grant update (username, display_name, bio, avatar_url, banner_url)
+  on public.profiles to authenticated;
 
 -- El límite de dos semanas se aplica en el servidor y no puede alterarse desde el navegador.
 create or replace function public.enforce_public_profile_rules()
