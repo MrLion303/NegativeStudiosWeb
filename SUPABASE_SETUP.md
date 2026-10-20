@@ -59,7 +59,47 @@ El servicio de correo predeterminado puede tener límites de envío. Para produc
 
 La web usa Google como proveedor social inicial; pueden añadirse otros proveedores desde Supabase sin almacenar contraseñas sociales en el sitio.
 
-## 6. Características preparadas
+## 6. Activar el acceso con Discord y Twitch
+
+La web ya incluye botones para los dos proveedores. Para que funcionen, hay que registrar una aplicación en cada plataforma y guardar sus credenciales en Supabase.
+
+### Discord
+
+1. Abre el [Discord Developer Portal](https://discord.com/developers/applications) y pulsa **New Application**.
+2. Ponle un nombre (por ejemplo, `NegativeStudios Web`) y crea la aplicación.
+3. Entra a **OAuth2** y busca el apartado **Redirects**. Antes de completarlo, copia la URL de callback de Supabase: abre el proyecto en Supabase → **Authentication** → **Sign In / Providers** → **Discord**. La URL será parecida a `https://<project-ref>.supabase.co/auth/v1/callback`; copia la que muestra tu propio panel, no escribas una inventada.
+4. En Discord, añade esa URL en **Redirects** y guarda los cambios.
+5. Copia el **Client ID** y el **Client Secret** de Discord.
+6. Regresa a Supabase → **Authentication** → **Sign In / Providers** → **Discord**, activa el proveedor, pega el Client ID y Client Secret y guarda.
+
+### Twitch
+
+1. Abre la [Twitch Developer Console](https://dev.twitch.tv/console/apps) e inicia sesión. Twitch puede pedirte que actives la autenticación en dos pasos en tu cuenta antes de registrar una aplicación.
+2. Pulsa **Register Your Application** y crea una aplicación para el sitio web.
+3. En Supabase → **Authentication** → **Sign In / Providers** → **Twitch**, copia la URL de callback que muestra el panel.
+4. Regresa al formulario de Twitch y pega esa URL en **OAuth Redirect URL**. Selecciona la categoría que mejor encaje, completa el CAPTCHA y crea la aplicación.
+5. En la aplicación creada, pulsa **Manage**. Copia el **Client ID** y genera un **Client Secret**.
+6. En Supabase, abre el proveedor **Twitch**, actívalo, pega el Client ID y Client Secret y guarda los cambios.
+
+### Comprueba las URL de retorno
+
+En Supabase → **Authentication** → **URL Configuration**, mantén como **Site URL**:
+
+`https://mrlion303.github.io/NegativeStudiosWeb/`
+
+En **Redirect URLs**, asegúrate de que exista:
+
+`https://mrlion303.github.io/NegativeStudiosWeb/**`
+
+Los proveedores Discord y Twitch deben tener configurada la URL de callback de Supabase; esa URL no es la misma que la dirección de GitHub Pages. Las credenciales de cliente y los secretos OAuth se introducen en los paneles de los proveedores y en Supabase, nunca en el JavaScript de la web ni en GitHub.
+
+### Foto de perfil del proveedor
+
+Al iniciar sesión, la web intenta obtener la imagen que Supabase recibe del proveedor OAuth. Si el perfil todavía no tiene avatar, guarda la imagen proporcionada por Discord o Twitch en el perfil público. Si el usuario ya ha subido una foto manualmente, esa imagen tiene prioridad y no se sobrescribe automáticamente. La disponibilidad del avatar depende de que el proveedor devuelva una URL de imagen dentro de los datos de identidad.
+
+Después de guardar estos cambios, vuelve a ejecutar el archivo completo `supabase/schema.sql` desde el SQL Editor de Supabase para actualizar también el trigger que crea perfiles y copiar mejor los datos de nombre y avatar que envían los proveedores.
+
+## 7. Características preparadas
 
 - Registro e inicio de sesión por correo y contraseña.
 - Confirmación del correo mediante un código de 6 dígitos.
@@ -77,7 +117,7 @@ La web usa Google como proveedor social inicial; pueden añadirse otros proveedo
 Los perfiles, avatares, banners y comentarios son públicos por diseño, incluso cuando alguien no ha iniciado sesión. El nombre de usuario tiene un límite de cambio de 14 días aplicado en la base de datos. No añadas datos personales sensibles a la biografía ni publiques información privada en los comentarios. Si en el futuro se quiere añadir contenido privado, habrá que diseñar políticas de acceso específicas para esa función.
 
 
-## 7. Activar la eliminación de cuentas
+## 8. Activar la eliminación de cuentas
 
 La eliminación usa una Supabase Edge Function. Puedes desplegarla desde el navegador, sin instalar la CLI.
 
@@ -89,6 +129,6 @@ La eliminación usa una Supabase Edge Function. Puedes desplegarla desde el nave
 6. No crees secretos manuales llamados `SUPABASE_URL`, `SUPABASE_ANON_KEY` o `SUPABASE_SERVICE_ROLE_KEY`: Supabase los proporciona a las Edge Functions. Nunca pongas una clave administrativa en GitHub o en JavaScript del navegador.
 7. Para probarlo, inicia sesión en la web y usa la sección **Eliminar mi cuenta** de `configurar-perfil.html`. Es una operación permanente; haz la primera prueba únicamente con una cuenta que estés dispuesto a borrar.
 
-## 8. Activar comentarios
+## 9. Activar comentarios
 
 Después de ejecutar el nuevo `supabase/schema.sql`, abre una página de proyecto, por ejemplo OVERLAND. Los comentarios se leen públicamente; para escribir o responder es necesario iniciar sesión. Las respuestas quedan enlazadas al comentario original y no se pueden asociar a otro proyecto.
