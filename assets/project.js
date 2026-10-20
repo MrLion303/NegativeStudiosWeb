@@ -24,10 +24,17 @@ document.addEventListener('DOMContentLoaded',()=>{
     set('#projectSummary','La ficha que buscas no existe o cambió de dirección.');
     const legacy=document.querySelector('#legacyLink');
     if(legacy){legacy.href='proyectos.html';legacy.textContent='Volver a proyectos';}
+    const commentsBlock=document.querySelector('[data-project-comments]');
+    if(commentsBlock) commentsBlock.hidden=true;
     return;
   }
 
   document.title=`${project.name} — NegativeStudios`;
+  const commentsBlock=document.querySelector('[data-project-comments]');
+  if(commentsBlock){
+    const commentSlug=String(project.id||id||'project').toLowerCase().replace(/[^a-z0-9-]/g,'-').replace(/-+/g,'-').replace(/^-|-$/g,'').slice(0,64);
+    commentsBlock.dataset.projectSlug=commentSlug.length>=2?commentSlug:'project';
+  }
   const summary=original?.summary||project.summary;
   set('#projectName',project.name);
   set('#projectCrumb',project.name);
