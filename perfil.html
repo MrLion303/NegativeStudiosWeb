@@ -8,7 +8,7 @@
   <title>Perfil — NegativeStudios</title>
   <link rel="icon" href="assets/media/brand-icon.webp">
   <link rel="stylesheet" href="assets/styles.css?v=20261013c">
-  <link rel="stylesheet" href="assets/account.css?v=20261020e">
+  <link rel="stylesheet" href="assets/account.css?v=20261020g">
 </head>
 <body>
 <header class="nav">
@@ -50,7 +50,7 @@
           <a class="btn primary" id="customizeProfileButton" href="configurar-perfil.html">Personalizar perfil</a>
         </div>
         <div class="public-profile-actions" id="publicProfileAdminActions" hidden></div>
-        <div class="public-profile-actions" id="publicProfileAdminActions" hidden></div>
+        <div id="publicProfileFriendAction" hidden></div>
       </div>
       <div class="public-profile-copy">
         <div class="public-profile-name-line" id="publicProfileNameLine"><h1 class="public-profile-name" id="publicProfileDisplayName">Usuario</h1></div>
@@ -61,17 +61,20 @@
         </div>
       </div>
       <div id="publicProfileBadgeAdmin" hidden></div>
-      <div id="publicProfileBadgeAdmin" hidden></div>
       <div class="public-profile-divider"></div>
     </div>
     <section class="public-profile-timeline">
-      <h2>Actividad</h2>
-      <p>Este perfil está preparado para las próximas funciones de comunidad de NegativeStudios.</p>
+      <h2>Publicaciones</h2>
+      <div id="publicProfilePosts" class="community-feed"><p class="community-muted">Las publicaciones del usuario aparecerán aquí.</p></div>
     </section>
   </article>
+  <aside id="publicProfileCommunityRail" hidden>
+    <section id="friendRequestsInbox" class="community-panel" hidden></section>
+    <section id="communitySuggestions" class="community-panel"></section>
+  </aside>
 </main>
 
 <footer class="footer"><div class="container"><div class="footer-bottom"><span>© 2026 NegativeStudios. Desde 2022.</span><span>Forjamos mundos, creamos experiencias.</span></div></div></footer>
-<script src="assets/app.js?v=20261020e"></script>
+<script src="assets/app.js?v=20261020g"></script>
 </body>
 </html>
