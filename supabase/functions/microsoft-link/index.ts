@@ -12,6 +12,42 @@ const json = (body: unknown, status = 200) => Response.json(body, { status, head
 const env = (key: string) => Deno.env.get(key) || "";
 const redirectToSettings = (state: string) => Response.redirect(settingsReturnUrl + encodeURIComponent(state), 302);
 
+function decodeBase64Url(value: string): Uint8Array {
+  const base64 = value.replace(/-/g, "+").replace(/_/g, "/");
+  const padded = base64 + "=".repeat((4 - (base64.length % 4)) % 4);
+  const binary = atob(padded);
+  return Uint8Array.from(binary, char => char.charCodeAt(0));
+}
+
+function decodeJwtPart(value: string): Record<string, unknown> {
+  return JSON.parse(new TextDecoder().decode(decodeBase64Url(value)));
+}
+
+async function verifiedIdentityClaims(idToken: string, clientId: string, expectedNonce: string) {
+  const parts = idToken.split(".");
+  if (parts.length !== 3) throw new Error("ID token inválido.");
+  const header = decodeJwtPart(parts[0]);
+  const claims = decodeJwtPart(parts[1]);
+  if (header.alg !== "RS256" || typeof header.kid !== "string") throw new Error("Firma Microsoft no admitida.");
+  const jwksResponse = await fetch("https://login.microsoftonline.com/common/discovery/v2.0/keys");
+  if (!jwksResponse.ok) throw new Error("No se pudieron validar las claves de Microsoft.");
+  const jwks = await jwksResponse.json();
+  const jwk = (jwks.keys || []).find((key: Record<string, unknown>) => key.kid === header.kid);
+  if (!jwk) throw new Error("No se encontró la clave de firma de Microsoft.");
+  const publicKey = await crypto.subtle.importKey("jwk", jwk, {
+    name: "RSASSA-PKCS1-v1_5", hash: "SHA-256",
+  }, false, ["verify"]);
+  const signedPart = new TextEncoder().encode(parts[0] + "." + parts[1]);
+  const verified = await crypto.subtle.verify("RSASSA-PKCS1-v1_5", publicKey, decodeBase64Url(parts[2]), signedPart);
+  if (!verified) throw new Error("La firma del ID token de Microsoft no es válida.");
+  const now = Math.floor(Date.now() / 1000);
+  if (claims.aud !== clientId || Number(claims.exp) <= now || Number(claims.nbf || 0) > now) throw new Error("El ID token de Microsoft ha caducado o no corresponde a esta aplicación.");
+  if (claims.nonce !== expectedNonce) throw new Error("El nonce OAuth de Microsoft no coincide.");
+  const tid = String(claims.tid || "");
+  if (!tid || claims.iss !== "https://login.microsoftonline.com/" + tid + "/v2.0") throw new Error("El emisor del ID token de Microsoft no es válido.");
+  return claims;
+}
+
 async function encryptToken(value: string, secret: string): Promise<string> {
   const keyBytes = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(secret));
   const key = await crypto.subtle.importKey("raw", keyBytes, { name: "AES-GCM" }, false, ["encrypt"]);
@@ -46,7 +82,7 @@ Deno.serve(async (req: Request) => {
     const state = paramsIn.get("state") || "";
     if (!code || !state) return redirectToSettings("microsoft-error");
     const { data: savedState, error: stateError } = await admin.from("microsoft_oauth_states")
-      .select("state,user_id,slot,expires_at").eq("state", state).maybeSingle();
+      .select("state,user_id,slot,nonce,expires_at").eq("state", state).maybeSingle();
     if (stateError || !savedState || new Date(savedState.expires_at).getTime() < Date.now()) {
       if (savedState) await admin.from("microsoft_oauth_states").delete().eq("state", state);
       return redirectToSettings("microsoft-error-state");
@@ -62,17 +98,21 @@ Deno.serve(async (req: Request) => {
         grant_type: "authorization_code",
         code,
         redirect_uri: redirectUri,
-        scope: "openid profile email offline_access User.Read XboxLive.signin",
+        scope: "openid profile email offline_access XboxLive.signin",
       }),
     });
     const tokens = await tokenResponse.json();
     if (!tokenResponse.ok || !tokens.access_token) return redirectToSettings("microsoft-error-token");
 
-    const graphResponse = await fetch("https://graph.microsoft.com/v1.0/me?$select=id,displayName,mail,userPrincipalName", {
-      headers: { Authorization: "Bearer " + tokens.access_token },
-    });
-    const account = await graphResponse.json();
-    if (!graphResponse.ok || !account.id) return redirectToSettings("microsoft-error-account");
+    if (!tokens.id_token) return redirectToSettings("microsoft-error-token");
+    let account: Record<string, unknown>;
+    try {
+      account = await verifiedIdentityClaims(String(tokens.id_token), clientId, String(savedState.nonce || ""));
+    } catch {
+      return redirectToSettings("microsoft-error-identity");
+    }
+    const microsoftId = String(account.oid || account.sub || "");
+    if (!microsoftId) return redirectToSettings("microsoft-error-account");
 
     let accessTokenEncrypted = "";
     let refreshTokenEncrypted: string | null = null;
@@ -83,12 +123,12 @@ Deno.serve(async (req: Request) => {
       return redirectToSettings("microsoft-error-encryption");
     }
 
-    const email = String(account.mail || account.userPrincipalName || "");
-    const displayName = String(account.displayName || email || "Cuenta Microsoft").slice(0, 160);
+    const email = String(account.preferred_username || account.email || account.upn || "");
+    const displayName = String(account.name || email || "Cuenta Microsoft").slice(0, 160);
     const { error: saveError } = await admin.from("microsoft_account_connections").upsert({
       user_id: savedState.user_id,
       slot: savedState.slot,
-      microsoft_user_id: String(account.id),
+      microsoft_user_id: microsoftId,
       email,
       display_name: displayName,
       access_token_encrypted: accessTokenEncrypted,
@@ -134,8 +174,9 @@ Deno.serve(async (req: Request) => {
   if (action !== "start") return json({ error: "Acción no válida." }, 400);
 
   const state = crypto.randomUUID();
+  const nonce = crypto.randomUUID();
   const { error: stateError } = await admin.from("microsoft_oauth_states").insert({
-    state, user_id: userData.user.id, slot,
+    state, nonce, user_id: userData.user.id, slot,
     expires_at: new Date(Date.now() + 10 * 60 * 1000).toISOString(),
   });
   if (stateError) return json({ error: "No se pudo iniciar la vinculación de Microsoft." }, 500);
@@ -145,8 +186,9 @@ Deno.serve(async (req: Request) => {
     response_type: "code",
     redirect_uri: redirectUri,
     response_mode: "query",
-    scope: "openid profile email offline_access User.Read XboxLive.signin",
+    scope: "openid profile email offline_access XboxLive.signin",
     state,
+    nonce,
     prompt: "select_account",
   });
   return json({ authorization_url: "https://login.microsoftonline.com/common/oauth2/v2.0/authorize?" + params.toString() });
