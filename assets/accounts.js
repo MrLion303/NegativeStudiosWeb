@@ -771,10 +771,21 @@
           content
         });
         if (error) throw error;
+        textarea.value = '';
         await loadProjectComments(slug);
       }, 'projectCommentsMessage');
     });
     return form;
+  }
+
+  function formatCommentTimestamp(value) {
+    if (!value) return 'Fecha desconocida';
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return 'Fecha desconocida';
+    return new Intl.DateTimeFormat(undefined, {
+      year: 'numeric', month: 'short', day: 'numeric',
+      hour: 'numeric', minute: '2-digit'
+    }).format(date);
   }
 
   function renderCommentNode(comment, children, slug) {
@@ -791,7 +802,7 @@
     link.href = profileHref(profile);
     link.textContent = profile.display_name || profile.username || 'Usuario';
     const handle = document.createElement('small');
-    handle.textContent = '@' + (profile.username || 'usuario') + ' · ' + formatDate(comment.created_at, { day: 'numeric', month: 'short', year: 'numeric' });
+    handle.textContent = '@' + (profile.username || 'usuario') + ' · ' + formatCommentTimestamp(comment.created_at);
     author.append(link, handle);
     header.appendChild(author);
     article.appendChild(header);
@@ -839,30 +850,41 @@
 
   async function loadProjectComments(slug) {
     if (!client) return;
-    const root = document.querySelector('[data-project-comments][data-project-slug="' + slug + '"]');
-    if (!root) return;
-    const feed = root.querySelector('[data-project-comments-feed]');
-    const count = root.querySelector('[data-project-comments-count]');
-    if (!feed) return;
-    feed.replaceChildren();
-    const loading = document.createElement('p');
-    loading.className = 'project-comment-empty';
-    loading.textContent = 'Cargando comentarios…';
-    feed.appendChild(loading);
+    const roots = Array.from(document.querySelectorAll('[data-project-comments][data-project-slug="' + slug + '"]'));
+    const root = roots[0];
+    const sidebar = document.querySelector('[data-project-sidebar-comments][data-project-slug="' + slug + '"]');
+    if (!root && !sidebar) return;
+    const feed = root?.querySelector('[data-project-comments-feed]');
+    const count = root?.querySelector('[data-project-comments-count]');
+    if (feed) {
+      feed.replaceChildren();
+      const loading = document.createElement('p');
+      loading.className = 'project-comment-empty';
+      loading.textContent = 'Cargando comentarios…';
+      feed.appendChild(loading);
+    }
     const { data, error } = await client.from('project_comments')
       .select('id, project_slug, parent_comment_id, user_id, content, created_at, profiles!project_comments_user_id_fkey(username, display_name, avatar_url)')
       .eq('project_slug', slug).order('created_at', { ascending: true }).limit(1000);
     if (error) {
-      feed.replaceChildren();
-      const errorText = document.createElement('p');
-      errorText.className = 'project-comment-empty';
-      errorText.textContent = 'No se pudieron cargar los comentarios. Comprueba que hayas ejecutado el esquema actualizado de Supabase.';
-      feed.appendChild(errorText);
+      if (feed) {
+        feed.replaceChildren();
+        const errorText = document.createElement('p');
+        errorText.className = 'project-comment-empty';
+        errorText.textContent = 'No se pudieron cargar los comentarios. Comprueba que hayas ejecutado el esquema actualizado de Supabase.';
+        feed.appendChild(errorText);
+      }
+      if (sidebar) {
+        const preview = sidebar.querySelector('[data-project-sidebar-feed]');
+        if (preview) preview.textContent = 'No se pudieron cargar los comentarios.';
+      }
       message('projectCommentsMessage', friendlyError(error), 'error');
       return;
     }
     const rows = data || [];
     if (count) count.textContent = rows.length + (rows.length === 1 ? ' comentario' : ' comentarios');
+    const sidebarCount = sidebar?.querySelector('[data-project-sidebar-count]');
+    if (sidebarCount) sidebarCount.textContent = String(rows.length);
     const byId = new Map();
     rows.forEach(row => byId.set(row.id, { row, children: [] }));
     const top = [];
@@ -875,14 +897,49 @@
     top.reverse();
     const sortChildren = node => { node.children.sort((a,b) => new Date(a.row.created_at) - new Date(b.row.created_at)); node.children.forEach(sortChildren); };
     top.forEach(sortChildren);
-    feed.replaceChildren();
-    if (!top.length) {
-      const empty = document.createElement('p');
-      empty.className = 'project-comment-empty';
-      empty.textContent = 'Todavía no hay comentarios. Sé la primera persona en compartir su opinión.';
-      feed.appendChild(empty);
-    } else {
-      top.forEach(node => feed.appendChild(renderCommentNode(node.row, node.children, slug)));
+    if (feed) {
+      feed.replaceChildren();
+      if (!top.length) {
+        const empty = document.createElement('p');
+        empty.className = 'project-comment-empty';
+        empty.textContent = 'Todavía no hay comentarios. Sé la primera persona en compartir su opinión.';
+        feed.appendChild(empty);
+      } else {
+        top.forEach(node => feed.appendChild(renderCommentNode(node.row, node.children, slug)));
+      }
+    }
+
+    if (sidebar) {
+      const preview = sidebar.querySelector('[data-project-sidebar-feed]');
+      if (preview) {
+        preview.replaceChildren();
+        const recent = top.slice(0, 3);
+        if (!recent.length) {
+          const empty = document.createElement('p');
+          empty.className = 'project-sidebar-comments-empty';
+          empty.textContent = 'Todavía no hay comentarios.';
+          preview.appendChild(empty);
+        } else {
+          recent.forEach(node => {
+            const profile = commentProfile(node.row);
+            const item = document.createElement('article');
+            item.className = 'project-sidebar-comment';
+            item.appendChild(avatarNode(profile.avatar_url, profile.display_name || profile.username));
+            const copy = document.createElement('div');
+            copy.className = 'project-sidebar-comment-copy';
+            const author = document.createElement('strong');
+            author.textContent = profile.display_name || profile.username || 'Usuario';
+            const date = document.createElement('time');
+            date.dateTime = node.row.created_at || '';
+            date.textContent = formatCommentTimestamp(node.row.created_at);
+            const body = document.createElement('p');
+            body.textContent = node.row.content;
+            copy.append(author, date, body);
+            item.appendChild(copy);
+            preview.appendChild(item);
+          });
+        }
+      }
     }
   }
 
