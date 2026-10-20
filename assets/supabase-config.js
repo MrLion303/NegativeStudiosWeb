@@ -5,6 +5,6 @@
  */
 window.NS_SUPABASE_CONFIG = {
   siteUrl: "https://mrlion303.github.io/NegativeStudiosWeb/",
-  url: "",
-  publishableKey: ""
+  url: "https://fdoqiddixjxzaugkqquo.supabase.co",
+  publishableKey: "sb_publishable_nxwKxUTaKoK8bByjiQzQ5A_DVjaGFjq"
 };
