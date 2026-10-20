@@ -39,7 +39,7 @@
   }
 
   function ensureStyles() {
-    const href = new URL('assets/account.css?v=20261020d', SITE_ROOT).href;
+    const href = new URL('assets/account.css?v=20261020e', SITE_ROOT).href;
     if (!$$('link[rel="stylesheet"]').some(link => link.href === href)) {
       const link = document.createElement('link');
       link.rel = 'stylesheet';
@@ -943,9 +943,23 @@
     }
   }
 
+  function setupProjectSidebarVisibility() {
+    const sidebar = document.querySelector('.project-sidebar');
+    const comments = document.querySelector('#projectComments[data-project-comments]');
+    if (!sidebar || !comments || sidebar.dataset.commentsObserverReady === 'true') return;
+    sidebar.dataset.commentsObserverReady = 'true';
+    if (!('IntersectionObserver' in window)) return;
+    const observer = new IntersectionObserver(entries => {
+      const entry = entries[0];
+      sidebar.classList.toggle('is-comments-bottom', Boolean(entry?.isIntersecting));
+    }, { root: null, rootMargin: '0px 0px -20% 0px', threshold: 0 });
+    observer.observe(comments);
+  }
+
   function initProjectComments() {
+    setupProjectSidebarVisibility();
     if (!client) return;
-    $$('[data-project-comments][data-project-slug]').forEach(root => {
+    $('[data-project-comments][data-project-slug]').forEach(root => {
       const slug = root.dataset.projectSlug;
       const compose = root.querySelector('[data-project-comments-compose]');
       if (!compose) return;
