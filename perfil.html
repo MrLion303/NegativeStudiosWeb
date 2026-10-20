@@ -85,7 +85,7 @@
             <p class="muted">Los cambios sensibles se gestionan a través de Supabase Auth y pueden requerir confirmación por correo.</p>
           </div>
           <div class="account-message" id="securityMessage" hidden role="status" aria-live="polite"></div>
-          <form id="changeEmailForm" class="account-form">
+          <form id="changeEmailForm" class="account-form" data-message-target="securityMessage">
             <label for="currentEmail">Correo actual</label>
             <input id="currentEmail" type="email" readonly>
             <label for="newEmail">Nuevo correo electrónico</label>
@@ -93,7 +93,7 @@
             <button class="btn ghost account-submit" type="submit">Cambiar correo</button>
           </form>
           <div class="account-separator"></div>
-          <form id="changePasswordForm" class="account-form">
+          <form id="changePasswordForm" class="account-form" data-message-target="securityMessage">
             <label for="changePassword">Nueva contraseña</label>
             <input id="changePassword" type="password" autocomplete="new-password" minlength="8" placeholder="Mínimo 8 caracteres" required>
             <label for="changePasswordConfirm">Repite la contraseña</label>
