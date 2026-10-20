@@ -10,6 +10,7 @@
   let verifyEmail = '';
   let authListenerRegistered = false;
   let navLink = null;
+  let commentMenuDismissBound = false;
 
   const $ = selector => document.querySelector(selector);
   const $$ = selector => Array.from(document.querySelectorAll(selector));
@@ -1117,11 +1118,46 @@
     }).format(date);
   }
 
+  function createCommentOverflowMenu(items) {
+    if (!items.length) items = [{ label: 'Sin acciones disponibles', disabled: true, action: async () => {} }];
+    const wrap = document.createElement('div'); wrap.className = 'community-overflow project-comment-overflow';
+    const trigger = document.createElement('button');
+    trigger.type = 'button'; trigger.className = 'community-overflow-trigger';
+    trigger.textContent = '⋮'; trigger.title = 'Más opciones'; trigger.setAttribute('aria-label', 'Más opciones');
+    trigger.setAttribute('aria-haspopup', 'menu'); trigger.setAttribute('aria-expanded', 'false');
+    const menu = document.createElement('div'); menu.className = 'project-comment-menu'; menu.hidden = true; menu.setAttribute('role', 'menu');
+    trigger.addEventListener('click', event => {
+      event.stopPropagation(); menu.hidden = !menu.hidden; trigger.setAttribute('aria-expanded', String(!menu.hidden));
+    });
+    items.forEach(item => {
+      const option = document.createElement('button'); option.type = 'button'; option.setAttribute('role', 'menuitem');
+      option.textContent = item.label;
+      if (item.danger) option.classList.add('is-danger');
+      if (item.disabled) option.disabled = true;
+      option.addEventListener('click', async event => {
+        event.stopPropagation(); menu.hidden = true; trigger.setAttribute('aria-expanded', 'false'); await item.action(option);
+      });
+      menu.appendChild(option);
+    });
+    wrap.append(trigger, menu);
+    if (!commentMenuDismissBound) {
+      commentMenuDismissBound = true;
+      document.addEventListener('click', event => {
+        if (event.target.closest('.project-comment-overflow')) return;
+        document.querySelectorAll('.project-comment-menu').forEach(node => {
+          node.hidden = true; node.parentElement?.querySelector('.community-overflow-trigger')?.setAttribute('aria-expanded', 'false');
+        });
+      });
+    }
+    return wrap;
+  }
+
   function renderCommentNode(comment, children, slug) {
     const profile = commentProfile(comment);
     const article = document.createElement('article');
     article.className = 'project-comment';
     article.dataset.commentId = String(comment.id);
+    article.id = 'comment-' + comment.id;
     const header = document.createElement('div');
     header.className = 'project-comment-head';
     header.appendChild(avatarNode(profile.avatar_url, profile.display_name || profile.username));
@@ -1136,6 +1172,34 @@
     handle.textContent = '@' + (profile.username || 'usuario') + ' · ' + formatCommentTimestamp(comment.created_at);
     author.append(nameLine, handle);
     header.appendChild(author);
+
+    const menuItems = [];
+    if (currentUser && currentUser.id === comment.user_id) {
+      menuItems.push({
+        label: 'Eliminar comentario', danger: true,
+        action: async button => {
+          if (!window.confirm('¿Eliminar este comentario y sus respuestas?')) return;
+          button.disabled = true;
+          const result = await client.from('project_comments').delete().eq('id', comment.id).eq('user_id', currentUser.id);
+          if (result.error) { message('projectCommentsMessage', friendlyError(result.error), 'error'); button.disabled = false; }
+          else await loadProjectComments(slug);
+        }
+      });
+    } else if (currentUser && currentUser.id !== comment.user_id && normalizedBadges(lastProfile).is_mod) {
+      menuItems.push({
+        label: 'Eliminar como moderador', danger: true,
+        action: async button => {
+          if (!window.confirm('¿Eliminar este comentario y todas sus respuestas? Esta acción no se puede deshacer.')) return;
+          button.disabled = true;
+          try {
+            const result = await client.rpc('moderator_delete_project_comment', { target_comment_id: comment.id });
+            if (result.error) throw result.error;
+            await loadProjectComments(slug);
+          } catch (error) { message('projectCommentsMessage', friendlyError(error), 'error'); button.disabled = false; }
+        }
+      });
+    }
+    header.appendChild(createCommentOverflowMenu(menuItems));
     article.appendChild(header);
 
     const content = document.createElement('div');
@@ -1185,34 +1249,6 @@
         actions.insertAdjacentElement('afterend', form);
       });
       actions.appendChild(reply);
-    }
-    if (currentUser && currentUser.id === comment.user_id) {
-      const remove = document.createElement('button');
-      remove.type = 'button';
-      remove.className = 'project-comment-action project-comment-action--delete';
-      remove.textContent = 'Eliminar';
-      remove.addEventListener('click', async () => {
-        if (!window.confirm('¿Eliminar este comentario y sus respuestas?')) return;
-        const result = await client.from('project_comments').delete().eq('id', comment.id).eq('user_id', currentUser.id);
-        if (result.error) message('projectCommentsMessage', friendlyError(result.error), 'error');
-        else await loadProjectComments(slug);
-      });
-      actions.appendChild(remove);
-    }
-    if (currentUser && currentUser.id !== comment.user_id && normalizedBadges(lastProfile).is_mod) {
-      const moderatorDelete = document.createElement('button');
-      moderatorDelete.type = 'button'; moderatorDelete.className = 'project-comment-action project-comment-action--delete';
-      moderatorDelete.textContent = 'Eliminar como moderador';
-      moderatorDelete.addEventListener('click', async () => {
-        if (!window.confirm('¿Eliminar este comentario y todas sus respuestas? Esta acción no se puede deshacer.')) return;
-        moderatorDelete.disabled = true;
-        try {
-          const result = await client.rpc('moderator_delete_project_comment', { target_comment_id: comment.id });
-          if (result.error) throw result.error;
-          await loadProjectComments(slug);
-        } catch (error) { message('projectCommentsMessage', friendlyError(error), 'error'); moderatorDelete.disabled = false; }
-      });
-      actions.appendChild(moderatorDelete);
     }
     article.appendChild(actions);
     if (children.length) {
