@@ -808,7 +808,163 @@
     const likes = Array.isArray(post.forum_post_likes) ? post.forum_post_likes : [];
     actions.appendChild(renderHeartButton('forum_post_likes', 'post_id', post, user, likes));
     card.appendChild(actions);
+
+    const replies = document.createElement('section');
+    replies.className = 'community-post-replies';
+    replies.dataset.postReplies = String(post.id);
+    card.appendChild(replies);
+    loadPostComments(post, replies, user).catch(() => {
+      const error = document.createElement('p');
+      error.className = 'community-muted';
+      error.textContent = 'No se pudieron cargar las respuestas.';
+      replies.replaceChildren(error);
+    });
     return card;
+  }
+
+  async function loadPostComments(post, host, user) {
+    if (!host || !client) return;
+    host.replaceChildren();
+    const heading = document.createElement('button');
+    heading.type = 'button';
+    heading.className = 'community-post-replies-toggle';
+    heading.textContent = 'Respuestas';
+    heading.setAttribute('aria-expanded', 'true');
+    const list = document.createElement('div');
+    list.className = 'community-post-reply-list';
+    const formHost = document.createElement('div');
+    formHost.className = 'community-post-reply-compose';
+    host.append(heading, list, formHost);
+    heading.addEventListener('click', () => {
+      const expanded = heading.getAttribute('aria-expanded') !== 'true';
+      heading.setAttribute('aria-expanded', String(expanded));
+      list.hidden = !expanded;
+      formHost.hidden = !expanded;
+    });
+
+    const renderForm = parentCommentId => {
+      formHost.replaceChildren();
+      if (!user) {
+        const login = document.createElement('a');
+        login.className = 'community-post-reply-login';
+        login.href = new URL('cuenta.html', SITE_ROOT).href;
+        login.textContent = 'Inicia sesión para responder';
+        formHost.appendChild(login);
+        return;
+      }
+      const form = document.createElement('form');
+      form.className = 'community-post-reply-form';
+      const input = document.createElement('textarea');
+      input.rows = 2;
+      input.maxLength = 2000;
+      input.placeholder = parentCommentId ? 'Escribe tu respuesta…' : 'Escribe una respuesta a esta publicación…';
+      input.required = true;
+      const actions = document.createElement('div');
+      actions.className = 'community-post-reply-form-actions';
+      const cancel = document.createElement('button');
+      cancel.type = 'button'; cancel.className = 'community-button community-button--quiet';
+      cancel.textContent = 'Cancelar';
+      cancel.hidden = !parentCommentId;
+      cancel.addEventListener('click', () => renderForm(null));
+      const send = document.createElement('button');
+      send.type = 'submit'; send.className = 'community-button community-button--primary'; send.textContent = 'Responder';
+      actions.append(cancel, send);
+      form.append(input, actions);
+      form.addEventListener('submit', async event => {
+        event.preventDefault();
+        const content = input.value.trim();
+        if (!content) return;
+        send.disabled = true; send.textContent = 'Enviando…';
+        try {
+          const result = await client.from('forum_post_comments').insert({
+            post_id: post.id, parent_comment_id: parentCommentId, user_id: user.id, content
+          });
+          if (result.error) throw result.error;
+          renderForm(null);
+          await loadPostComments(post, host, user);
+        } catch (error) {
+          const status = document.createElement('p');
+          status.className = 'community-status community-status--error';
+          status.textContent = error?.message || 'No se pudo enviar la respuesta. Actualiza el esquema de Supabase.';
+          form.appendChild(status);
+          send.disabled = false; send.textContent = 'Responder';
+        }
+      });
+      formHost.appendChild(form);
+    };
+    renderForm(null);
+
+    const result = await client.from('forum_post_comments')
+      .select('id,post_id,parent_comment_id,user_id,content,created_at,profiles!forum_post_comments_user_id_fkey(username,display_name,avatar_url,profile_badges(is_mod,is_verified))')
+      .eq('post_id', post.id).order('created_at', { ascending: true }).limit(300);
+    if (result.error) {
+      list.replaceChildren();
+      const info = document.createElement('p');
+      info.className = 'community-muted';
+      info.textContent = 'Las respuestas estarán disponibles cuando ejecutes el esquema actualizado de Supabase.';
+      list.appendChild(info);
+      return;
+    }
+    const rows = result.data || [];
+    heading.textContent = 'Respuestas · ' + rows.length;
+    if (!rows.length) {
+      const empty = document.createElement('p'); empty.className = 'community-muted';
+      empty.textContent = 'Todavía no hay respuestas. Inicia la conversación.';
+      list.appendChild(empty);
+      return;
+    }
+    const byId = new Map();
+    rows.forEach(row => byId.set(row.id, { row, children: [] }));
+    const roots = [];
+    rows.forEach(row => {
+      const node = byId.get(row.id);
+      const parent = row.parent_comment_id ? byId.get(row.parent_comment_id) : null;
+      if (parent) parent.children.push(node); else roots.push(node);
+    });
+    const renderOne = (node, depth) => {
+      const row = node.row;
+      const profile = row.profiles || {};
+      const item = document.createElement('article');
+      item.className = 'community-post-reply' + (depth ? ' community-post-reply--nested' : '');
+      item.id = 'post-comment-' + row.id;
+      item.appendChild(avatar(profile, 'community-avatar community-avatar--reply'));
+      const body = document.createElement('div'); body.className = 'community-post-reply-body';
+      const head = document.createElement('div'); head.className = 'community-post-reply-head';
+      const nameLine = document.createElement('div'); nameLine.className = 'community-name-line';
+      const name = document.createElement('a'); name.className = 'community-name'; name.href = profileUrl(profile);
+      name.textContent = profile.display_name || profile.username || 'Usuario';
+      nameLine.append(name, badges(profile, 'community-name-badges'));
+      const meta = document.createElement('small'); meta.className = 'community-post-reply-meta';
+      meta.textContent = '@' + (profile.username || 'usuario') + ' · ' + new Date(row.created_at).toLocaleString('es-MX', { dateStyle: 'medium', timeStyle: 'short' });
+      head.append(nameLine, meta);
+      if (user && user.id === row.user_id) {
+        const overflow = createOverflowMenu([{
+          label: 'Eliminar respuesta', danger: true, action: async button => {
+            if (!window.confirm('¿Eliminar esta respuesta?')) return;
+            button.disabled = true;
+            const deleted = await client.from('forum_post_comments').delete().eq('id', row.id).eq('user_id', user.id);
+            if (deleted.error) { alert(deleted.error.message); button.disabled = false; return; }
+            await loadPostComments(post, host, user);
+          }
+        }]);
+        head.appendChild(overflow);
+      }
+      const textNode = document.createElement('p'); textNode.className = 'community-post-reply-text'; textNode.textContent = row.content;
+      body.append(head, textNode);
+      if (user) {
+        const reply = document.createElement('button'); reply.type = 'button';
+        reply.className = 'community-post-reply-button'; reply.textContent = 'Responder';
+        reply.addEventListener('click', () => { renderForm(row.id); inputFocus(); });
+        body.appendChild(reply);
+      }
+      const children = document.createElement('div'); children.className = 'community-post-reply-children';
+      node.children.forEach(child => children.appendChild(renderOne(child, depth + 1)));
+      body.appendChild(children);
+      item.appendChild(body);
+      return item;
+    };
+    function inputFocus() { formHost.querySelector('textarea')?.focus(); }
+    roots.forEach(node => list.appendChild(renderOne(node, 0)));
   }
 
   async function loadPostsForProfile(profileId, target) {
