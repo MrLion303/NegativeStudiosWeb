@@ -181,3 +181,11 @@
 
 #settingsWorkspace[hidden],#settingsGuest[hidden]{display:none!important}
 @media(max-width:620px){.ns-account-link.client-download:not(.ns-account-link--profile){max-width:124px!important;font-size:.68rem!important;line-height:1.12!important;padding:0 7px!important}}
+
+
+/* Proveedores de acceso social */
+.account-provider-buttons{display:grid;gap:10px;margin-bottom:2px}
+.account-provider-button{border-color:rgba(122,184,255,.23);background:rgba(255,255,255,.035)}
+.account-provider-button:hover{background:rgba(102,194,255,.09)}
+.account-provider-button svg{width:22px;height:22px}
+.account-provider-button:disabled{opacity:.68;cursor:wait;transform:none}
