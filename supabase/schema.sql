@@ -476,4 +476,11 @@ create policy "Users can delete their own post images" on storage.objects for de
  $$;
  revoke all on function public.moderator_delete_forum_post(bigint) from public,anon;
  grant execute on function public.moderator_delete_forum_post(bigint) to authenticated;
+
  
+-- Permitir consultar públicamente amistades aceptadas sin exponer solicitudes pendientes.
+drop policy if exists "Accepted friendships are publicly readable" on public.friend_requests;
+create policy "Accepted friendships are publicly readable"
+  on public.friend_requests for select
+  using (status = 'accepted');
+grant select on public.friend_requests to anon, authenticated;
