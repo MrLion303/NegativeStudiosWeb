@@ -129,6 +129,44 @@ La eliminación usa una Supabase Edge Function. Puedes desplegarla desde el nave
 6. No crees secretos manuales llamados `SUPABASE_URL`, `SUPABASE_ANON_KEY` o `SUPABASE_SERVICE_ROLE_KEY`: Supabase los proporciona a las Edge Functions. Nunca pongas una clave administrativa en GitHub o en JavaScript del navegador.
 7. Para probarlo, inicia sesión en la web y usa la sección **Eliminar mi cuenta** de `configurar-perfil.html`. Es una operación permanente; haz la primera prueba únicamente con una cuenta que estés dispuesto a borrar.
 
+
+## 10. Inicio de sesión con nombre de usuario
+
+Para permitir acceso con correo o nombre de usuario, despliega la función `login-by-username`:
+
+1. En Supabase → **Edge Functions**, crea una función llamada exactamente `login-by-username` usando el editor web.
+2. Copia el contenido de [`supabase/functions/login-by-username/index.ts`](https://github.com/MrLion303/NegativeStudiosWeb/blob/main/supabase/functions/login-by-username/index.ts) y publícalo.
+3. Desactiva **Verify JWT** para esta función porque el usuario todavía no ha iniciado sesión. La propia función valida el nombre y la contraseña con Supabase Auth; responde con un mensaje genérico y no expone el correo asociado al nombre.
+4. No añadas claves privadas al navegador. La función usa las variables de entorno de Supabase; nunca copies la `service_role` a archivos públicos.
+
+Hasta que la función se despliegue, el inicio de sesión por correo sigue disponible; el inicio con nombre de usuario mostrará un aviso.
+
+## 11. Centro de notificaciones, menciones y menús de moderación
+
+Ejecuta otra vez **todo** `supabase/schema.sql` en SQL Editor para crear la tabla privada de notificaciones, sus disparadores y la tabla de menciones. Se generan notificaciones por solicitudes de amistad, corazones en comentarios y publicaciones, respuestas a comentarios y menciones en publicaciones. Los usuarios solo pueden leer y marcar como leídas sus propias notificaciones.
+
+Las opciones de borrar contenido también se muestran en el menú de tres puntos. Los permisos reales siguen impuestos por RLS y las funciones protegidas: una cuenta normal puede borrar solo sus propios comentarios y publicaciones; la capacidad de moderación requiere el badge correspondiente.
+
+## 12. Conectar Google, Discord, Twitch y hasta tres cuentas Microsoft
+
+### Google, Discord y Twitch
+
+Activa y configura cada proveedor en Supabase → **Authentication → Sign In / Providers**, siguiendo los pasos de Google, Discord y Twitch de esta guía. Desde **Personalizar perfil → Conexiones**, el usuario puede vincular o desvincular esas identidades. No se debe quitar el único método de acceso que tenga la cuenta.
+
+### Microsoft / Minecraft
+
+La vinculación Microsoft usa la Edge Function `microsoft-link`; no utiliza los proveedores sociales enlazados a Supabase porque hay que mantener hasta tres cuentas Microsoft distintas por perfil.
+
+1. Registra una aplicación web en [Microsoft Entra](https://entra.microsoft.com/) que permita cuentas personales de Microsoft (y organizacionales, si las necesitas).
+2. En la configuración de autenticación de la aplicación, añade como redirect URI de plataforma **Web** la URL exacta de tu proyecto Supabase seguida de `/functions/v1/microsoft-link`. El valor tiene esta forma: `https://TU-PROYECTO.supabase.co/functions/v1/microsoft-link`; reemplaza el dominio por el que muestra tu propio proyecto.
+3. Configura los permisos de Microsoft necesarios para la identidad y Xbox Live, incluido `XboxLive.signin`, y acepta el consentimiento que solicite Microsoft.
+4. En Supabase → **Edge Functions**, crea la función `microsoft-link`, copia [`supabase/functions/microsoft-link/index.ts`](https://github.com/MrLion303/NegativeStudiosWeb/blob/main/supabase/functions/microsoft-link/index.ts) y publícala.
+5. Desactiva **Verify JWT** para la función de callback. Sus peticiones POST validan la sesión Supabase del usuario; el callback GET se valida con un estado OAuth aleatorio de corta duración.
+6. En los secretos de Edge Functions, configura `MICROSOFT_CLIENT_ID`, `MICROSOFT_CLIENT_SECRET` y `MICROSOFT_TOKEN_ENCRYPTION_KEY`. El último debe ser un secreto aleatorio robusto; no lo publiques ni lo guardes en GitHub. Supabase proporciona `SUPABASE_URL`, `SUPABASE_ANON_KEY` y `SUPABASE_SERVICE_ROLE_KEY` a las funciones.
+7. Ejecuta otra vez todo `supabase/schema.sql`. La tabla de conexiones Microsoft no concede acceso directo a usuarios del navegador; los tokens de acceso y actualización se guardan cifrados del lado del servidor.
+
+Las tres posiciones Microsoft se muestran en la pestaña **Conexiones**. La vinculación guarda una identidad Microsoft y tokens cifrados para futuras integraciones con el launcher; todavía no implementa el inicio de sesión Minecraft en el launcher ni comprueba licencias/entitlements. Esa integración requiere desarrollar y probar el flujo Xbox Live / Minecraft del launcher después.
+
 ## 9. Activar comentarios
 
 Después de ejecutar el nuevo `supabase/schema.sql`, abre una página de proyecto, por ejemplo OVERLAND. Los comentarios se leen públicamente; para escribir o responder es necesario iniciar sesión. Las respuestas quedan enlazadas al comentario original y no se pueden asociar a otro proyecto.
