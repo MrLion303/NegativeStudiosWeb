@@ -69,3 +69,16 @@
 @media(max-width:840px){.account-profile-grid{grid-template-columns:minmax(0,1fr)}.account-profile-preview{position:static}.account-profile-preview{max-width:none}.account-profile-preview .account-upload-button{max-width:300px}}
 @media(max-width:620px){.account-page{width:min(calc(100% - 26px),980px);padding:48px 0 68px}.account-card{padding:22px 18px}.account-intro{margin-bottom:25px}.ns-account-link{min-height:38px;padding:0 8px;max-width:140px;white-space:normal;text-align:center;font-size:.72rem}.ns-account-link--profile{width:38px;height:38px;min-height:38px;flex-basis:38px;max-width:none;padding:2px}.account-tabs{gap:3px}.account-tab{font-size:.88rem;padding:8px 6px}}
 @media(prefers-reduced-motion:reduce){.account-google-button,.account-tab,.ns-account-link,.account-form input,.account-form textarea{transition:none!important}}
+
+@media(max-width:620px){
+  .nav-inner{gap:7px!important}
+  .nav-inner>.brand{gap:7px;min-width:0;white-space:nowrap}
+  .nav-inner>.brand span{font-size:.84rem;letter-spacing:-.045em}
+  .nav-actions{gap:6px;flex:0 0 auto}
+  .ns-account-link{max-width:118px;font-size:.68rem;padding:0 7px;min-height:38px}
+  .ns-account-link--profile{width:38px;height:38px;min-height:38px;flex-basis:38px}
+  .menu-btn{width:38px!important;height:38px!important;flex:0 0 38px}
+}
+@media(max-width:380px){
+  .nav-inner>.brand span{display:none}
+}
