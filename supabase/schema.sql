@@ -477,7 +477,7 @@ grant usage,select on sequence public.forum_post_comments_id_seq to authenticate
 -- Permitir a los moderadores eliminar respuestas ajenas del foro.
 create or replace function public.moderator_delete_forum_comment(target_comment_id bigint)
 returns void language plpgsql security definer set search_path=''
-as $
+as $$
 begin
   if auth.uid() is null or not exists (
     select 1 from public.profile_badges where user_id = auth.uid() and is_mod = true
@@ -489,13 +489,13 @@ begin
     raise exception 'No se encontró la respuesta o ya fue eliminada.';
   end if;
 end;
-$;
+$$;
 revoke all on function public.moderator_delete_forum_comment(bigint) from public, anon;
 grant execute on function public.moderator_delete_forum_comment(bigint) to authenticated;
 
 create or replace function public.validate_forum_post_comment_parent()
 returns trigger language plpgsql set search_path=''
-as $
+as $$
 declare parent_post bigint;
 begin
   new.content := trim(new.content);
@@ -507,7 +507,7 @@ begin
   end if;
   return new;
 end;
-$;
+$$;
 drop trigger if exists validate_forum_post_comment_parent on public.forum_post_comments;
 create trigger validate_forum_post_comment_parent before insert or update on public.forum_post_comments
 for each row execute function public.validate_forum_post_comment_parent();
@@ -651,7 +651,7 @@ for each row execute function public.notify_project_comment_reply();
 
 create or replace function public.notify_forum_post_comment()
 returns trigger language plpgsql security definer set search_path=''
-as $
+as $$
 declare post_owner uuid; parent_owner uuid;
 begin
   select user_id into post_owner from public.forum_posts where id=new.post_id;
@@ -663,7 +663,7 @@ begin
   end if;
   return new;
 end;
-$;
+$$;
 drop trigger if exists notify_forum_post_comment on public.forum_post_comments;
 create trigger notify_forum_post_comment after insert on public.forum_post_comments
 for each row execute function public.notify_forum_post_comment();
