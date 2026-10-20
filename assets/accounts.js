@@ -1204,7 +1204,7 @@
         }
       });
     }
-    header.appendChild(createCommentOverflowMenu(menuItems));
+    if (menuItems.length) header.appendChild(createCommentOverflowMenu(menuItems));
     article.appendChild(header);
 
     const content = document.createElement('div');
