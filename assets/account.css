@@ -261,3 +261,13 @@
 .ns-badge-admin-status{font-size:.84rem;line-height:1.45}
 .ns-badge-admin-status[data-kind="success"]{color:#91e7b5}
 .ns-badge-admin-status[data-kind="error"]{color:#ffb6b6}
+
+
+/* Badges a la altura de cada nombre; la insignia de verificación va primero. */
+.ns-badges{gap:.22em}
+.ns-badge{width:1.28em;height:1.28em;flex:0 0 auto}
+.public-profile-name-line>.ns-badges .ns-badge{width:1.12em;height:1.12em}
+.ns-badges--comment .ns-badge{width:1.22em;height:1.22em}
+.ns-badges--sidebar .ns-badge{width:1.15em;height:1.15em}
+.project-comment-like{color:#d9b7c5;border-color:rgba(255,115,158,.23);background:rgba(255,90,140,.05)}
+.project-comment-like.is-liked{color:#ff668d;background:rgba(255,70,120,.12);border-color:rgba(255,115,158,.45)}
