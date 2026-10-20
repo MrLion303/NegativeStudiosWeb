@@ -168,6 +168,48 @@
     } catch (_) {}
   }
 
+  async function syncOAuthAvatar(user) {
+    if (!client || !user) return null;
+    const sources = [user.user_metadata || {}];
+    if (Array.isArray(user.identities)) {
+      user.identities.forEach(identity => {
+        if (identity?.identity_data) sources.push(identity.identity_data);
+      });
+    }
+
+    const candidates = [];
+    sources.forEach(source => {
+      candidates.push(
+        source.avatar_url,
+        source.picture,
+        source.profile_image_url,
+        source.profile_image,
+        source.avatar,
+        source.image_url
+      );
+    });
+    const avatarUrl = candidates.find(value =>
+      typeof value === 'string' && /^https:\/\//i.test(value)
+    );
+    if (!avatarUrl) return null;
+
+    const { data: profile, error: readError } = await client.from('profiles')
+      .select('id, avatar_url')
+      .eq('id', user.id)
+      .maybeSingle();
+    if (readError || !profile || profile.avatar_url) return null;
+
+    const { data, error } = await client.from('profiles')
+      .update({ avatar_url: avatarUrl })
+      .eq('id', user.id)
+      .is('avatar_url', null)
+      .select('id, username, display_name, bio, avatar_url, banner_url, username_changed_at, created_at, updated_at')
+      .maybeSingle();
+    if (error) throw error;
+    return data || null;
+  }
+
+
   function normalizeUsername(value) {
     return String(value || '').trim().toLowerCase().replace(/[^a-z0-9_]/g, '').slice(0, 24);
   }
@@ -186,7 +228,7 @@
     if (lower.includes('user already registered')) return 'Ya existe una cuenta con ese correo. Prueba iniciar sesión.';
     if (lower.includes('password should be at least')) return 'La contraseña debe tener al menos ocho caracteres.';
     if (lower.includes('rate limit') || lower.includes('too many requests')) return 'Se alcanzó el límite temporal de solicitudes. Espera un momento antes de intentarlo de nuevo.';
-    if (lower.includes('provider is not enabled')) return 'El inicio de sesión con Google aún no está habilitado en Supabase.';
+    if (lower.includes('provider is not enabled')) return 'Este proveedor todavía no está habilitado en Supabase. Revisa Authentication → Providers y activa Google, Discord o Twitch según corresponda.';
     if (lower.includes('username_cooldown')) return 'Solo puedes cambiar tu nombre de usuario una vez cada 14 días.';
     if (lower.includes('duplicate key') || lower.includes('profiles_username_lower_unique')) return 'Ese nombre de usuario ya está ocupado. Prueba con otro.';
     if (lower.includes('failed to fetch') || lower.includes('function') && lower.includes('not found')) return 'No se pudo contactar con la función de Supabase. Comprueba que esté desplegada.';
@@ -266,15 +308,36 @@
     $$('[data-back-to-login]').forEach(el => el.addEventListener('click', () => showAuthTab('login')));
     $('#backToRegisterButton')?.addEventListener('click', () => showAuthTab('register'));
 
-    $('#googleLoginButton')?.addEventListener('click', async () => {
-      if (!requireClient()) return;
-      try {
-        const { error } = await client.auth.signInWithOAuth({
-          provider: 'google',
-          options: { redirectTo: new URL('perfil.html', SITE_ROOT).href }
-        });
-        if (error) throw error;
-      } catch (error) { message('authMessage', friendlyError(error), 'error'); }
+    [
+      ['googleLoginButton', 'google'],
+      ['discordLoginButton', 'discord'],
+      ['twitchLoginButton', 'twitch']
+    ].forEach(([buttonId, provider]) => {
+      document.getElementById(buttonId)?.addEventListener('click', async () => {
+        if (!requireClient()) return;
+        const button = document.getElementById(buttonId);
+        if (button) {
+          button.disabled = true;
+          button.dataset.originalText = button.textContent;
+          const label = button.querySelector('span');
+          if (label) label.textContent = 'Conectando…';
+        }
+        try {
+          const { error } = await client.auth.signInWithOAuth({
+            provider,
+            options: { redirectTo: new URL('perfil.html', SITE_ROOT).href }
+          });
+          if (error) throw error;
+        } catch (error) {
+          message('authMessage', friendlyError(error), 'error');
+          if (button) {
+            button.disabled = false;
+            const label = button.querySelector('span');
+            if (label) label.textContent = button.dataset.originalText?.replace(/^\\s+|\\s+$/g, '') || 'Continuar';
+            delete button.dataset.originalText;
+          }
+        }
+      });
     });
 
     $('#loginForm')?.addEventListener('submit', event => {
@@ -883,6 +946,10 @@
         window.setTimeout(async () => {
           const user = session?.user || null;
           await refreshNav(user);
+          if (user) {
+            try { await syncOAuthAvatar(user); } catch (_) {}
+            await refreshNav(user);
+          }
           if (pageType === 'settings') await initSettingsPage(user);
           if (pageType === 'public-profile') await initPublicProfilePage(user);
           initProjectComments();
@@ -898,6 +965,10 @@
     if (error) throw error;
     const user = data.session?.user || null;
     await refreshNav(user);
+    if (user) {
+      try { await syncOAuthAvatar(user); } catch (_) {}
+      await refreshNav(user);
+    }
 
     if (pageType === 'auth') {
       if (isRecoveryFlow()) showAuthOnly('authRecoveryPassword');
