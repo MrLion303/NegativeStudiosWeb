@@ -128,3 +128,66 @@
 .community-friend-list-item .community-name{font-size:.9rem}
 .community-friend-list-item .ns-badge{width:1.12em;height:1.12em}
 .community-friend-list .community-empty,.community-friend-list .community-status{margin-top:13px}
+
+
+/* Editor social tipo timeline: avatar lateral, campo limpio y herramientas discretas. */
+.community-composer{display:block;padding:0;border:1px solid var(--line);border-radius:18px;background:linear-gradient(145deg,rgba(14,32,51,.86),rgba(5,13,22,.96));overflow:visible}
+.community-composer-layout{display:grid;grid-template-columns:44px minmax(0,1fr);gap:12px;padding:16px}
+.community-avatar--composer{width:44px;height:44px;flex-basis:44px;margin-top:2px}
+.community-composer-main{display:grid;gap:10px;min-width:0}
+.community-editor{min-height:112px;max-height:340px;padding:8px 0;border:0;border-radius:0;background:transparent;font-size:1.02rem;line-height:1.65;box-shadow:none!important}
+.community-editor:focus{border-color:transparent}
+.community-toolbar{padding-top:10px;border-top:1px solid rgba(122,184,255,.14);align-items:center}
+.community-tool{min-width:34px;min-height:34px;border-radius:50%;font-size:.85rem}
+.community-tool[data-tool="bold"]{font-weight:900}
+.community-tool[data-tool="italic"]{font-style:italic}
+.community-compose-bottom{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:11px 16px;border-top:1px solid rgba(122,184,255,.12)}
+.community-compose-bottom .community-composer-footer{margin-left:auto}
+.community-composer-footer{padding:0;border:0}
+.community-mention-suggestions{display:grid;gap:0;max-height:240px;overflow:auto;border:1px solid rgba(122,184,255,.24);border-radius:12px;background:#091625;box-shadow:0 12px 32px rgba(0,0,0,.35)}
+.community-mention-suggestions[hidden]{display:none!important}
+.community-mention-option{display:flex;align-items:center;gap:10px;padding:10px;border:0;border-bottom:1px solid rgba(122,184,255,.1);background:transparent;text-align:left;color:var(--text);cursor:pointer}
+.community-mention-option:last-child{border-bottom:0}
+.community-mention-option:hover,.community-mention-option:focus-visible{background:rgba(102,194,255,.1)}
+.community-mention-option .community-avatar{width:32px;height:32px;flex-basis:32px}
+.community-mention-option-copy{display:grid;gap:2px}
+.community-mention-option-copy small{color:var(--muted)}
+/* Notificaciones */
+.ns-notifications-link{position:relative;display:inline-flex!important;align-items:center;gap:7px}
+.ns-notifications-link[hidden]{display:none!important}
+.ns-notification-count{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;padding:0 5px;border-radius:999px;background:#ff668d;color:#fff;font-size:.68rem;font-weight:900;line-height:1}
+.ns-notification-count[hidden]{display:none!important}
+.notifications-layout{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:22px;align-items:start}
+.notifications-main,.notifications-sidebar{min-width:0}
+.notifications-sidebar{position:sticky;top:94px}
+.notifications-heading{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:14px}
+.notifications-heading h2{font-size:1.15rem;margin:0}
+.community-notification-feed{display:grid;gap:10px}
+.community-notification{display:grid;grid-template-columns:42px minmax(0,1fr) auto;align-items:start;gap:12px;padding:14px;border:1px solid var(--line);border-radius:14px;background:rgba(8,19,32,.78);min-width:0;transition:border-color .15s,background .15s}
+.community-notification.is-unread{border-color:rgba(102,194,255,.31);background:rgba(45,138,255,.06)}
+.community-notification-avatar{width:42px;height:42px}
+.community-notification-avatar .community-avatar{width:42px;height:42px}
+.community-notification-copy{display:grid;gap:5px;min-width:0;cursor:pointer}
+.community-notification-copy strong{font-size:.9rem;line-height:1.4}
+.community-notification-copy p{color:var(--muted);font-size:.83rem;line-height:1.5;overflow-wrap:anywhere;margin:0}
+.community-notification-copy small{color:#71869e;font-size:.72rem}
+.community-notification-open{font-size:.8rem;font-weight:800;color:#8feef3;padding:6px 4px}
+@media(max-width:900px){.notifications-layout{grid-template-columns:minmax(0,1fr)}.notifications-sidebar{position:static}}
+@media(max-width:620px){.community-composer-layout{grid-template-columns:36px minmax(0,1fr);gap:9px;padding:12px}.community-avatar--composer{width:36px;height:36px;flex-basis:36px}.community-compose-bottom{padding:10px 12px}.notifications-page{padding-top:30px}.community-notification{grid-template-columns:36px minmax(0,1fr) auto;gap:8px;padding:11px}.community-notification-avatar,.community-notification-avatar .community-avatar{width:36px;height:36px}}
+/* Menú de tres puntos para acciones propias o moderación. */
+.community-post-head{position:relative;padding-right:35px}
+.community-overflow{position:absolute;top:-5px;right:-5px;z-index:3}
+.community-overflow-trigger{display:grid;place-items:center;width:34px;height:34px;border:1px solid transparent;border-radius:50%;background:transparent;color:var(--muted);font-size:1.35rem;line-height:1;cursor:pointer}
+.community-overflow-trigger:hover,.community-overflow-trigger[aria-expanded="true"]{border-color:rgba(122,184,255,.2);background:rgba(102,194,255,.08);color:var(--text)}
+.community-overflow-menu{position:absolute;top:38px;right:0;z-index:50;min-width:180px;padding:5px;border:1px solid rgba(122,184,255,.22);border-radius:12px;background:#0a1624;box-shadow:0 12px 36px rgba(0,0,0,.46)}
+.community-overflow-menu[hidden]{display:none!important}
+.community-overflow-menu button{display:block;width:100%;padding:10px;border:0;border-radius:8px;background:transparent;text-align:left;color:var(--text);font:inherit;font-size:.84rem;cursor:pointer}
+.community-overflow-menu button:hover{background:rgba(255,255,255,.06)}
+.community-overflow-menu button.is-danger{color:#ffb0b0}
+.project-comment-head{position:relative;padding-right:35px}
+.project-comment-overflow{position:absolute;top:-3px;right:-3px}
+.project-comment-menu{position:absolute;top:35px;right:0;z-index:20;min-width:190px;padding:5px;border:1px solid rgba(122,184,255,.22);border-radius:12px;background:#0a1624;box-shadow:0 12px 36px rgba(0,0,0,.46)}
+.project-comment-menu[hidden]{display:none!important}
+.project-comment-menu button{display:block;width:100%;padding:10px;border:0;border-radius:8px;background:transparent;text-align:left;color:var(--text);font:inherit;font-size:.83rem;cursor:pointer}
+.project-comment-menu button:hover{background:rgba(255,255,255,.06)}
+.project-comment-menu button.is-danger{color:#ffb0b0}
