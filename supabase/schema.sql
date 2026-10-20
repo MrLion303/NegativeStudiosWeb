@@ -484,3 +484,164 @@ create policy "Accepted friendships are publicly readable"
   on public.friend_requests for select
   using (status = 'accepted');
 grant select on public.friend_requests to anon, authenticated;
+
+
+
+-- Notificaciones de actividad, menciones y conexiones de Microsoft.
+create table if not exists public.notifications (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references public.profiles(id) on delete cascade,
+  actor_id uuid references public.profiles(id) on delete set null,
+  type text not null,
+  title text not null,
+  body text not null default '',
+  post_id bigint references public.forum_posts(id) on delete cascade,
+  comment_id bigint references public.project_comments(id) on delete cascade,
+  friend_request_id uuid references public.friend_requests(id) on delete cascade,
+  project_slug text,
+  created_at timestamptz not null default now(),
+  read_at timestamptz
+);
+create index if not exists notifications_user_unread_created_idx
+  on public.notifications(user_id, read_at, created_at desc);
+alter table public.notifications enable row level security;
+drop policy if exists "Users can read their own notifications" on public.notifications;
+create policy "Users can read their own notifications"
+  on public.notifications for select to authenticated using(user_id=(select auth.uid()));
+drop policy if exists "Users can mark their own notifications read" on public.notifications;
+create policy "Users can mark their own notifications read"
+  on public.notifications for update to authenticated using(user_id=(select auth.uid())) with check(user_id=(select auth.uid()));
+revoke all on public.notifications from anon, authenticated;
+grant select, update on public.notifications to authenticated;
+
+create or replace function public.create_activity_notification(
+  target_user_id uuid, actor_user_id uuid, event_type text, event_title text,
+  event_body text default '', target_post_id bigint default null,
+  target_comment_id bigint default null, target_friend_request_id uuid default null,
+  target_project_slug text default null
+) returns void language plpgsql security definer set search_path=''
+as $$
+begin
+  if target_user_id is null or (actor_user_id is not null and target_user_id=actor_user_id) then return; end if;
+  insert into public.notifications(user_id,actor_id,type,title,body,post_id,comment_id,friend_request_id,project_slug)
+  values(target_user_id,actor_user_id,event_type,event_title,coalesce(event_body,''),target_post_id,target_comment_id,target_friend_request_id,target_project_slug);
+end;
+$$;
+revoke all on function public.create_activity_notification(uuid,uuid,text,text,text,bigint,bigint,uuid,text) from public,anon,authenticated;
+
+create or replace function public.notify_friend_request_activity()
+returns trigger language plpgsql security definer set search_path=''
+as $$
+begin
+  if new.status='pending' and (tg_op='INSERT' or old.status is distinct from 'pending') then
+    perform public.create_activity_notification(new.recipient_id,new.requester_id,'friend_request','Te envió una solicitud de amistad','',null,null,new.id,null);
+  end if;
+  return new;
+end;
+$$;
+drop trigger if exists notify_friend_request_activity on public.friend_requests;
+create trigger notify_friend_request_activity after insert or update of status on public.friend_requests
+for each row execute function public.notify_friend_request_activity();
+
+create or replace function public.notify_forum_post_like()
+returns trigger language plpgsql security definer set search_path=''
+as $$
+declare post_owner uuid;
+begin
+  select user_id into post_owner from public.forum_posts where id=new.post_id;
+  perform public.create_activity_notification(post_owner,new.user_id,'post_like','Le gustó tu publicación','',new.post_id,null,null,null);
+  return new;
+end;
+$$;
+drop trigger if exists notify_forum_post_like on public.forum_post_likes;
+create trigger notify_forum_post_like after insert on public.forum_post_likes
+for each row execute function public.notify_forum_post_like();
+
+create or replace function public.notify_project_comment_like()
+returns trigger language plpgsql security definer set search_path=''
+as $$
+declare comment_owner uuid; project_name text;
+begin
+  select user_id, project_slug into comment_owner, project_name from public.project_comments where id=new.comment_id;
+  perform public.create_activity_notification(comment_owner,new.user_id,'comment_like','Le gustó tu comentario','',null,new.comment_id,null,project_name);
+  return new;
+end;
+$$;
+drop trigger if exists notify_project_comment_like on public.project_comment_likes;
+create trigger notify_project_comment_like after insert on public.project_comment_likes
+for each row execute function public.notify_project_comment_like();
+
+create or replace function public.notify_project_comment_reply()
+returns trigger language plpgsql security definer set search_path=''
+as $$
+declare parent_owner uuid;
+begin
+  if new.parent_comment_id is null then return new; end if;
+  select user_id into parent_owner from public.project_comments where id=new.parent_comment_id;
+  perform public.create_activity_notification(parent_owner,new.user_id,'comment_reply','Respondieron a tu comentario',left(new.content,180),null,new.id,null,new.project_slug);
+  return new;
+end;
+$$;
+drop trigger if exists notify_project_comment_reply on public.project_comments;
+create trigger notify_project_comment_reply after insert on public.project_comments
+for each row execute function public.notify_project_comment_reply();
+
+create table if not exists public.forum_post_mentions (
+  post_id bigint not null references public.forum_posts(id) on delete cascade,
+  mentioned_user_id uuid not null references public.profiles(id) on delete cascade,
+  created_at timestamptz not null default now(),
+  primary key(post_id,mentioned_user_id)
+);
+create index if not exists forum_post_mentions_user_idx on public.forum_post_mentions(mentioned_user_id,created_at desc);
+alter table public.forum_post_mentions enable row level security;
+drop policy if exists "Post mentions are publicly readable" on public.forum_post_mentions;
+create policy "Post mentions are publicly readable" on public.forum_post_mentions for select using(true);
+drop policy if exists "Authors can tag users in their own posts" on public.forum_post_mentions;
+create policy "Authors can tag users in their own posts" on public.forum_post_mentions for insert to authenticated
+  with check(exists(select 1 from public.forum_posts p where p.id=post_id and p.user_id=(select auth.uid())));
+grant select on public.forum_post_mentions to anon,authenticated;
+grant insert on public.forum_post_mentions to authenticated;
+
+create or replace function public.notify_forum_post_mention()
+returns trigger language plpgsql security definer set search_path=''
+as $$
+declare post_owner uuid; post_body text;
+begin
+  select user_id,content_text into post_owner,post_body from public.forum_posts where id=new.post_id;
+  perform public.create_activity_notification(new.mentioned_user_id,post_owner,'post_mention','Te mencionaron en una publicación',left(coalesce(post_body,''),180),new.post_id,null,null,null);
+  return new;
+end;
+$$;
+drop trigger if exists notify_forum_post_mention on public.forum_post_mentions;
+create trigger notify_forum_post_mention after insert on public.forum_post_mentions
+for each row execute function public.notify_forum_post_mention();
+
+-- Tokens de cuentas Microsoft enlazadas: nunca son legibles desde el navegador.
+create table if not exists public.microsoft_account_connections (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references public.profiles(id) on delete cascade,
+  slot smallint not null check(slot between 1 and 3),
+  microsoft_user_id text not null,
+  email text,
+  display_name text not null default 'Cuenta Microsoft',
+  access_token_encrypted text not null,
+  refresh_token_encrypted text,
+  expires_at timestamptz,
+  scopes text not null default '',
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  unique(user_id,slot),
+  unique(user_id,microsoft_user_id)
+);
+alter table public.microsoft_account_connections enable row level security;
+revoke all on public.microsoft_account_connections from anon,authenticated;
+
+create table if not exists public.microsoft_oauth_states (
+  state text primary key,
+  user_id uuid not null references public.profiles(id) on delete cascade,
+  slot smallint not null check(slot between 1 and 3),
+  created_at timestamptz not null default now(),
+  expires_at timestamptz not null
+);
+alter table public.microsoft_oauth_states enable row level security;
+revoke all on public.microsoft_oauth_states from anon,authenticated;
