@@ -79,17 +79,15 @@ Los perfiles, avatares, banners y comentarios son públicos por diseño, incluso
 
 ## 7. Activar la eliminación de cuentas
 
-La eliminación permanente usa una Supabase Edge Function porque la web publicada en GitHub Pages no puede guardar de forma segura una clave administrativa.
+La eliminación usa una Supabase Edge Function. Puedes desplegarla desde el navegador, sin instalar la CLI.
 
-1. Instala e inicia sesión en [Supabase CLI](https://supabase.com/docs/guides/cli) y vincula el proyecto correcto.
-2. Desde la raíz de este repositorio, despliega la función:
-
-   ```bash
-   supabase functions deploy delete-account
-   ```
-
-3. En **Project Settings / Edge Functions / Secrets** (o mediante Supabase CLI), comprueba que la función tenga disponibles `SUPABASE_URL`, `SUPABASE_ANON_KEY` y `SUPABASE_SERVICE_ROLE_KEY`. Usa la clave administrativa solo como secreto del servidor; nunca la copies a un HTML, JavaScript o repositorio público.
-4. Prueba la eliminación con una cuenta de prueba. La función valida la sesión del usuario, elimina sus archivos de avatar/banner y después elimina la cuenta, lo que también elimina el perfil y sus comentarios asociados.
+1. Abre tu proyecto en [Supabase Dashboard](https://supabase.com/dashboard) y entra en **Edge Functions** desde el menú lateral.
+2. Pulsa **Deploy a new function** y elige **Via Editor**.
+3. Ponle exactamente este nombre: `delete-account`.
+4. En GitHub, abre [`supabase/functions/delete-account/index.ts`](https://github.com/MrLion303/NegativeStudiosWeb/blob/main/supabase/functions/delete-account/index.ts), copia todo el código y pégalo en el editor de Supabase, reemplazando el ejemplo que venga por defecto.
+5. Pulsa **Deploy function** y espera a que Supabase confirme que se publicó.
+6. No crees secretos manuales llamados `SUPABASE_URL`, `SUPABASE_ANON_KEY` o `SUPABASE_SERVICE_ROLE_KEY`: Supabase los proporciona a las Edge Functions. Nunca pongas una clave administrativa en GitHub o en JavaScript del navegador.
+7. Para probarlo, inicia sesión en la web y usa la sección **Eliminar mi cuenta** de `configurar-perfil.html`. Es una operación permanente; haz la primera prueba únicamente con una cuenta que estés dispuesto a borrar.
 
 ## 8. Activar comentarios
 
