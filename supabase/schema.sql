@@ -410,14 +410,14 @@ create index if not exists forum_posts_user_created_idx on public.forum_posts(us
 -- Los usuarios no pueden falsificar la fecha de publicación ni cambiar su autor.
 create or replace function public.enforce_forum_post_timestamps()
 returns trigger language plpgsql set search_path=''
-as $
+as $forum_post_timestamps$
 begin
   new.user_id := old.user_id;
   new.created_at := old.created_at;
   new.updated_at := now();
   return new;
 end;
-$;
+$forum_post_timestamps$;
 drop trigger if exists enforce_forum_post_timestamps on public.forum_posts;
 create trigger enforce_forum_post_timestamps before update on public.forum_posts
 for each row execute function public.enforce_forum_post_timestamps();
