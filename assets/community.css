@@ -247,3 +247,7 @@
 .ns-notifications-label{display:none!important}
 .ns-notifications-link .ns-notification-count{position:absolute;top:-5px;right:-5px;border:2px solid #07111e}
 @media(max-width:620px){.community-compose-bottom{align-items:center;padding:9px 12px 12px}.community-compose-bottom .community-toolbar{flex-basis:100%;order:1}.community-compose-bottom .community-composer-footer{order:2}.community-post-reply-children{margin-left:0;padding-left:9px}.ns-notifications-link{width:38px;height:38px;min-width:38px}}
+
+.community-inbox-notification-button{display:flex;align-items:center;justify-content:center;width:42px;height:42px;margin:0 0 14px auto;border:1px solid rgba(74,157,255,.38);border-radius:50%;background:rgba(35,134,244,.14);color:#8ac7ff;text-decoration:none;transition:background .15s,border-color .15s}
+.community-inbox-notification-button:hover{background:rgba(35,134,244,.24);border-color:#2386f4}
+.community-inbox-notification-button:focus-visible{outline:2px solid #2386f4;outline-offset:3px}
