@@ -6,14 +6,15 @@
   let SITE_ROOT = new URL('../', SCRIPT_URL).href;
   let client = null;
   let currentUser = null;
-  let verifyEmail = '';
   let lastProfile = null;
+  let verifyEmail = '';
   let authListenerRegistered = false;
   let navLink = null;
 
   const $ = selector => document.querySelector(selector);
   const $$ = selector => Array.from(document.querySelectorAll(selector));
   const pageType = document.querySelector('[data-account-page]')?.dataset.accountPage || '';
+  const USERNAME_COOLDOWN_MS = 14 * 24 * 60 * 60 * 1000;
 
   function ensureTrailingSlash(value) {
     return String(value || '').endsWith('/') ? String(value) : String(value || '') + '/';
@@ -31,17 +32,14 @@
       const script = document.createElement('script');
       script.src = src;
       if (marker) script.setAttribute(marker, '');
-      script.onload = () => {
-        script.dataset.loaded = 'true';
-        resolve();
-      };
+      script.onload = () => { script.dataset.loaded = 'true'; resolve(); };
       script.onerror = () => reject(new Error('No se pudo cargar un recurso necesario.'));
       document.head.appendChild(script);
     });
   }
 
   function ensureStyles() {
-    const href = new URL('assets/account.css?v=20261019c', SITE_ROOT).href;
+    const href = new URL('assets/account.css?v=20261020a', SITE_ROOT).href;
     if (!$$('link[rel="stylesheet"]').some(link => link.href === href)) {
       const link = document.createElement('link');
       link.rel = 'stylesheet';
@@ -61,7 +59,7 @@
 
   function setConfigNotice(text) {
     $$('[data-account-config-notice]').forEach(el => {
-      el.innerHTML = '';
+      el.replaceChildren();
       const p = document.createElement('p');
       p.textContent = text;
       el.appendChild(p);
@@ -88,21 +86,25 @@
       if (download) {
         download.replaceWith(actions);
         actions.appendChild(download);
-      } else {
-        nav.appendChild(actions);
-      }
+      } else nav.appendChild(actions);
     }
-
     navLink = actions.querySelector('.ns-account-link');
     if (!navLink) {
       navLink = document.createElement('a');
-      navLink.className = 'ns-account-link';
+      navLink.className = 'client-download ns-account-link';
       navLink.href = new URL('cuenta.html', SITE_ROOT).href;
-      navLink.textContent = 'Registrar / Iniciar sesión';
       navLink.setAttribute('aria-label', 'Registrar / Iniciar sesión');
       navLink.dataset.nsAccountLink = 'true';
+      const label = document.createElement('span');
+      label.className = 'client-download-label';
+      label.textContent = 'Registrar / Iniciar sesión';
+      navLink.appendChild(label);
       actions.appendChild(navLink);
     }
+  }
+
+  function profileHref(profile) {
+    return new URL('perfil.html' + (profile?.username ? '?username=' + encodeURIComponent(profile.username) : ''), SITE_ROOT).href;
   }
 
   function updateNav(user, profile) {
@@ -110,13 +112,15 @@
     if (profile) lastProfile = profile;
     ensureNavLink();
     if (!navLink) return;
-
-    navLink.href = user ? new URL('perfil.html', SITE_ROOT).href : new URL('cuenta.html', SITE_ROOT).href;
+    navLink.href = user ? profileHref(profile || lastProfile) : new URL('cuenta.html', SITE_ROOT).href;
     navLink.classList.toggle('ns-account-link--profile', Boolean(user));
     navLink.replaceChildren();
 
     if (!user) {
-      navLink.textContent = 'Registrar / Iniciar sesión';
+      const label = document.createElement('span');
+      label.className = 'client-download-label';
+      label.textContent = 'Registrar / Iniciar sesión';
+      navLink.appendChild(label);
       navLink.setAttribute('aria-label', 'Registrar / Iniciar sesión');
       navLink.title = 'Registrar / Iniciar sesión';
       return;
@@ -128,11 +132,11 @@
     fallback.textContent = String(name).trim().charAt(0).toUpperCase() || 'N';
     navLink.appendChild(fallback);
 
-    const avatar = profile?.avatar_url || user.user_metadata?.avatar_url || user.user_metadata?.picture;
-    if (avatar) {
+    const avatarUrl = profile?.avatar_url || user.user_metadata?.avatar_url || user.user_metadata?.picture;
+    if (avatarUrl) {
       const img = document.createElement('img');
       img.alt = '';
-      img.src = avatar;
+      img.src = avatarUrl;
       img.onload = () => { if (fallback.isConnected) fallback.remove(); };
       img.onerror = () => img.remove();
       navLink.appendChild(img);
@@ -143,105 +147,25 @@
 
   async function loadProfileBrief(user) {
     if (!client || !user) return null;
-    try {
-      const { data, error } = await client
-        .from('profiles')
-        .select('username, display_name, avatar_url, is_private')
-        .eq('id', user.id)
-        .maybeSingle();
-      if (error) throw error;
-      return data;
-    } catch (_) {
-      return null;
-    }
+    const { data, error } = await client.from('profiles')
+      .select('id, username, display_name, avatar_url, banner_url, username_changed_at, created_at')
+      .eq('id', user.id).maybeSingle();
+    if (error) throw error;
+    return data;
   }
 
   async function refreshNav(user) {
     if (!user) {
+      currentUser = null;
+      lastProfile = null;
       updateNav(null, null);
       return;
     }
     updateNav(user, lastProfile);
-    const profile = await loadProfileBrief(user);
-    if (currentUser?.id === user.id) updateNav(user, profile);
-  }
-
-  function showAuthTab(tab) {
-    const isRegister = tab === 'register';
-    const loginTab = $('#authTabLogin');
-    const registerTab = $('#authTabRegister');
-    if (loginTab) {
-      loginTab.classList.toggle('is-active', !isRegister);
-      loginTab.setAttribute('aria-selected', String(!isRegister));
-    }
-    if (registerTab) {
-      registerTab.classList.toggle('is-active', isRegister);
-      registerTab.setAttribute('aria-selected', String(isRegister));
-    }
-    const loginPanel = $('#authLoginPanel');
-    const registerPanel = $('#authRegisterPanel');
-    if (loginPanel) loginPanel.hidden = isRegister;
-    if (registerPanel) registerPanel.hidden = !isRegister;
-    ['authVerifyPanel', 'authRecoveryRequest', 'authRecoveryPassword', 'authAlreadySignedIn'].forEach(id => {
-      const el = document.getElementById(id);
-      if (el) el.hidden = true;
-    });
-    const mainView = $('#authMainView');
-    if (mainView) mainView.hidden = false;
-    message('authMessage', '');
-  }
-
-  function showAuthOnly(panelId) {
-    const mainView = $('#authMainView');
-    if (mainView) mainView.hidden = true;
-    ['authVerifyPanel', 'authRecoveryRequest', 'authRecoveryPassword', 'authAlreadySignedIn'].forEach(id => {
-      const el = document.getElementById(id);
-      if (el) el.hidden = id !== panelId;
-    });
-    message('authMessage', '');
-  }
-
-  function friendlyError(error) {
-    const raw = String(error?.message || error || 'Ocurrió un error inesperado.');
-    const lower = raw.toLowerCase();
-    if (lower.includes('invalid login credentials')) return 'El correo o la contraseña no son correctos.';
-    if (lower.includes('email not confirmed')) return 'Primero debes verificar tu correo electrónico.';
-    if (lower.includes('user already registered')) return 'Ya existe una cuenta con ese correo. Prueba iniciar sesión.';
-    if (lower.includes('password should be at least')) return 'La contraseña debe tener al menos ocho caracteres.';
-    if (lower.includes('rate limit') || lower.includes('too many requests')) return 'Se alcanzó el límite temporal de solicitudes. Espera un momento antes de intentarlo de nuevo.';
-    if (lower.includes('provider is not enabled')) return 'El inicio de sesión con Google aún no está habilitado en Supabase.';
-    if (lower.includes('duplicate key') || lower.includes('profiles_username_lower_unique')) return 'Ese nombre de usuario ya está ocupado. Prueba con otro.';
-    if (lower.includes('row-level security') || lower.includes('permission denied') || lower.includes('relation') && lower.includes('does not exist')) {
-      return 'Falta configurar la base de datos o sus políticas. Revisa la guía de Supabase del repositorio.';
-    }
-    return raw;
-  }
-
-  function requireClient() {
-    if (client) return true;
-    setConfigNotice('El sistema de cuentas aún no está conectado a un proyecto de Supabase. La interfaz ya está preparada, pero el registro y el inicio de sesión necesitan completar la configuración.');
-    return false;
-  }
-
-  async function withBusy(form, callback) {
-    const button = form?.querySelector('button[type="submit"]');
-    if (button) {
-      button.disabled = true;
-      button.dataset.originalText = button.textContent;
-      button.textContent = 'Procesando…';
-    }
     try {
-      await callback();
-    } catch (error) {
-      const target = form?.dataset.messageTarget || (pageType === 'profile' ? 'profileMessage' : 'authMessage');
-      message(target, friendlyError(error), 'error');
-    } finally {
-      if (button) {
-        button.disabled = false;
-        button.textContent = button.dataset.originalText || 'Continuar';
-        delete button.dataset.originalText;
-      }
-    }
+      const profile = await loadProfileBrief(user);
+      if (currentUser?.id === user.id) updateNav(user, profile);
+    } catch (_) {}
   }
 
   function normalizeUsername(value) {
@@ -254,6 +178,76 @@
     return candidate.slice(0, 24);
   }
 
+  function friendlyError(error) {
+    const raw = String(error?.message || error || 'Ocurrió un error inesperado.');
+    const lower = raw.toLowerCase();
+    if (lower.includes('invalid login credentials')) return 'El correo o la contraseña no son correctos.';
+    if (lower.includes('email not confirmed')) return 'Primero debes verificar tu correo electrónico.';
+    if (lower.includes('user already registered')) return 'Ya existe una cuenta con ese correo. Prueba iniciar sesión.';
+    if (lower.includes('password should be at least')) return 'La contraseña debe tener al menos ocho caracteres.';
+    if (lower.includes('rate limit') || lower.includes('too many requests')) return 'Se alcanzó el límite temporal de solicitudes. Espera un momento antes de intentarlo de nuevo.';
+    if (lower.includes('provider is not enabled')) return 'El inicio de sesión con Google aún no está habilitado en Supabase.';
+    if (lower.includes('username_cooldown')) return 'Solo puedes cambiar tu nombre de usuario una vez cada 14 días.';
+    if (lower.includes('duplicate key') || lower.includes('profiles_username_lower_unique')) return 'Ese nombre de usuario ya está ocupado. Prueba con otro.';
+    if (lower.includes('failed to fetch') || lower.includes('function') && lower.includes('not found')) return 'No se pudo contactar con la función de Supabase. Comprueba que esté desplegada.';
+    if (lower.includes('row-level security') || lower.includes('permission denied') || (lower.includes('relation') && lower.includes('does not exist'))) {
+      return 'Falta actualizar la base de datos o sus políticas. Sigue la guía de Supabase del repositorio.';
+    }
+    return raw;
+  }
+
+  function requireClient() {
+    if (client) return true;
+    setConfigNotice('El sistema de cuentas necesita estar conectado a Supabase. Revisa la configuración antes de continuar.');
+    return false;
+  }
+
+  async function withBusy(form, callback, targetOverride) {
+    const button = form?.querySelector('button[type="submit"]');
+    if (button) {
+      button.disabled = true;
+      button.dataset.originalText = button.textContent;
+      button.textContent = 'Procesando…';
+    }
+    try {
+      await callback();
+    } catch (error) {
+      const target = targetOverride || form?.dataset.messageTarget || (pageType === 'settings' ? 'settingsProfileMessage' : 'authMessage');
+      message(target, friendlyError(error), 'error');
+    } finally {
+      if (button) {
+        button.disabled = false;
+        button.textContent = button.dataset.originalText || 'Continuar';
+        delete button.dataset.originalText;
+      }
+    }
+  }
+
+  function showAuthTab(tab) {
+    const isRegister = tab === 'register';
+    $('#authTabLogin')?.classList.toggle('is-active', !isRegister);
+    $('#authTabRegister')?.classList.toggle('is-active', isRegister);
+    $('#authTabLogin')?.setAttribute('aria-selected', String(!isRegister));
+    $('#authTabRegister')?.setAttribute('aria-selected', String(isRegister));
+    if ($('#authLoginPanel')) $('#authLoginPanel').hidden = isRegister;
+    if ($('#authRegisterPanel')) $('#authRegisterPanel').hidden = !isRegister;
+    ['authVerifyPanel', 'authRecoveryRequest', 'authRecoveryPassword', 'authAlreadySignedIn'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.hidden = true;
+    });
+    if ($('#authMainView')) $('#authMainView').hidden = false;
+    message('authMessage', '');
+  }
+
+  function showAuthOnly(panelId) {
+    if ($('#authMainView')) $('#authMainView').hidden = true;
+    ['authVerifyPanel', 'authRecoveryRequest', 'authRecoveryPassword', 'authAlreadySignedIn'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.hidden = id !== panelId;
+    });
+    message('authMessage', '');
+  }
+
   function isRecoveryFlow() {
     const query = new URLSearchParams(location.search);
     const hash = new URLSearchParams(location.hash.replace(/^#/, ''));
@@ -262,13 +256,12 @@
 
   function initAuthPage() {
     if (!$('#loginForm')) return;
-    try { verifyEmail = sessionStorage.getItem('ns_pending_verification_email') || ''; } catch (_) {}
-    const pendingEmailLabel = $('#verifyEmailLabel');
-    if (pendingEmailLabel && verifyEmail) pendingEmailLabel.textContent = verifyEmail;
-    const loginTab = $('#authTabLogin');
-    const registerTab = $('#authTabRegister');
-    loginTab?.addEventListener('click', () => showAuthTab('login'));
-    registerTab?.addEventListener('click', () => showAuthTab('register'));
+    try {
+      verifyEmail = sessionStorage.getItem('ns_pending_verification_email') || '';
+    } catch (_) {}
+    if ($('#verifyEmailLabel') && verifyEmail) $('#verifyEmailLabel').textContent = verifyEmail;
+    $('#authTabLogin')?.addEventListener('click', () => showAuthTab('login'));
+    $('#authTabRegister')?.addEventListener('click', () => showAuthTab('register'));
     $$('[data-open-recovery]').forEach(el => el.addEventListener('click', () => showAuthOnly('authRecoveryRequest')));
     $$('[data-back-to-login]').forEach(el => el.addEventListener('click', () => showAuthTab('login')));
     $('#backToRegisterButton')?.addEventListener('click', () => showAuthTab('register'));
@@ -281,20 +274,19 @@
           options: { redirectTo: new URL('perfil.html', SITE_ROOT).href }
         });
         if (error) throw error;
-      } catch (error) {
-        message('authMessage', friendlyError(error), 'error');
-      }
+      } catch (error) { message('authMessage', friendlyError(error), 'error'); }
     });
 
     $('#loginForm')?.addEventListener('submit', event => {
       event.preventDefault();
       withBusy(event.currentTarget, async () => {
         if (!requireClient()) return;
-        const email = $('#loginEmail').value.trim();
-        const password = $('#loginPassword').value;
-        const { data, error } = await client.auth.signInWithPassword({ email, password });
+        const { data, error } = await client.auth.signInWithPassword({
+          email: $('#loginEmail').value.trim(),
+          password: $('#loginPassword').value
+        });
         if (error) throw error;
-        if (data.user) location.assign(new URL('perfil.html', SITE_ROOT).href);
+        if (data.user) location.assign(profileHref(null));
       });
     });
 
@@ -319,14 +311,13 @@
         if (error) throw error;
         verifyEmail = email;
         try { sessionStorage.setItem('ns_pending_verification_email', email); } catch (_) {}
-        const label = $('#verifyEmailLabel');
-        if (label) label.textContent = email;
+        if ($('#verifyEmailLabel')) $('#verifyEmailLabel').textContent = email;
         if (data.session && data.user) {
-          location.assign(new URL('perfil.html', SITE_ROOT).href);
+          location.assign(profileHref(null));
           return;
         }
         showAuthOnly('authVerifyPanel');
-        message('authMessage', 'Cuenta creada. Introduce el código que te enviamos para confirmar tu correo.', 'success');
+        message('authMessage', 'Cuenta creada. Introduce el código de seis dígitos que te enviamos para confirmar el correo.', 'success');
       });
     });
 
@@ -335,12 +326,12 @@
       withBusy(event.currentTarget, async () => {
         if (!requireClient()) return;
         const token = $('#verifyCode').value.trim();
-        const email = verifyEmail || $('#registerEmail').value.trim() || $('#loginEmail').value.trim();
-        if (!email) throw new Error('Escribe tu correo electrónico e intenta solicitar un código nuevo.');
+        const email = verifyEmail || $('#registerEmail')?.value.trim() || $('#loginEmail')?.value.trim();
+        if (!email) throw new Error('Escribe tu correo electrónico y solicita un código nuevo.');
         const { data, error } = await client.auth.verifyOtp({ email, token, type: 'email' });
         if (error) throw error;
         try { sessionStorage.removeItem('ns_pending_verification_email'); } catch (_) {}
-        if (data.session) location.assign(new URL('perfil.html', SITE_ROOT).href);
+        if (data.session) location.assign(profileHref(null));
         else {
           showAuthTab('login');
           message('authMessage', 'El correo quedó verificado. Ya puedes iniciar sesión.', 'success');
@@ -351,26 +342,22 @@
     $('#resendCodeButton')?.addEventListener('click', async () => {
       if (!requireClient()) return;
       try {
-        const email = verifyEmail || $('#registerEmail').value.trim();
+        const email = verifyEmail || $('#registerEmail')?.value.trim();
         if (!email) throw new Error('Escribe el correo con el que intentaste registrarte.');
         const { error } = await client.auth.resend({
-          type: 'signup',
-          email,
+          type: 'signup', email,
           options: { emailRedirectTo: new URL('cuenta.html?verified=1', SITE_ROOT).href }
         });
         if (error) throw error;
         message('authMessage', 'Solicitamos un código nuevo. Revisa tu correo.', 'success');
-      } catch (error) {
-        message('authMessage', friendlyError(error), 'error');
-      }
+      } catch (error) { message('authMessage', friendlyError(error), 'error'); }
     });
 
     $('#recoveryRequestForm')?.addEventListener('submit', event => {
       event.preventDefault();
       withBusy(event.currentTarget, async () => {
         if (!requireClient()) return;
-        const email = $('#recoveryEmail').value.trim();
-        const { error } = await client.auth.resetPasswordForEmail(email, {
+        const { error } = await client.auth.resetPasswordForEmail($('#recoveryEmail').value.trim(), {
           redirectTo: new URL('cuenta.html?flow=recovery', SITE_ROOT).href
         });
         if (error) throw error;
@@ -388,7 +375,7 @@
         if (error) throw error;
         history.replaceState(null, '', new URL('cuenta.html', SITE_ROOT).href);
         message('authMessage', 'La contraseña se actualizó correctamente. Te llevaremos a tu perfil.', 'success');
-        location.assign(new URL('perfil.html', SITE_ROOT).href);
+        location.assign(profileHref(null));
       });
     });
   }
@@ -396,160 +383,183 @@
   async function loadCurrentProfile(user) {
     if (!user || !client) return null;
     const { data, error } = await client.from('profiles')
-      .select('id, username, display_name, bio, avatar_url, is_private, created_at, updated_at')
-      .eq('id', user.id)
-      .maybeSingle();
+      .select('id, username, display_name, bio, avatar_url, banner_url, username_changed_at, created_at, updated_at')
+      .eq('id', user.id).maybeSingle();
     if (error) throw error;
-    if (!data) throw new Error('No se encontró tu perfil. Ejecuta el archivo supabase/schema.sql del repositorio en el SQL Editor de Supabase.');
+    if (!data) throw new Error('No se encontró tu perfil. Ejecuta el archivo supabase/schema.sql en el SQL Editor de Supabase.');
     return data;
   }
 
-  function drawProfile(user, profile) {
-    const workspace = $('#profileWorkspace');
-    const guest = $('#profileGuest');
-    if (workspace) workspace.hidden = !user;
-    if (guest) guest.hidden = Boolean(user);
-    if (!user || !profile) return;
+  function setImagePreview(imageId, fallbackId, url, fallbackText) {
+    const image = document.getElementById(imageId);
+    const fallback = document.getElementById(fallbackId);
+    if (fallback) fallback.textContent = (fallbackText || 'N').trim().charAt(0).toUpperCase() || 'N';
+    if (image && url) {
+      image.src = url;
+      image.hidden = false;
+      if (fallback) fallback.hidden = true;
+    } else {
+      if (image) { image.removeAttribute('src'); image.hidden = true; }
+      if (fallback) fallback.hidden = false;
+    }
+  }
 
+  function formatDate(dateValue, options) {
+    if (!dateValue) return '';
+    const date = new Date(dateValue);
+    if (Number.isNaN(date.getTime())) return '';
+    return date.toLocaleDateString('es-MX', options || { year: 'numeric', month: 'long' });
+  }
+
+  function renderCooldown(profile) {
+    const field = $('#profileUsername');
+    const note = $('#usernameCooldownNote');
+    if (!field || !note) return;
+    const changedAt = profile.username_changed_at ? new Date(profile.username_changed_at).getTime() : 0;
+    const availableAt = changedAt ? changedAt + USERNAME_COOLDOWN_MS : 0;
+    const remaining = availableAt - Date.now();
+    field.disabled = remaining > 0;
+    if (remaining > 0) {
+      note.textContent = 'Podrás volver a cambiarlo el ' + new Date(availableAt).toLocaleDateString('es-MX', { year: 'numeric', month: 'long', day: 'numeric' }) + '. Puedes cambiar el nombre a mostrar mientras tanto.';
+    } else {
+      note.textContent = 'Disponible para cambiar. Después de guardar un nuevo nombre de usuario, tendrás que esperar 14 días para volver a modificarlo.';
+    }
+  }
+
+  function drawSettings(user, profile) {
+    const workspace = $('#settingsWorkspace');
+    const guest = $('#settingsGuest');
+    if (workspace) workspace.hidden = !user || !profile;
+    if (guest) guest.hidden = Boolean(user && profile);
+    if (!user || !profile) return;
+    currentUser = user;
     lastProfile = profile;
     updateNav(user, profile);
-    const value = (id, next) => { const el = document.getElementById(id); if (el) el.value = next ?? ''; };
-    value('profileUsername', profile.username);
-    value('profileDisplayName', profile.display_name);
-    value('profileBio', profile.bio);
-    value('currentEmail', user.email || '');
-    const privateToggle = $('#profilePrivate');
-    if (privateToggle) privateToggle.checked = Boolean(profile.is_private);
-    const title = $('#profileDisplayNamePreview');
-    if (title) title.textContent = profile.display_name || 'Tu nombre';
-    const handle = $('#profileUsernamePreview');
-    if (handle) handle.textContent = '@' + (profile.username || 'usuario');
-    const bio = $('#profileBioPreview');
-    if (bio) bio.textContent = profile.bio || 'Tu biografía aparecerá aquí.';
-    const fallback = $('#profileAvatarFallback');
-    if (fallback) fallback.textContent = (profile.display_name || profile.username || user.email || 'N').trim().charAt(0).toUpperCase() || 'N';
-    const avatar = $('#profileAvatarImage');
-    if (avatar) {
-      if (profile.avatar_url) {
-        avatar.src = profile.avatar_url;
-        avatar.hidden = false;
-        if (fallback) fallback.hidden = true;
-      } else {
-        avatar.removeAttribute('src');
-        avatar.hidden = true;
-        if (fallback) fallback.hidden = false;
-      }
+    const setValue = (id, value) => { const el = document.getElementById(id); if (el) el.value = value ?? ''; };
+    setValue('profileUsername', profile.username);
+    setValue('profileDisplayName', profile.display_name);
+    setValue('profileBio', profile.bio);
+    setValue('currentEmail', user.email || '');
+    if ($('#settingsDisplayNamePreview')) $('#settingsDisplayNamePreview').textContent = profile.display_name || 'Tu nombre';
+    if ($('#settingsUsernamePreview')) $('#settingsUsernamePreview').textContent = '@' + (profile.username || 'usuario');
+    setImagePreview('settingsAvatarImage', 'settingsAvatarFallback', profile.avatar_url, profile.display_name || profile.username);
+    const bannerPreview = $('#settingsBannerPreview');
+    if (bannerPreview) {
+      bannerPreview.style.backgroundImage = profile.banner_url ? 'url("' + profile.banner_url.replace(/"/g, '%22') + '")' : '';
     }
-    const joined = $('#profileMemberSince');
-    if (joined) {
-      const date = profile.created_at ? new Date(profile.created_at) : null;
-      joined.textContent = date && !Number.isNaN(date.getTime()) ? 'Miembro desde ' + date.toLocaleDateString('es-MX', { year: 'numeric', month: 'long' }) : '';
-    }
+    const publicLink = $('#viewPublicProfileButton');
+    if (publicLink) publicLink.href = profileHref(profile);
+    renderCooldown(profile);
   }
 
-  async function initProfilePage() {
-    if (!$('#profileWorkspace')) return;
-    if (!client) return;
-    const { data, error } = await client.auth.getSession();
-    if (error) throw error;
-    const user = data.session?.user || null;
+  async function initSettingsPage(userFromSession) {
+    if (!$('#settingsWorkspace') || !client) return;
+    const user = userFromSession || (await client.auth.getSession()).data.session?.user || null;
     if (!user) {
-      drawProfile(null, null);
+      $('#settingsWorkspace').hidden = true;
+      $('#settingsGuest').hidden = false;
       return;
     }
-    try {
-      const profile = await loadCurrentProfile(user);
-      drawProfile(user, profile);
-    } catch (error) {
-      message('profileMessage', friendlyError(error), 'error');
-    }
+    try { drawSettings(user, await loadCurrentProfile(user)); }
+    catch (error) { message('settingsProfileMessage', friendlyError(error), 'error'); }
   }
 
-  function initProfileEvents() {
+  function uploadExtension(file) {
+    if (file.type === 'image/png') return 'png';
+    if (file.type === 'image/webp') return 'webp';
+    return 'jpg';
+  }
+
+  async function uploadProfileImage(file, bucket, maxBytes, column, successText) {
+    if (!requireClient()) return;
+    if (!currentUser) throw new Error('Inicia sesión para cambiar las imágenes del perfil.');
+    if (!['image/png', 'image/jpeg', 'image/webp'].includes(file.type)) throw new Error('Elige una imagen PNG, JPG o WebP.');
+    if (file.size > maxBytes) throw new Error(bucket === 'avatars' ? 'La foto supera el límite de 3 MB.' : 'El banner supera el límite de 6 MB.');
+    message('settingsImageMessage', 'Subiendo imagen…');
+    const filename = (crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36)) + '.' + uploadExtension(file);
+    const path = currentUser.id + '/' + filename;
+    const { error: uploadError } = await client.storage.from(bucket).upload(path, file, {
+      cacheControl: '3600', upsert: false, contentType: file.type
+    });
+    if (uploadError) throw uploadError;
+    const { data: urlData } = client.storage.from(bucket).getPublicUrl(path);
+    const { data: profile, error } = await client.from('profiles')
+      .update({ [column]: urlData.publicUrl })
+      .eq('id', currentUser.id)
+      .select('id, username, display_name, bio, avatar_url, banner_url, username_changed_at, created_at, updated_at')
+      .single();
+    if (error) throw error;
+    const metadata = column === 'avatar_url' ? { avatar_url: urlData.publicUrl } : {};
+    if (Object.keys(metadata).length) {
+      const { error: metadataError } = await client.auth.updateUser({ data: metadata });
+      if (metadataError) throw metadataError;
+    }
+    drawSettings(currentUser, profile);
+    message('settingsImageMessage', successText, 'success');
+  }
+
+  function initSettingsEvents() {
     $('#profileForm')?.addEventListener('submit', event => {
       event.preventDefault();
       withBusy(event.currentTarget, async () => {
-        if (!requireClient()) return;
-        if (!currentUser) throw new Error('Tu sesión ya no está activa. Inicia sesión otra vez.');
+        if (!requireClient() || !currentUser) throw new Error('Inicia sesión para editar tu perfil.');
         const username = normalizeUsername($('#profileUsername').value);
         const displayName = $('#profileDisplayName').value.trim();
         const bio = $('#profileBio').value.trim();
         if (username.length < 3) throw new Error('El nombre de usuario debe tener al menos 3 caracteres.');
         if (!displayName || displayName.length > 32) throw new Error('El nombre a mostrar debe tener entre 1 y 32 caracteres.');
         if (bio.length > 180) throw new Error('La biografía no puede superar los 180 caracteres.');
-
-        const changes = {
-          id: currentUser.id,
-          username,
-          display_name: displayName,
-          bio,
-          is_private: Boolean($('#profilePrivate').checked),
-          updated_at: new Date().toISOString()
-        };
-        const { data, error } = await client.from('profiles').upsert(changes, { onConflict: 'id' })
-          .select('id, username, display_name, bio, avatar_url, is_private, created_at, updated_at').single();
+        const existing = await loadCurrentProfile(currentUser);
+        if (username !== existing.username && existing.username_changed_at) {
+          const availableAt = new Date(existing.username_changed_at).getTime() + USERNAME_COOLDOWN_MS;
+          if (Date.now() < availableAt) throw new Error('Solo puedes cambiar tu nombre de usuario cada 14 días. Podrás cambiarlo el ' + new Date(availableAt).toLocaleDateString('es-MX') + '.');
+        }
+        const { data: profile, error } = await client.from('profiles')
+          .update({ username, display_name: displayName, bio })
+          .eq('id', currentUser.id)
+          .select('id, username, display_name, bio, avatar_url, banner_url, username_changed_at, created_at, updated_at')
+          .single();
         if (error) throw error;
-
         const { error: metadataError } = await client.auth.updateUser({ data: { username, display_name: displayName } });
         if (metadataError) throw metadataError;
-        drawProfile(currentUser, data);
-        message('profileMessage', 'Los cambios de tu perfil se guardaron.', 'success');
+        drawSettings(currentUser, profile);
+        message('settingsProfileMessage', 'Los cambios se guardaron correctamente.', 'success');
       });
     });
 
     $('#avatarFile')?.addEventListener('change', async event => {
       const file = event.currentTarget.files?.[0];
       if (!file) return;
-      try {
-        if (!requireClient()) return;
-        if (!currentUser) throw new Error('Inicia sesión para cambiar tu foto.');
-        if (!['image/png', 'image/jpeg', 'image/webp'].includes(file.type)) throw new Error('Elige una imagen PNG, JPG o WebP.');
-        if (file.size > 3 * 1024 * 1024) throw new Error('La imagen supera el límite de 3 MB.');
-        message('avatarMessage', 'Subiendo imagen…');
-        const extension = file.type === 'image/png' ? 'png' : file.type === 'image/webp' ? 'webp' : 'jpg';
-        const filename = (crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36)) + '.' + extension;
-        const path = currentUser.id + '/' + filename;
-        const { error: uploadError } = await client.storage.from('avatars').upload(path, file, {
-          cacheControl: '3600',
-          upsert: false,
-          contentType: file.type
-        });
-        if (uploadError) throw uploadError;
-        const { data } = client.storage.from('avatars').getPublicUrl(path);
-        const avatarUrl = data.publicUrl;
-        const { data: profile, error } = await client.from('profiles')
-          .update({ avatar_url: avatarUrl, updated_at: new Date().toISOString() })
-          .eq('id', currentUser.id)
-          .select('id, username, display_name, bio, avatar_url, is_private, created_at, updated_at').single();
-        if (error) throw error;
-        const { error: metadataError } = await client.auth.updateUser({ data: { avatar_url: avatarUrl } });
-        if (metadataError) throw metadataError;
-        drawProfile(currentUser, profile);
-        message('avatarMessage', 'Tu foto de perfil se actualizó.', 'success');
-      } catch (error) {
-        message('avatarMessage', friendlyError(error), 'error');
-      } finally {
-        event.currentTarget.value = '';
-      }
+      try { await uploadProfileImage(file, 'avatars', 3 * 1024 * 1024, 'avatar_url', 'Tu foto de perfil se actualizó.'); }
+      catch (error) { message('settingsImageMessage', friendlyError(error), 'error'); }
+      finally { event.currentTarget.value = ''; }
+    });
+
+    $('#bannerFile')?.addEventListener('change', async event => {
+      const file = event.currentTarget.files?.[0];
+      if (!file) return;
+      try { await uploadProfileImage(file, 'banners', 6 * 1024 * 1024, 'banner_url', 'Tu banner se actualizó.'); }
+      catch (error) { message('settingsImageMessage', friendlyError(error), 'error'); }
+      finally { event.currentTarget.value = ''; }
     });
 
     $('#changeEmailForm')?.addEventListener('submit', event => {
       event.preventDefault();
       withBusy(event.currentTarget, async () => {
-        if (!requireClient()) return;
+        if (!requireClient() || !currentUser) throw new Error('Inicia sesión para cambiar tu correo.');
         const email = $('#newEmail').value.trim();
-        if (!email || email === currentUser?.email) throw new Error('Introduce un correo diferente al actual.');
+        if (!email || email === currentUser.email) throw new Error('Introduce un correo diferente al actual.');
         const { error } = await client.auth.updateUser({ email });
         if (error) throw error;
-        message('securityMessage', 'Solicitamos el cambio de correo. Sigue las instrucciones de confirmación que te enviemos.', 'success');
+        message('securityMessage', 'Solicitamos el cambio de correo. Sigue las instrucciones de confirmación que te enviamos.', 'success');
         $('#newEmail').value = '';
-      });
+      }, 'securityMessage');
     });
 
     $('#changePasswordForm')?.addEventListener('submit', event => {
       event.preventDefault();
       withBusy(event.currentTarget, async () => {
-        if (!requireClient()) return;
+        if (!requireClient() || !currentUser) throw new Error('Inicia sesión para cambiar tu contraseña.');
         const password = $('#changePassword').value;
         if (password !== $('#changePasswordConfirm').value) throw new Error('Las contraseñas no coinciden.');
         const { error } = await client.auth.updateUser({ password });
@@ -557,7 +567,7 @@
         $('#changePassword').value = '';
         $('#changePasswordConfirm').value = '';
         message('securityMessage', 'Tu contraseña se actualizó correctamente.', 'success');
-      });
+      }, 'securityMessage');
     });
 
     $('#signOutButton')?.addEventListener('click', async () => {
@@ -566,31 +576,292 @@
       if (error) message('securityMessage', friendlyError(error), 'error');
       else location.assign(new URL('cuenta.html', SITE_ROOT).href);
     });
+
+    $('#deleteAccountButton')?.addEventListener('click', async () => {
+      if (!requireClient() || !currentUser) return;
+      const confirmation = window.prompt('Esta acción es permanente. Escribe ELIMINAR para borrar tu cuenta y tus comentarios.');
+      if (confirmation !== 'ELIMINAR') {
+        message('deleteAccountMessage', 'No se eliminó la cuenta.', 'success');
+        return;
+      }
+      const button = $('#deleteAccountButton');
+      if (button) { button.disabled = true; button.textContent = 'Eliminando cuenta…'; }
+      try {
+        const { data, error } = await client.functions.invoke('delete-account', { body: { confirm: true } });
+        if (error) throw error;
+        if (!data?.success) throw new Error(data?.error || 'No se confirmó la eliminación de la cuenta.');
+        try { await client.auth.signOut(); } catch (_) {}
+        location.assign(new URL('index.html?cuenta-eliminada=1', SITE_ROOT).href);
+      } catch (error) {
+        message('deleteAccountMessage', friendlyError(error), 'error');
+        if (button) { button.disabled = false; button.textContent = 'Eliminar cuenta permanentemente'; }
+      }
+    });
+  }
+
+  function showPublicProfileState(state) {
+    ['publicProfileLoading', 'publicProfileGuest', 'publicProfileMissing', 'publicProfileCard'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.hidden = id !== state;
+    });
+  }
+
+  function drawPublicProfile(profile, owner) {
+    if (!profile) { showPublicProfileState('publicProfileMissing'); return; }
+    showPublicProfileState('publicProfileCard');
+    const setText = (id, value) => { const el = document.getElementById(id); if (el) el.textContent = value || ''; };
+    setText('publicProfileDisplayName', profile.display_name || profile.username || 'Usuario');
+    setText('publicProfileUsername', '@' + (profile.username || 'usuario'));
+    setText('publicProfileBio', profile.bio || '');
+    setText('publicProfileJoined', profile.created_at ? 'Se unió en ' + formatDate(profile.created_at, { month: 'long', year: 'numeric' }) : '');
+    setImagePreview('publicProfileAvatarImage', 'publicProfileAvatarFallback', profile.avatar_url, profile.display_name || profile.username);
+    const banner = $('#publicProfileBanner');
+    if (banner) {
+      banner.style.backgroundImage = profile.banner_url ? 'url("' + profile.banner_url.replace(/"/g, '%22') + '")' : '';
+      banner.classList.toggle('has-banner', Boolean(profile.banner_url));
+    }
+    const actions = $('#publicProfileOwnerActions');
+    if (actions) actions.hidden = !owner;
+    const custom = $('#customizeProfileButton');
+    if (custom) custom.href = new URL('configurar-perfil.html', SITE_ROOT).href;
+    document.title = (profile.display_name || profile.username) + ' (@' + profile.username + ') — NegativeStudios';
+  }
+
+  async function initPublicProfilePage(userFromSession) {
+    if (!$('#publicProfileCard') || !client) return;
+    showPublicProfileState('publicProfileLoading');
+    let user = userFromSession || currentUser;
+    if (!user) {
+      const { data } = await client.auth.getSession();
+      user = data.session?.user || null;
+    }
+    const requestedUsername = new URLSearchParams(location.search).get('username');
+    if (!requestedUsername && !user) {
+      showPublicProfileState('publicProfileGuest');
+      return;
+    }
+    let profile = null;
+    if (requestedUsername) {
+      const username = normalizeUsername(requestedUsername);
+      if (!username) { showPublicProfileState('publicProfileMissing'); return; }
+      const { data, error } = await client.from('profiles')
+        .select('id, username, display_name, bio, avatar_url, banner_url, created_at')
+        .eq('username', username).maybeSingle();
+      if (error) throw error;
+      profile = data;
+    } else {
+      profile = await loadCurrentProfile(user);
+    }
+    drawPublicProfile(profile, Boolean(user && profile && user.id === profile.id));
+  }
+
+  function commentProfile(comment) {
+    const relation = comment.profiles;
+    return Array.isArray(relation) ? (relation[0] || {}) : (relation || {});
+  }
+
+  function avatarNode(url, name) {
+    const avatar = document.createElement('span');
+    avatar.className = 'project-comment-avatar';
+    avatar.textContent = (name || 'N').trim().charAt(0).toUpperCase() || 'N';
+    if (url) {
+      const img = document.createElement('img');
+      img.alt = '';
+      img.src = url;
+      img.onerror = () => img.remove();
+      avatar.replaceChildren(img);
+    }
+    return avatar;
+  }
+
+  function makeCommentForm(slug, parentId, placeholder, onCancel) {
+    const form = document.createElement('form');
+    form.className = parentId ? 'project-reply-form' : 'project-comments-form';
+    const textarea = document.createElement('textarea');
+    textarea.maxLength = 2000;
+    textarea.required = true;
+    textarea.placeholder = placeholder || 'Comparte tu opinión sobre este proyecto…';
+    form.appendChild(textarea);
+    const buttons = document.createElement('div');
+    buttons.className = parentId ? 'project-reply-buttons' : '';
+    const submit = document.createElement('button');
+    submit.type = 'submit';
+    submit.textContent = parentId ? 'Responder' : 'Publicar comentario';
+    buttons.appendChild(submit);
+    if (parentId) {
+      const cancel = document.createElement('button');
+      cancel.type = 'button';
+      cancel.textContent = 'Cancelar';
+      cancel.addEventListener('click', onCancel || (() => form.remove()));
+      buttons.appendChild(cancel);
+    }
+    form.appendChild(buttons);
+    form.addEventListener('submit', event => {
+      event.preventDefault();
+      const content = textarea.value.trim();
+      if (!content || !currentUser || !client) return;
+      withBusy(form, async () => {
+        const { error } = await client.from('project_comments').insert({
+          project_slug: slug,
+          user_id: currentUser.id,
+          parent_comment_id: parentId,
+          content
+        });
+        if (error) throw error;
+        await loadProjectComments(slug);
+      }, 'projectCommentsMessage');
+    });
+    return form;
+  }
+
+  function renderCommentNode(comment, children, slug) {
+    const profile = commentProfile(comment);
+    const article = document.createElement('article');
+    article.className = 'project-comment';
+    article.dataset.commentId = String(comment.id);
+    const header = document.createElement('div');
+    header.className = 'project-comment-head';
+    header.appendChild(avatarNode(profile.avatar_url, profile.display_name || profile.username));
+    const author = document.createElement('div');
+    author.className = 'project-comment-author';
+    const link = document.createElement('a');
+    link.href = profileHref(profile);
+    link.textContent = profile.display_name || profile.username || 'Usuario';
+    const handle = document.createElement('small');
+    handle.textContent = '@' + (profile.username || 'usuario') + ' · ' + formatDate(comment.created_at, { day: 'numeric', month: 'short', year: 'numeric' });
+    author.append(link, handle);
+    header.appendChild(author);
+    article.appendChild(header);
+    const content = document.createElement('div');
+    content.className = 'project-comment-content';
+    content.textContent = comment.content;
+    article.appendChild(content);
+    const actions = document.createElement('div');
+    actions.className = 'project-comment-actions';
+    if (currentUser) {
+      const reply = document.createElement('button');
+      reply.type = 'button';
+      reply.className = 'project-comment-action';
+      reply.textContent = 'Responder';
+      reply.addEventListener('click', () => {
+        const existing = article.querySelector(':scope > .project-reply-form');
+        if (existing) { existing.remove(); return; }
+        const form = makeCommentForm(slug, comment.id, 'Escribe tu respuesta…');
+        actions.insertAdjacentElement('afterend', form);
+      });
+      actions.appendChild(reply);
+    }
+    if (currentUser && currentUser.id === comment.user_id) {
+      const remove = document.createElement('button');
+      remove.type = 'button';
+      remove.className = 'project-comment-action project-comment-action--delete';
+      remove.textContent = 'Eliminar';
+      remove.addEventListener('click', async () => {
+        if (!window.confirm('¿Eliminar este comentario y sus respuestas?')) return;
+        const { error } = await client.from('project_comments').delete().eq('id', comment.id).eq('user_id', currentUser.id);
+        if (error) message('projectCommentsMessage', friendlyError(error), 'error');
+        else await loadProjectComments(slug);
+      });
+      actions.appendChild(remove);
+    }
+    if (actions.childElementCount) article.appendChild(actions);
+    if (children.length) {
+      const nested = document.createElement('div');
+      nested.className = 'project-comment-children';
+      children.forEach(child => nested.appendChild(renderCommentNode(child.row, child.children, slug)));
+      article.appendChild(nested);
+    }
+    return article;
+  }
+
+  async function loadProjectComments(slug) {
+    if (!client) return;
+    const root = document.querySelector('[data-project-comments][data-project-slug="' + slug + '"]');
+    if (!root) return;
+    const feed = root.querySelector('[data-project-comments-feed]');
+    const count = root.querySelector('[data-project-comments-count]');
+    if (!feed) return;
+    feed.replaceChildren();
+    const loading = document.createElement('p');
+    loading.className = 'project-comment-empty';
+    loading.textContent = 'Cargando comentarios…';
+    feed.appendChild(loading);
+    const { data, error } = await client.from('project_comments')
+      .select('id, project_slug, parent_comment_id, user_id, content, created_at, profiles!project_comments_user_id_fkey(username, display_name, avatar_url)')
+      .eq('project_slug', slug).order('created_at', { ascending: true }).limit(1000);
+    if (error) {
+      feed.replaceChildren();
+      const errorText = document.createElement('p');
+      errorText.className = 'project-comment-empty';
+      errorText.textContent = 'No se pudieron cargar los comentarios. Comprueba que hayas ejecutado el esquema actualizado de Supabase.';
+      feed.appendChild(errorText);
+      message('projectCommentsMessage', friendlyError(error), 'error');
+      return;
+    }
+    const rows = data || [];
+    if (count) count.textContent = rows.length + (rows.length === 1 ? ' comentario' : ' comentarios');
+    const byId = new Map();
+    rows.forEach(row => byId.set(row.id, { row, children: [] }));
+    const top = [];
+    rows.forEach(row => {
+      const node = byId.get(row.id);
+      const parent = row.parent_comment_id === null ? null : byId.get(row.parent_comment_id);
+      if (parent) parent.children.push(node);
+      else top.push(node);
+    });
+    top.reverse();
+    const sortChildren = node => { node.children.sort((a,b) => new Date(a.row.created_at) - new Date(b.row.created_at)); node.children.forEach(sortChildren); };
+    top.forEach(sortChildren);
+    feed.replaceChildren();
+    if (!top.length) {
+      const empty = document.createElement('p');
+      empty.className = 'project-comment-empty';
+      empty.textContent = 'Todavía no hay comentarios. Sé la primera persona en compartir su opinión.';
+      feed.appendChild(empty);
+    } else {
+      top.forEach(node => feed.appendChild(renderCommentNode(node.row, node.children, slug)));
+    }
+  }
+
+  function initProjectComments() {
+    if (!client) return;
+    $$('[data-project-comments][data-project-slug]').forEach(root => {
+      const slug = root.dataset.projectSlug;
+      const compose = root.querySelector('[data-project-comments-compose]');
+      if (!compose || compose.dataset.initialized === 'true') return;
+      compose.dataset.initialized = 'true';
+      if (currentUser) {
+        compose.appendChild(makeCommentForm(slug, null, 'Comparte tu opinión sobre este proyecto…'));
+      } else {
+        const wrap = document.createElement('div');
+        wrap.className = 'project-comments-auth';
+        const text = document.createElement('p');
+        text.textContent = 'Inicia sesión para publicar comentarios y responder a otras personas.';
+        const link = document.createElement('a');
+        link.className = 'btn primary';
+        link.href = new URL('cuenta.html', SITE_ROOT).href;
+        link.textContent = 'Registrar / Iniciar sesión';
+        wrap.append(text, link);
+        compose.appendChild(wrap);
+      }
+      loadProjectComments(slug).catch(error => message('projectCommentsMessage', friendlyError(error), 'error'));
+    });
   }
 
   async function initialize() {
     ensureStyles();
     ensureNavLink();
-
-    try {
-      await loadScript(new URL('assets/supabase-config.js', SITE_ROOT).href, 'data-ns-supabase-config');
-    } catch (_) {
-      // Se mostrará una advertencia clara si falta la configuración.
-    }
-
+    try { await loadScript(new URL('assets/supabase-config.js', SITE_ROOT).href, 'data-ns-supabase-config'); } catch (_) {}
     const config = window.NS_SUPABASE_CONFIG || {};
     if (config.siteUrl) SITE_ROOT = ensureTrailingSlash(config.siteUrl);
     ensureNavLink();
     if (!config.url || !config.publishableKey) {
       updateNav(null, null);
-      const text = 'El sistema de cuentas está preparado, pero falta conectar Supabase. Completa assets/supabase-config.js y sigue la guía de configuración.';
-      if (pageType === 'profile') {
-        const guest = $('#profileGuest');
-        if (guest) guest.hidden = false;
-      }
+      const text = 'El sistema de cuentas está preparado, pero falta completar la conexión con Supabase.';
       setConfigNotice(text);
       if (pageType === 'auth') initAuthPage();
-      if (pageType === 'profile') initProfileEvents();
+      if (pageType === 'settings') $('#settingsGuest') && ($('#settingsGuest').hidden = false);
+      if (pageType === 'public-profile') showPublicProfileState('publicProfileGuest');
       return;
     }
 
@@ -601,15 +872,18 @@
     });
 
     if (pageType === 'auth') initAuthPage();
-    if (pageType === 'profile') initProfileEvents();
+    if (pageType === 'settings') initSettingsEvents();
 
     if (!authListenerRegistered) {
       client.auth.onAuthStateChange((event, session) => {
-        window.setTimeout(() => {
-          refreshNav(session?.user || null);
-          if (pageType === 'profile') initProfilePage().catch(error => message('profileMessage', friendlyError(error), 'error'));
-          if (pageType === 'auth' && session?.user && !isRecoveryFlow() && !$('#authVerifyPanel')?.hidden) {
-            location.assign(new URL('perfil.html', SITE_ROOT).href);
+        window.setTimeout(async () => {
+          const user = session?.user || null;
+          await refreshNav(user);
+          if (pageType === 'settings') await initSettingsPage(user);
+          if (pageType === 'public-profile') await initPublicProfilePage(user);
+          initProjectComments();
+          if (pageType === 'auth' && user && !isRecoveryFlow() && !$('#authVerifyPanel')?.hidden) {
+            location.assign(profileHref(null));
           }
         }, 0);
       });
@@ -622,20 +896,19 @@
     await refreshNav(user);
 
     if (pageType === 'auth') {
-      if (isRecoveryFlow()) {
-        showAuthOnly('authRecoveryPassword');
-      } else if (user) {
-        showAuthOnly('authAlreadySignedIn');
-      } else if (verifyEmail) {
-        const label = $('#verifyEmailLabel');
-        if (label) label.textContent = verifyEmail;
+      if (isRecoveryFlow()) showAuthOnly('authRecoveryPassword');
+      else if (user) showAuthOnly('authAlreadySignedIn');
+      else if (verifyEmail) {
+        if ($('#verifyEmailLabel')) $('#verifyEmailLabel').textContent = verifyEmail;
         showAuthOnly('authVerifyPanel');
       } else if (new URLSearchParams(location.search).get('verified') === '1') {
         showAuthTab('login');
         message('authMessage', 'Tu correo quedó verificado. Ya puedes iniciar sesión.', 'success');
       }
     }
-    if (pageType === 'profile') await initProfilePage();
+    if (pageType === 'settings') await initSettingsPage(user);
+    if (pageType === 'public-profile') await initPublicProfilePage(user);
+    initProjectComments();
   }
 
   ensureStyles();
@@ -643,6 +916,9 @@
   initialize().catch(error => {
     const text = 'No se pudo inicializar el sistema de cuentas: ' + friendlyError(error);
     if (pageType === 'auth') message('authMessage', text, 'error');
-    if (pageType === 'profile') message('profileMessage', text, 'error');
+    if (pageType === 'settings') message('settingsProfileMessage', text, 'error');
+    if (pageType === 'public-profile') {
+      showPublicProfileState('publicProfileMissing');
+    }
   });
 })();
