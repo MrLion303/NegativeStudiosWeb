@@ -10,6 +10,7 @@
   let sessionProfile = null;
   let activeProfile = null;
   let profileRequests = [];
+  let overflowCloseBound = false;
 
   function addStyles() {
     if (document.querySelector('link[data-ns-community-css]')) return;
@@ -657,6 +658,55 @@
     return button;
   }
 
+  function createOverflowMenu(items) {
+    if (!items.length) return null;
+    const wrap = document.createElement('div');
+    wrap.className = 'community-overflow';
+    const trigger = document.createElement('button');
+    trigger.type = 'button'; trigger.className = 'community-overflow-trigger';
+    trigger.textContent = '⋮'; trigger.title = 'Más opciones';
+    trigger.setAttribute('aria-label', 'Más opciones'); trigger.setAttribute('aria-haspopup', 'menu');
+    trigger.setAttribute('aria-expanded', 'false');
+    const menu = document.createElement('div');
+    menu.className = 'community-overflow-menu'; menu.hidden = true; menu.setAttribute('role', 'menu');
+    trigger.addEventListener('click', event => {
+      event.stopPropagation();
+      menu.hidden = !menu.hidden;
+      trigger.setAttribute('aria-expanded', String(!menu.hidden));
+    });
+    items.forEach(item => {
+      const option = document.createElement('button');
+      option.type = 'button'; option.setAttribute('role', 'menuitem');
+      option.textContent = item.label;
+      if (item.danger) option.classList.add('is-danger');
+      option.addEventListener('click', async event => {
+        event.stopPropagation();
+        menu.hidden = true; trigger.setAttribute('aria-expanded', 'false');
+        await item.action(option);
+      });
+      menu.appendChild(option);
+    });
+    wrap.append(trigger, menu);
+    if (!overflowCloseBound) {
+      overflowCloseBound = true;
+      document.addEventListener('click', event => {
+        if (event.target.closest('.community-overflow')) return;
+        document.querySelectorAll('.community-overflow-menu').forEach(node => {
+          node.hidden = true;
+          node.parentElement?.querySelector('.community-overflow-trigger')?.setAttribute('aria-expanded', 'false');
+        });
+      });
+      document.addEventListener('keydown', event => {
+        if (event.key !== 'Escape') return;
+        document.querySelectorAll('.community-overflow-menu').forEach(node => {
+          node.hidden = true;
+          node.parentElement?.querySelector('.community-overflow-trigger')?.setAttribute('aria-expanded', 'false');
+        });
+      });
+    }
+    return wrap;
+  }
+
   function viewerIsModerator() {
     let relation = sessionProfile?.profile_badges;
     if (Array.isArray(relation)) relation = relation[0] || {};
@@ -681,20 +731,7 @@
     const handle = document.createElement('a'); handle.href = profileUrl(profile); handle.textContent = '@' + (profile.username || 'usuario');
     const dot = document.createTextNode(' · ' + new Date(post.created_at).toLocaleString('es-MX', { dateStyle: 'medium', timeStyle: 'short' }));
     meta.append(handle, dot); who.append(nameLine, meta); header.appendChild(who);
-    card.appendChild(header);
 
-    if (post.content_html || post.content_text) {
-      const body = document.createElement('div'); body.className = 'community-post-body';
-      body.innerHTML = safePostHtml(post.content_html || String(post.content_text || '').replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])));
-      card.appendChild(body);
-    }
-    if (post.image_url && /^https?:\/\//i.test(post.image_url)) {
-      const img = document.createElement('img'); img.className = 'community-post-image';
-      img.src = post.image_url; img.alt = 'Imagen adjunta a la publicación'; img.loading = 'lazy'; card.appendChild(img);
-    }
-    const actions = document.createElement('div'); actions.className = 'community-post-actions';
-    const likes = Array.isArray(post.forum_post_likes) ? post.forum_post_likes : [];
-    actions.appendChild(renderHeartButton('forum_post_likes', 'post_id', post, user, likes));
     const removePost = async (button, moderator) => {
       if (!window.confirm(moderator ? '¿Eliminar esta publicación como moderador? Esta acción no se puede deshacer.' : '¿Eliminar esta publicación?')) return;
       button.disabled = true;
@@ -710,17 +747,25 @@
         button.disabled = false;
       }
     };
-    if (user && user.id === post.user_id) {
-      const remove = document.createElement('button'); remove.type = 'button'; remove.className = 'community-button community-button--quiet';
-      remove.textContent = 'Eliminar publicación';
-      remove.addEventListener('click', () => removePost(remove, false));
-      actions.appendChild(remove);
-    } else if (user && viewerIsModerator()) {
-      const remove = document.createElement('button'); remove.type = 'button'; remove.className = 'community-button community-button--quiet';
-      remove.textContent = 'Eliminar como moderador';
-      remove.addEventListener('click', () => removePost(remove, true));
-      actions.appendChild(remove);
+    const menuItems = [];
+    if (user && user.id === post.user_id) menuItems.push({ label: 'Eliminar publicación', danger: true, action: button => removePost(button, false) });
+    else if (user && viewerIsModerator()) menuItems.push({ label: 'Eliminar como moderador', danger: true, action: button => removePost(button, true) });
+    const menu = createOverflowMenu(menuItems);
+    if (menu) header.appendChild(menu);
+    card.appendChild(header);
+
+    if (post.content_html || post.content_text) {
+      const body = document.createElement('div'); body.className = 'community-post-body';
+      body.innerHTML = safePostHtml(post.content_html || String(post.content_text || '').replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])));
+      card.appendChild(body);
     }
+    if (post.image_url && /^https?:\/\//i.test(post.image_url)) {
+      const img = document.createElement('img'); img.className = 'community-post-image';
+      img.src = post.image_url; img.alt = 'Imagen adjunta a la publicación'; img.loading = 'lazy'; card.appendChild(img);
+    }
+    const actions = document.createElement('div'); actions.className = 'community-post-actions';
+    const likes = Array.isArray(post.forum_post_likes) ? post.forum_post_likes : [];
+    actions.appendChild(renderHeartButton('forum_post_likes', 'post_id', post, user, likes));
     card.appendChild(actions);
     return card;
   }
