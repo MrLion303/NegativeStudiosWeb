@@ -132,3 +132,10 @@ La eliminación usa una Supabase Edge Function. Puedes desplegarla desde el nave
 ## 9. Activar comentarios
 
 Después de ejecutar el nuevo `supabase/schema.sql`, abre una página de proyecto, por ejemplo OVERLAND. Los comentarios se leen públicamente; para escribir o responder es necesario iniciar sesión. Las respuestas quedan enlazadas al comentario original y no se pueden asociar a otro proyecto.
+
+
+## Badges y moderación
+
+Después de añadir los emblemas, vuelve a ejecutar **todo** `supabase/schema.sql` en Supabase → SQL Editor. Esto crea la tabla de badges y las funciones protegidas para asignarlos y moderar comentarios. La cuenta `mrlion303` se registra como administradora si su perfil ya existe al ejecutar el esquema; si creas esa cuenta después, vuelve a ejecutar el esquema para registrarla.
+
+Los emblemas se cargan desde `assets/badges/mod.png` y `assets/badges/verificado.png`. La interfaz no es la autoridad de los permisos: Supabase valida que solo la cuenta administradora pueda asignar badges y que solo las cuentas con badge de moderador puedan eliminar comentarios ajenos.
