@@ -512,7 +512,8 @@ drop policy if exists "Users can mark their own notifications read" on public.no
 create policy "Users can mark their own notifications read"
   on public.notifications for update to authenticated using(user_id=(select auth.uid())) with check(user_id=(select auth.uid()));
 revoke all on public.notifications from anon, authenticated;
-grant select, update on public.notifications to authenticated;
+grant select on public.notifications to authenticated;
+grant update(read_at) on public.notifications to authenticated;
 
 create or replace function public.create_activity_notification(
   target_user_id uuid, actor_user_id uuid, event_type text, event_title text,
