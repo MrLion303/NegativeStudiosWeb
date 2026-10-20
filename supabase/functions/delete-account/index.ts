@@ -15,7 +15,7 @@ Deno.serve(async (req: Request) => {
     return Response.json({ error: "Método no permitido." }, { status: 405, headers: corsHeaders });
   }
   const origin = req.headers.get("origin");
-  if (origin && origin !== "https://mrlion303.github.io" && !origin.startsWith("http://localhost:")) {
+  if (origin && origin !== "https://mrlion303.github.io") {
     return Response.json({ error: "Origen no autorizado." }, { status: 403, headers: corsHeaders });
   }
 
