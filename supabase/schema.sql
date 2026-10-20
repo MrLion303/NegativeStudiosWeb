@@ -333,7 +333,7 @@ create table if not exists public.profile_badges (
 alter table public.profile_badges enable row level security;
 drop policy if exists "Profile badges are publicly readable" on public.profile_badges;
 create policy "Profile badges are publicly readable" on public.profile_badges for select using (true);
-revoke insert, update, delete on public.profile_badges from anon, authenticated;
+revoke all on public.profile_badges from anon, authenticated;
 grant select on public.profile_badges to anon, authenticated;
 
 -- Registro privado de administradores; se inicializa con mrlion303 si su perfil ya existe.
