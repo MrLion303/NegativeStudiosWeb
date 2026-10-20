@@ -611,8 +611,8 @@
   }
 
   function initSettingsTabs() {
-    const buttons = $('[data-settings-tab]');
-    const panels = $('[data-settings-panel]');
+    const buttons = $$('[data-settings-tab]');
+    const panels = $$('[data-settings-panel]');
     if (!buttons.length || !panels.length) return;
     const activate = name => {
       buttons.forEach(button => {
@@ -697,7 +697,7 @@
 
   function initConnectionControls() {
     if (!$('#settingsConnectionsPanel')) return;
-    $('[data-link-identity]').forEach(button => {
+    $$('[data-link-identity]').forEach(button => {
       button.addEventListener('click', async () => {
         if (!client || !currentUser) { message('connectionsMessage', 'Inicia sesión para administrar conexiones.', 'error'); return; }
         const provider = button.dataset.linkIdentity;
@@ -728,7 +728,7 @@
       });
     });
 
-    $('[data-microsoft-action]').forEach(button => {
+    $$('[data-microsoft-action]').forEach(button => {
       button.addEventListener('click', async () => {
         if (!client || !currentUser) { message('connectionsMessage', 'Inicia sesión para administrar conexiones.', 'error'); return; }
         const slot = Number(button.dataset.microsoftSlot);
