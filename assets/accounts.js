@@ -233,7 +233,7 @@
     try {
       await callback();
     } catch (error) {
-      const target = pageType === 'profile' ? 'profileMessage' : 'authMessage';
+      const target = form?.dataset.messageTarget || (pageType === 'profile' ? 'profileMessage' : 'authMessage');
       message(target, friendlyError(error), 'error');
     } finally {
       if (button) {
@@ -335,7 +335,7 @@
       withBusy(event.currentTarget, async () => {
         if (!requireClient()) return;
         const token = $('#verifyCode').value.trim();
-        const email = verifyEmail || sessionStorage.getItem('ns_pending_verification_email') || $('#registerEmail').value.trim() || $('#loginEmail').value.trim();
+        const email = verifyEmail || $('#registerEmail').value.trim() || $('#loginEmail').value.trim();
         if (!email) throw new Error('Escribe tu correo electrónico e intenta solicitar un código nuevo.');
         const { data, error } = await client.auth.verifyOtp({ email, token, type: 'email' });
         if (error) throw error;
@@ -351,7 +351,7 @@
     $('#resendCodeButton')?.addEventListener('click', async () => {
       if (!requireClient()) return;
       try {
-        const email = verifyEmail || sessionStorage.getItem('ns_pending_verification_email') || $('#registerEmail').value.trim();
+        const email = verifyEmail || $('#registerEmail').value.trim();
         if (!email) throw new Error('Escribe el correo con el que intentaste registrarte.');
         const { error } = await client.auth.resend({
           type: 'signup',
