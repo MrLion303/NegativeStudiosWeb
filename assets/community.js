@@ -93,10 +93,10 @@
     target.setAttribute('role', 'status');
   }
 
-  async function loadProfiles(select, query) {
-    let result = await query.select(select);
+  async function loadProfiles(select, buildQuery) {
+    let result = await buildQuery(select);
     if (result.error && select.includes('profile_badges(is_mod, is_verified)')) {
-      result = await query.select(select.replace(', profile_badges(is_mod, is_verified)', ''));
+      result = await buildQuery(select.replace(', profile_badges(is_mod, is_verified)', ''));
     }
     if (result.error) throw result.error;
     return result.data || [];
@@ -249,7 +249,7 @@
     try {
       const profiles = await loadProfiles(
         'id, username, display_name, avatar_url, created_at, profile_badges(is_mod, is_verified)',
-        client.from('profiles').select('*').order('created_at', { ascending: false }).limit(40)
+        fields => client.from('profiles').select(fields).order('created_at', { ascending: false }).limit(40)
       );
       const requests = sessionUser ? await getFriendRequests(sessionUser) : [];
       const excluded = new Set([sessionUser?.id, ...(excludeIds || [])].filter(Boolean));
@@ -291,7 +291,7 @@
       }
       const ids = incoming.map(row => row.requester_id);
       const people = await loadProfiles('id, username, display_name, avatar_url, profile_badges(is_mod, is_verified)',
-        client.from('profiles').select('*').in('id', ids));
+        fields => client.from('profiles').select(fields).in('id', ids));
       people.forEach(profile => {
         const row = document.createElement('article');
         row.className = 'community-suggestion';
