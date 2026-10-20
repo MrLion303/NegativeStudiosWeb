@@ -143,6 +143,8 @@ Los emblemas se cargan desde `assets/badges/mod.png` y `assets/badges/verificado
 
 ## Foro, amistades, publicaciones y corazones
 
+Para mostrar el contador de amigos y abrir la lista pública en los perfiles, vuelve a ejecutar el esquema completo `supabase/schema.sql`. Las políticas nuevas solo permiten consultar públicamente las amistades con estado `accepted`; las solicitudes pendientes siguen limitadas a las personas implicadas.
+
 Ejecuta **todo** `supabase/schema.sql` en Supabase → SQL Editor. Esta actualización añade:
 
 - Solicitudes de amistad, aceptación/rechazo y eliminación de amistades.
