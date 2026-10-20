@@ -44,21 +44,32 @@ Deno.serve(async (req: Request) => {
     auth: { persistSession: false, autoRefreshToken: false },
   });
 
-  // Borra los archivos del usuario antes de eliminar la cuenta. Los perfiles,
-  // comentarios y relaciones restantes se eliminan mediante sus claves foráneas.
-  for (const bucket of ["avatars", "banners"]) {
-    const { data: files, error: listError } = await adminClient.storage.from(bucket).list(userData.user.id, { limit: 1000 });
-    if (listError) {
-      return Response.json({ error: "No se pudieron preparar los archivos de tu perfil para eliminarlos." }, { status: 500, headers: corsHeaders });
-    }
-    if (files?.length) {
-      const paths = files.filter((file) => file.name && file.id).map((file) => userData.user.id + "/" + file.name);
+  // Elimina todos los archivos del usuario antes de borrar su cuenta.
+  // También limpia las imágenes del foro y pagina para no dejar archivos huérfanos
+  // cuando una cuenta acumule más de 1.000 archivos.
+  for (const bucket of ["avatars", "banners", "post-images"]) {
+    let offset = 0;
+    const pageSize = 100;
+    while (true) {
+      const { data: files, error: listError } = await adminClient.storage
+        .from(bucket)
+        .list(userData.user.id, { limit: pageSize, offset, sortBy: { column: "name", order: "asc" } });
+      if (listError) {
+        return Response.json({ error: "No se pudieron preparar los archivos de tu cuenta para eliminarlos." }, { status: 500, headers: corsHeaders });
+      }
+
+      const paths = (files || [])
+        .filter((file) => file.name && file.id)
+        .map((file) => userData.user.id + "/" + file.name);
       if (paths.length) {
         const { error: removeError } = await adminClient.storage.from(bucket).remove(paths);
         if (removeError) {
-          return Response.json({ error: "No se pudieron eliminar los archivos de tu perfil." }, { status: 500, headers: corsHeaders });
+          return Response.json({ error: "No se pudieron eliminar todos los archivos de tu cuenta." }, { status: 500, headers: corsHeaders });
         }
       }
+
+      if (!files || files.length < pageSize) break;
+      offset += files.length;
     }
   }
 
