@@ -167,6 +167,10 @@ La vinculación Microsoft usa la Edge Function `microsoft-link`; no utiliza los 
 
 Las tres posiciones Microsoft se muestran en la pestaña **Conexiones**. La vinculación guarda una identidad Microsoft y tokens cifrados para futuras integraciones con el launcher; todavía no implementa el inicio de sesión Minecraft en el launcher ni comprueba licencias/entitlements. Esa integración requiere desarrollar y probar el flujo Xbox Live / Minecraft del launcher después.
 
+
+
+Para activar las respuestas del foro, vuelve a ejecutar el archivo completo `supabase/schema.sql`. Este crea `forum_post_comments`, permite que cada usuario elimine únicamente sus propias respuestas y genera notificaciones para las respuestas a publicaciones y a otros comentarios.
+
 ## 9. Activar comentarios
 
 Después de ejecutar el nuevo `supabase/schema.sql`, abre una página de proyecto, por ejemplo OVERLAND. Los comentarios se leen públicamente; para escribir o responder es necesario iniciar sesión. Las respuestas quedan enlazadas al comentario original y no se pueden asociar a otro proyecto.
@@ -191,6 +195,7 @@ Ejecuta **todo** `supabase/schema.sql` en Supabase → SQL Editor. Esta actualiz
 - Formato de texto en publicaciones: negrita, cursiva y texto más grande o pequeño.
 - Adjuntos PNG, JPG o WebP de hasta 5 MB.
 - Reacciones de corazón en comentarios y publicaciones.
+- Respuestas a publicaciones, con respuestas anidadas y notificaciones al autor o al usuario respondido.
 
 La cuenta con badge de moderador también puede eliminar publicaciones ajenas del foro; Supabase comprueba el permiso mediante una función protegida.
 - Políticas de acceso para solicitudes, publicaciones, corazones e imágenes.
