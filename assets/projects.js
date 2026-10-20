@@ -38,6 +38,7 @@ document.addEventListener('DOMContentLoaded',async()=>{
       const meta=document.createElement('div');meta.className='card-meta';const type=document.createElement('span');type.textContent=`${p.phase||''} · ${p.type||'Proyecto'}`;const year=document.createElement('span');year.textContent=`${p.year||''} ↗`;meta.append(type,year);
       body.append(pill,title,text,meta);link.append(media,body);grid.appendChild(link);
     });
+    const countLabel=document.querySelector('[data-project-count]');if(countLabel)countLabel.textContent=`Archivo completo · ${index} proyectos`;
     grid.querySelectorAll('.reveal').forEach(el=>el.classList.add('in')); window.NSApplyProjectArtwork?.(document); document.dispatchEvent(new Event('projects-rendered'));
   }catch(e){console.error('NegativeStudios projects:',e)}
 });
