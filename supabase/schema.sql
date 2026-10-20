@@ -461,3 +461,19 @@ drop policy if exists "Users can update their own post images" on storage.object
 create policy "Users can update their own post images" on storage.objects for update to authenticated using(bucket_id='post-images' and (storage.foldername(name))[1]=(select auth.uid())::text) with check(bucket_id='post-images' and (storage.foldername(name))[1]=(select auth.uid())::text);
 drop policy if exists "Users can delete their own post images" on storage.objects;
 create policy "Users can delete their own post images" on storage.objects for delete to authenticated using(bucket_id='post-images' and (storage.foldername(name))[1]=(select auth.uid())::text);
+ 
+ -- Los moderadores también pueden retirar publicaciones ajenas del foro.
+ create or replace function public.moderator_delete_forum_post(target_post_id bigint)
+ returns void language plpgsql security definer set search_path=''
+ as $$
+ begin
+   if auth.uid() is null or not exists(select 1 from public.profile_badges where user_id=auth.uid() and is_mod=true) then
+     raise exception 'Necesitas el badge de moderador para eliminar publicaciones.' using errcode='42501';
+   end if;
+   delete from public.forum_posts where id=target_post_id;
+   if not found then raise exception 'No se encontró la publicación o ya fue eliminada.'; end if;
+ end;
+ $$;
+ revoke all on function public.moderator_delete_forum_post(bigint) from public,anon;
+ grant execute on function public.moderator_delete_forum_post(bigint) to authenticated;
+ 
