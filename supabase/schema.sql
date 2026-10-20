@@ -645,3 +645,6 @@ create table if not exists public.microsoft_oauth_states (
 );
 alter table public.microsoft_oauth_states enable row level security;
 revoke all on public.microsoft_oauth_states from anon,authenticated;
+alter table public.microsoft_oauth_states add column if not exists nonce text;
+grant all privileges on public.microsoft_account_connections to service_role;
+grant all privileges on public.microsoft_oauth_states to service_role;
