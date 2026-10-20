@@ -1051,7 +1051,6 @@
   }
 
   function initProjectComments() {
-    if (!client) return;
     $('[data-project-comments][data-project-slug]').forEach(root => {
       const slug = root.dataset.projectSlug;
       const compose = root.querySelector('[data-project-comments-compose]');
@@ -1075,13 +1074,14 @@
           compose.appendChild(wrap);
         }
       }
-      loadProjectComments(slug).catch(error => message('projectCommentsMessage', friendlyError(error), 'error'));
+      if (client) loadProjectComments(slug).catch(error => message('projectCommentsMessage', friendlyError(error), 'error'));
     });
   }
 
   async function initialize() {
     ensureStyles();
     ensureNavLink();
+    initProjectComments();
     try { await loadScript(new URL('assets/supabase-config.js', SITE_ROOT).href, 'data-ns-supabase-config'); } catch (_) {}
     const config = window.NS_SUPABASE_CONFIG || {};
     if (config.siteUrl) SITE_ROOT = ensureTrailingSlash(config.siteUrl);
@@ -1103,7 +1103,7 @@
     });
     window.NS_SUPABASE_CLIENT = client;
     initProjectComments();
-    try { await loadScript(new URL('assets/community.js?v=20261020b', SITE_ROOT).href, 'data-ns-community-script'); } catch (error) { console.warn('No se pudo cargar el módulo de comunidad.', error); }
+    try { await loadScript(new URL('assets/community.js?v=20261020c', SITE_ROOT).href, 'data-ns-community-script'); } catch (error) { console.warn('No se pudo cargar el módulo de comunidad.', error); }
 
     if (pageType === 'auth') initAuthPage();
     if (pageType === 'settings') initSettingsEvents();
