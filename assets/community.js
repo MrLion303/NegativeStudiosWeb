@@ -22,15 +22,47 @@
 
   function ensureForumNavigation() {
     const nav = $('#navLinks');
-    if (!nav || nav.querySelector('a[data-ns-forum-link]')) return;
+    if (!nav) return;
+    if (!nav.querySelector('a[data-ns-forum-link]')) {
+      const link = document.createElement('a');
+      link.href = new URL('foro.html', SITE_ROOT).href;
+      link.textContent = 'Foro';
+      link.dataset.nsForumLink = 'true';
+      if (location.pathname.endsWith('/foro.html')) link.classList.add('active');
+      const projects = Array.from(nav.querySelectorAll('a')).find(item => /proyectos\.html(?:$|[?#])/.test(item.href));
+      if (projects?.nextSibling) nav.insertBefore(link, projects.nextSibling);
+      else nav.appendChild(link);
+    }
+  }
+
+  function ensureNotificationLink() {
+    const nav = $('#navLinks');
+    if (!nav || nav.querySelector('a[data-ns-notifications-link]')) return;
     const link = document.createElement('a');
-    link.href = new URL('foro.html', SITE_ROOT).href;
-    link.textContent = 'Foro';
-    link.dataset.nsForumLink = 'true';
-    if (location.pathname.endsWith('/foro.html')) link.classList.add('active');
-    const projects = Array.from(nav.querySelectorAll('a')).find(item => /proyectos\.html(?:$|[?#])/.test(item.href));
-    if (projects?.nextSibling) nav.insertBefore(link, projects.nextSibling);
+    link.href = new URL('notificaciones.html', SITE_ROOT).href;
+    link.className = 'ns-notifications-link';
+    link.dataset.nsNotificationsLink = 'true';
+    link.setAttribute('aria-label', 'Notificaciones');
+    link.title = 'Notificaciones';
+    link.innerHTML = '<svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg><span class="ns-notifications-label">Notificaciones</span><span class="ns-notification-count" hidden>0</span>';
+    if (location.pathname.endsWith('/notificaciones.html')) link.classList.add('active');
+    const forum = nav.querySelector('a[data-ns-forum-link]');
+    if (forum?.nextSibling) nav.insertBefore(link, forum.nextSibling);
     else nav.appendChild(link);
+  }
+
+  async function updateNotificationCount() {
+    const link = $('a[data-ns-notifications-link]');
+    const badge = link?.querySelector('.ns-notification-count');
+    if (!link || !badge) return;
+    link.hidden = !sessionUser;
+    if (!sessionUser || !client) { badge.hidden = true; return; }
+    try {
+      const { count, error } = await client.from('notifications').select('id', { count: 'exact', head: true }).is('read_at', null);
+      if (error) throw error;
+      badge.textContent = count > 99 ? '99+' : String(count || 0);
+      badge.hidden = !count;
+    } catch (_) { badge.hidden = true; }
   }
 
   function avatar(profile, className) {
@@ -645,13 +677,11 @@
       const postsHost = $('#publicProfilePosts');
       if (activeProfile && postsHost) await loadPostsForProfile(activeProfile.id, postsHost);
       if ($('#publicProfileCommunityRail')) $('#publicProfileCommunityRail').hidden = false;
-      await renderFriendInbox();
       await renderSuggestions([activeProfile?.id]);
     }
     if ($('#forumComposer')) {
       mountForumComposer(sessionUser);
       await loadForumFeed();
-      await renderFriendInbox();
       await renderSuggestions([]);
     }
   }
@@ -779,6 +809,7 @@
   async function boot() {
     addStyles();
     ensureForumNavigation();
+    ensureNotificationLink();
     client = window.NS_SUPABASE_CLIENT || null;
     if (!client) {
       if ($('#forumFeed')) {
@@ -786,20 +817,22 @@
         info.textContent = 'No se pudo conectar con Supabase. Recarga la página e inténtalo de nuevo.';
         $('#forumFeed').replaceChildren(info);
       }
+      if ($('#notificationsFeed')) $('#notificationsFeed').replaceChildren(Object.assign(document.createElement('p'), { className: 'community-status community-status--error', textContent: 'No se pudo conectar con Supabase.' }));
       return;
     }
     const session = await client.auth.getSession();
     sessionUser = session.data?.session?.user || null;
     sessionProfile = sessionUser ? await getCurrentProfile(sessionUser).catch(() => null) : null;
     if ($('#publicProfileCard')) await refreshCommunityProfile();
+    await updateNotificationCount();
+    if ($('#notificationsFeed')) { await renderFriendInbox(); await loadNotifications(); }
     if ($('#forumComposer')) {
       mountForumComposer(sessionUser);
       await loadForumFeed();
-      await renderFriendInbox();
       await renderSuggestions([]);
     }
     client.auth.onAuthStateChange(() => {
-      window.setTimeout(() => refreshCommunityProfile().catch(() => {}), 0);
+      window.setTimeout(async () => { await refreshCommunityProfile().catch(() => {}); await updateNotificationCount(); if ($('#notificationsFeed')) { await renderFriendInbox(); await loadNotifications(); } }, 0);
     });
   }
 
