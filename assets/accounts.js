@@ -39,7 +39,7 @@
   }
 
   function ensureStyles() {
-    const href = new URL('assets/account.css?v=20261020c', SITE_ROOT).href;
+    const href = new URL('assets/account.css?v=20261020d', SITE_ROOT).href;
     if (!$$('link[rel="stylesheet"]').some(link => link.href === href)) {
       const link = document.createElement('link');
       link.rel = 'stylesheet';
@@ -318,8 +318,8 @@
         const button = document.getElementById(buttonId);
         if (button) {
           button.disabled = true;
-          button.dataset.originalText = button.textContent;
           const label = button.querySelector('span');
+          button.dataset.originalLabel = label?.textContent || 'Continuar';
           if (label) label.textContent = 'Conectando…';
         }
         try {
@@ -333,8 +333,8 @@
           if (button) {
             button.disabled = false;
             const label = button.querySelector('span');
-            if (label) label.textContent = button.dataset.originalText?.replace(/^\\s+|\\s+$/g, '') || 'Continuar';
-            delete button.dataset.originalText;
+            if (label) label.textContent = button.dataset.originalLabel || 'Continuar';
+            delete button.dataset.originalLabel;
           }
         }
       });
