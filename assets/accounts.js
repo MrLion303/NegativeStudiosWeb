@@ -147,11 +147,16 @@
 
   async function loadProfileBrief(user) {
     if (!client || !user) return null;
-    const { data, error } = await client.from('profiles')
+    let result = await client.from('profiles')
       .select('id, username, display_name, avatar_url, banner_url, username_changed_at, created_at, profile_badges(is_mod, is_verified)')
       .eq('id', user.id).maybeSingle();
-    if (error) throw error;
-    return data;
+    if (result.error) {
+      result = await client.from('profiles')
+        .select('id, username, display_name, avatar_url, banner_url, username_changed_at, created_at')
+        .eq('id', user.id).maybeSingle();
+    }
+    if (result.error) throw result.error;
+    return result.data;
   }
 
   async function refreshNav(user) {
@@ -445,12 +450,17 @@
 
   async function loadCurrentProfile(user) {
     if (!user || !client) return null;
-    const { data, error } = await client.from('profiles')
+    let result = await client.from('profiles')
       .select('id, username, display_name, bio, avatar_url, banner_url, username_changed_at, created_at, updated_at, profile_badges(is_mod, is_verified)')
       .eq('id', user.id).maybeSingle();
-    if (error) throw error;
-    if (!data) throw new Error('No se encontró tu perfil. Ejecuta el archivo supabase/schema.sql en el SQL Editor de Supabase.');
-    return data;
+    if (result.error) {
+      result = await client.from('profiles')
+        .select('id, username, display_name, bio, avatar_url, banner_url, username_changed_at, created_at, updated_at')
+        .eq('id', user.id).maybeSingle();
+    }
+    if (result.error) throw result.error;
+    if (!result.data) throw new Error('No se encontró tu perfil. El perfil no aparece vinculado a la cuenta autenticada en Supabase.');
+    return result.data;
   }
 
   function setImagePreview(imageId, fallbackId, url, fallbackText) {
@@ -785,11 +795,16 @@
     if (requestedUsername) {
       const username = normalizeUsername(requestedUsername);
       if (!username) { showPublicProfileState('publicProfileMissing'); return; }
-      const { data, error } = await client.from('profiles')
+      let result = await client.from('profiles')
         .select('id, username, display_name, bio, avatar_url, banner_url, created_at, profile_badges(is_mod, is_verified)')
         .eq('username', username).maybeSingle();
-      if (error) throw error;
-      profile = data;
+      if (result.error) {
+        result = await client.from('profiles')
+          .select('id, username, display_name, bio, avatar_url, banner_url, created_at')
+          .eq('username', username).maybeSingle();
+      }
+      if (result.error) throw result.error;
+      profile = result.data;
     } else {
       profile = await loadCurrentProfile(user);
     }
