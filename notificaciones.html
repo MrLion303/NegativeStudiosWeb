@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#07111e">
+  <meta name="description" content="Revisa las solicitudes, menciones y reacciones de tu comunidad en NegativeStudios.">
+  <meta name="robots" content="noindex,nofollow">
+  <title>Notificaciones — NegativeStudios</title>
+  <link rel="icon" href="assets/media/brand-icon.webp">
+  <link rel="stylesheet" href="assets/styles.css?v=20261013c">
+  <link rel="stylesheet" href="assets/account.css?v=20261020m">
+  <link rel="stylesheet" href="assets/community.css?v=20261020c">
+</head>
+<body>
+<header class="nav">
+  <div class="container nav-inner">
+    <a class="brand" href="index.html"><img src="assets/media/brand-logo.webp" alt="NegativeStudios" width="36" height="36"><span>NegativeStudios</span></a>
+    <nav class="nav-links" id="navLinks"><a href="index.html">Inicio</a><a href="proyectos.html">Proyectos</a><a href="foro.html" data-ns-forum-link="true">Foro</a><a href="anuncios.html">Anuncios</a><a href="equipo.html">Equipo</a><a href="acerca.html">Nosotros</a></nav>
+    <a class="nav-cta" href="descargar.html">Descargar Negative Client</a>
+    <button class="menu-btn" aria-label="Abrir navegación" aria-controls="navLinks" aria-expanded="false">☰</button>
+  </div>
+</header>
+
+<main class="community-page notifications-page" data-community-page="notifications">
+  <section class="community-page-intro">
+    <span class="eyebrow">Tu actividad</span>
+    <h1>Notificaciones</h1>
+    <p>Solicitudes de amistad, corazones, respuestas y menciones aparecen aquí.</p>
+  </section>
+  <div class="notifications-layout">
+    <section class="notifications-main">
+      <div class="notifications-heading">
+        <h2>Actividad reciente</h2>
+        <button id="markAllNotificationsRead" type="button" class="community-button community-button--quiet">Marcar todo como leído</button>
+      </div>
+      <div id="notificationsMessage" class="community-status" role="status" hidden></div>
+      <div id="notificationsFeed" class="community-notification-feed" aria-live="polite">
+        <p class="community-muted">Cargando actividad…</p>
+      </div>
+    </section>
+    <aside class="notifications-sidebar">
+      <section id="friendRequestsInbox" class="community-panel"></section>
+    </aside>
+  </div>
+</main>
+
+<footer class="footer"><div class="container"><div class="footer-bottom"><span>© 2026 NegativeStudios. Desde 2022.</span><span>Forjamos mundos, creamos experiencias.</span></div></div></footer>
+<script src="assets/app.js?v=20261020m"></script>
+</body>
+</html>
