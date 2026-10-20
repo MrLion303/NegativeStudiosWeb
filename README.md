@@ -32,3 +32,17 @@ En el repositorio abre **Settings → Pages**, selecciona **Deploy from a branch
 ## Dirección visual
 
 La estructura toma referencias generales de estudios creativos contemporáneos —jerarquía editorial fuerte, portafolio protagonista, superficies oscuras, acentos luminosos y navegación simple— manteniendo una identidad propia para NegativeStudios.
+
+
+## Cuentas y perfiles
+
+La estructura de autenticación se prepara con Supabase Auth para registro con correo y contraseña, confirmación por código, acceso con Google, recuperación de acceso y perfiles personales.
+
+- `cuenta.html` — registro e inicio de sesión.
+- `perfil.html` — edición de perfil, avatar, correo, contraseña y privacidad.
+- `assets/accounts.js` y `assets/account.css` — integración del cliente y componentes visuales.
+- `assets/supabase-config.js` — URL y clave publicable del proyecto.
+- `supabase/schema.sql` — tabla de perfiles, políticas RLS y almacenamiento de avatares.
+- `SUPABASE_SETUP.md` — guía para conectar Supabase y Google OAuth.
+
+El registro permanece sin conexión hasta configurar `assets/supabase-config.js` y completar los pasos de `SUPABASE_SETUP.md`. No se necesita ni debe publicarse una clave `service_role`.
