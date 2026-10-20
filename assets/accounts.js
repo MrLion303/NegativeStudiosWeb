@@ -828,21 +828,25 @@
     $$('[data-project-comments][data-project-slug]').forEach(root => {
       const slug = root.dataset.projectSlug;
       const compose = root.querySelector('[data-project-comments-compose]');
-      if (!compose || compose.dataset.initialized === 'true') return;
-      compose.dataset.initialized = 'true';
-      if (currentUser) {
-        compose.appendChild(makeCommentForm(slug, null, 'Comparte tu opinión sobre este proyecto…'));
-      } else {
-        const wrap = document.createElement('div');
-        wrap.className = 'project-comments-auth';
-        const text = document.createElement('p');
-        text.textContent = 'Inicia sesión para publicar comentarios y responder a otras personas.';
-        const link = document.createElement('a');
-        link.className = 'btn primary';
-        link.href = new URL('cuenta.html', SITE_ROOT).href;
-        link.textContent = 'Registrar / Iniciar sesión';
-        wrap.append(text, link);
-        compose.appendChild(wrap);
+      if (!compose) return;
+      const viewerKey = currentUser?.id || 'guest';
+      if (compose.dataset.viewerKey !== viewerKey) {
+        compose.dataset.viewerKey = viewerKey;
+        compose.replaceChildren();
+        if (currentUser) {
+          compose.appendChild(makeCommentForm(slug, null, 'Comparte tu opinión sobre este proyecto…'));
+        } else {
+          const wrap = document.createElement('div');
+          wrap.className = 'project-comments-auth';
+          const text = document.createElement('p');
+          text.textContent = 'Inicia sesión para publicar comentarios y responder a otras personas.';
+          const link = document.createElement('a');
+          link.className = 'btn primary';
+          link.href = new URL('cuenta.html', SITE_ROOT).href;
+          link.textContent = 'Registrar / Iniciar sesión';
+          wrap.append(text, link);
+          compose.appendChild(wrap);
+        }
       }
       loadProjectComments(slug).catch(error => message('projectCommentsMessage', friendlyError(error), 'error'));
     });
