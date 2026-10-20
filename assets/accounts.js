@@ -39,7 +39,7 @@
   }
 
   function ensureStyles() {
-    const href = new URL('assets/account.css?v=20261020a', SITE_ROOT).href;
+    const href = new URL('assets/account.css?v=20261020c', SITE_ROOT).href;
     if (!$$('link[rel="stylesheet"]').some(link => link.href === href)) {
       const link = document.createElement('link');
       link.rel = 'stylesheet';
