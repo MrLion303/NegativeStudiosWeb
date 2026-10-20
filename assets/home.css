@@ -204,7 +204,14 @@
   .home-project-dots button.is-active{width:38px}
 }
 @media(prefers-reduced-motion:reduce){
-  .home-project-slide{transition:opacity .2s ease!important;transform:none!important}
+  .home-slide,
+  .home-project-slide,
+  .home-project-arrow,
+  .home-project-dots button{
+    transition:none!important;
+    animation:none!important;
+  }
+  .home-project-slide{transform:none!important}
 }
 
 /* Final presentation spacing */
