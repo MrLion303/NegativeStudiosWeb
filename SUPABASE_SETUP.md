@@ -17,7 +17,7 @@ La clave publicable está destinada al navegador; la protección de los datos de
 
 Abre **SQL Editor** en Supabase y ejecuta todo el archivo `supabase/schema.sql`.
 
-El script crea la tabla `public.profiles`, habilita Row Level Security (RLS), limita las escrituras al propietario de cada perfil y crea el bucket público `avatars`. Los perfiles marcados como privados no se devuelven a otros usuarios mediante la tabla; las imágenes en un bucket público, en cambio, siguen siendo accesibles mediante su URL directa.
+El script crea la tabla `public.profiles`, habilita Row Level Security (RLS), limita las escrituras al propietario de cada perfil y crea el bucket público `avatars`, limitado a PNG/JPG/WebP y 3 MB por archivo. Los perfiles marcados como privados no se devuelven a otros usuarios mediante la tabla; las imágenes en un bucket público, en cambio, siguen siendo accesibles mediante su URL directa.
 
 ## 3. Configurar las URL de autenticación
 
