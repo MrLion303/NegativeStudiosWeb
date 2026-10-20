@@ -351,3 +351,6 @@ dialog.ns-modal::backdrop{background:rgba(1,6,13,.75);backdrop-filter:blur(5px)}
 .public-profile-edit-icon{order:3;margin-left:0}
 .public-profile-owner-actions{order:3}
 @media(max-width:620px){.public-profile-admin-actions{padding-top:10px}.public-profile-admin-button{width:38px;height:38px;min-width:38px}}
+
+#publicProfileAdminActions{order:2}
+#publicProfileOwnerActions{order:3;margin-left:0}
