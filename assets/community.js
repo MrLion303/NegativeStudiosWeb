@@ -482,6 +482,103 @@
     }
   }
 
+  function notificationDestination(item) {
+    if (item.type === 'friend_request') return new URL('notificaciones.html#friendRequestsInbox', SITE_ROOT).href;
+    if (item.post_id) return new URL('foro.html#post-' + item.post_id, SITE_ROOT).href;
+    if (item.project_slug) return new URL('proyectos/' + encodeURIComponent(item.project_slug) + '/index.html' + (item.comment_id ? '#comment-' + item.comment_id : ''), SITE_ROOT).href;
+    return new URL('notificaciones.html', SITE_ROOT).href;
+  }
+
+  async function markNotificationRead(id) {
+    if (!client || !sessionUser) return;
+    await client.from('notifications').update({ read_at: new Date().toISOString() }).eq('id', id).eq('user_id', sessionUser.id);
+  }
+
+  async function loadNotifications() {
+    const host = $('#notificationsFeed');
+    if (!host || !client || !sessionUser) {
+      if (host) {
+        host.replaceChildren();
+        const empty = document.createElement('p');
+        empty.className = 'community-muted';
+        empty.textContent = 'Inicia sesión para consultar tu actividad.';
+        host.appendChild(empty);
+      }
+      return;
+    }
+    host.replaceChildren();
+    const loading = document.createElement('p');
+    loading.className = 'community-muted'; loading.textContent = 'Cargando actividad…'; host.appendChild(loading);
+    let result = await client.from('notifications')
+      .select('id,type,title,body,post_id,comment_id,friend_request_id,project_slug,created_at,read_at,actor_id,profiles!notifications_actor_id_fkey(username,display_name,avatar_url,profile_badges(is_mod,is_verified))')
+      .order('created_at', { ascending: false }).limit(100);
+    if (result.error) {
+      result = await client.from('notifications')
+        .select('id,type,title,body,post_id,comment_id,friend_request_id,project_slug,created_at,read_at,actor_id')
+        .order('created_at', { ascending: false }).limit(100);
+    }
+    host.replaceChildren();
+    if (result.error) {
+      const error = document.createElement('p'); error.className = 'community-status community-status--error';
+      error.textContent = 'No se pudo cargar la actividad. Ejecuta el esquema actualizado de Supabase.';
+      host.appendChild(error); return;
+    }
+    const entries = result.data || [];
+    const unread = entries.filter(item => !item.read_at).length;
+    const markAll = $('#markAllNotificationsRead');
+    if (markAll) {
+      markAll.disabled = unread === 0;
+      markAll.textContent = unread ? 'Marcar todo como leído (' + unread + ')' : 'Todo leído';
+      markAll.onclick = async () => {
+        markAll.disabled = true;
+        try {
+          const response = await client.from('notifications').update({ read_at: new Date().toISOString() }).eq('user_id', sessionUser.id).is('read_at', null);
+          if (response.error) throw response.error;
+          await loadNotifications();
+          await updateNotificationCount();
+        } catch (error) {
+          markAll.disabled = false;
+          showStatus($('#notificationsMessage'), error.message || 'No se pudieron marcar las notificaciones.', 'error');
+        }
+      };
+    }
+    if (!entries.length) {
+      const empty = document.createElement('p'); empty.className = 'community-empty';
+      empty.textContent = 'Todavía no tienes actividad. Aquí aparecerán solicitudes, corazones, respuestas y menciones.';
+      host.appendChild(empty); return;
+    }
+    entries.forEach(item => {
+      let actor = item.profiles || {};
+      if (Array.isArray(actor)) actor = actor[0] || {};
+      const card = document.createElement('article');
+      card.className = 'community-notification' + (item.read_at ? '' : ' is-unread');
+      const actorLink = document.createElement('a');
+      actorLink.className = 'community-notification-avatar'; actorLink.href = actor.username ? profileUrl(actor) : '#';
+      actorLink.appendChild(avatar(actor, 'community-avatar'));
+      const copy = document.createElement('div'); copy.className = 'community-notification-copy';
+      const headline = document.createElement('strong'); headline.textContent = item.title || 'Nueva actividad';
+      const body = document.createElement('p');
+      body.textContent = item.body || (actor.display_name || actor.username ? (actor.display_name || '@' + actor.username) : 'La comunidad') + ' interactuó con tu contenido.';
+      const meta = document.createElement('small');
+      meta.textContent = new Date(item.created_at).toLocaleString('es-MX', { dateStyle: 'medium', timeStyle: 'short' });
+      copy.append(headline, body, meta);
+      const open = document.createElement('a'); open.className = 'community-notification-open';
+      open.href = notificationDestination(item); open.textContent = 'Ver'; open.setAttribute('aria-label', 'Ver actividad');
+      const activate = async () => {
+        if (!item.read_at) await markNotificationRead(item.id);
+      };
+      open.addEventListener('click', () => { activate(); });
+      copy.addEventListener('click', async event => {
+        if (event.target.closest('a')) return;
+        await activate();
+        location.assign(open.href);
+      });
+      card.append(actorLink, copy, open);
+      host.appendChild(card);
+    });
+    await updateNotificationCount();
+  }
+
   function safePostHtml(raw) {
     const parser = new DOMParser();
     const doc = parser.parseFromString('<div>' + String(raw || '') + '</div>', 'text/html');
@@ -571,6 +668,7 @@
     const card = document.createElement('article');
     card.className = 'community-post';
     card.dataset.postId = String(post.id);
+    card.id = 'post-' + post.id;
     const header = document.createElement('header');
     header.className = 'community-post-head';
     header.appendChild(avatar(profile, 'community-avatar community-avatar--post'));
