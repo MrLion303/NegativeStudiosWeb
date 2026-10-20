@@ -1066,7 +1066,7 @@
   }
 
   function initProjectComments() {
-    $('[data-project-comments][data-project-slug]').forEach(root => {
+    $$('[data-project-comments][data-project-slug]').forEach(root => {
       const slug = root.dataset.projectSlug;
       const compose = root.querySelector('[data-project-comments-compose]');
       if (!compose) return;
