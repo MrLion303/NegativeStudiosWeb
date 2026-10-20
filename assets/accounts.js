@@ -580,17 +580,27 @@
       cacheControl: '3600', upsert: false, contentType: file.type
     });
     if (uploadError) throw uploadError;
+
     const { data: urlData } = client.storage.from(bucket).getPublicUrl(path);
-    const { data: profile, error } = await client.from('profiles')
-      .update({ [column]: urlData.publicUrl })
-      .eq('id', currentUser.id)
-      .select('id, username, display_name, bio, avatar_url, banner_url, username_changed_at, created_at, updated_at')
-      .single();
-    if (error) throw error;
-    const metadata = column === 'avatar_url' ? { avatar_url: urlData.publicUrl } : {};
-    if (Object.keys(metadata).length) {
-      const { error: metadataError } = await client.auth.updateUser({ data: metadata });
-      if (metadataError) throw metadataError;
+    let profile;
+    try {
+      const result = await client.from('profiles')
+        .update({ [column]: urlData.publicUrl })
+        .eq('id', currentUser.id)
+        .select('id, username, display_name, bio, avatar_url, banner_url, username_changed_at, created_at, updated_at')
+        .single();
+      if (result.error) throw result.error;
+      profile = result.data;
+    } catch (error) {
+      // Si no se pudo guardar la URL en el perfil, evita dejar el archivo huérfano.
+      await client.storage.from(bucket).remove([path]).catch(() => {});
+      throw error;
+    }
+
+    // El perfil es la fuente de verdad; un fallo al sincronizar metadatos de Auth
+    // no debe presentar como fallido un cambio que ya se guardó correctamente.
+    if (column === 'avatar_url') {
+      await client.auth.updateUser({ data: { avatar_url: urlData.publicUrl } }).catch(() => {});
     }
     drawSettings(currentUser, profile);
     message('settingsImageMessage', successText, 'success');

@@ -44,21 +44,37 @@ Deno.serve(async (req: Request) => {
     auth: { persistSession: false, autoRefreshToken: false },
   });
 
-  // Borra los archivos del usuario antes de eliminar la cuenta. Los perfiles,
-  // comentarios y relaciones restantes se eliminan mediante sus claves foráneas.
-  for (const bucket of ["avatars", "banners"]) {
-    const { data: files, error: listError } = await adminClient.storage.from(bucket).list(userData.user.id, { limit: 1000 });
-    if (listError) {
-      return Response.json({ error: "No se pudieron preparar los archivos de tu perfil para eliminarlos." }, { status: 500, headers: corsHeaders });
-    }
-    if (files?.length) {
-      const paths = files.filter((file) => file.name && file.id).map((file) => userData.user.id + "/" + file.name);
-      if (paths.length) {
-        const { error: removeError } = await adminClient.storage.from(bucket).remove(paths);
-        if (removeError) {
-          return Response.json({ error: "No se pudieron eliminar los archivos de tu perfil." }, { status: 500, headers: corsHeaders });
-        }
+  // Elimina todos los archivos del usuario antes de borrar su cuenta.
+  // Incluye imágenes del foro y recorre todas las páginas y subcarpetas.
+  async function removeUserFiles(bucket: string, folder: string): Promise<boolean> {
+    while (true) {
+      const { data: entries, error: listError } = await adminClient.storage
+        .from(bucket)
+        .list(folder, { limit: 100, offset: 0, sortBy: { column: "name", order: "asc" } });
+      if (listError) return false;
+      if (!entries?.length) return true;
+
+      const files = entries.filter((entry) => entry.name && entry.id);
+      const folders = entries.filter((entry) => entry.name && !entry.id);
+      for (const subfolder of folders) {
+        if (!await removeUserFiles(bucket, folder + "/" + subfolder.name)) return false;
       }
+
+      if (files.length) {
+        const paths = files.map((file) => folder + "/" + file.name);
+        const { error: removeError } = await adminClient.storage.from(bucket).remove(paths);
+        if (removeError) return false;
+      }
+
+      // Volvemos a consultar desde el principio: borrar una página desplaza
+      // los elementos siguientes y usar offset podría saltarse archivos.
+      if (!files.length && !folders.length) return true;
+    }
+  }
+
+  for (const bucket of ["avatars", "banners", "post-images"]) {
+    if (!await removeUserFiles(bucket, userData.user.id)) {
+      return Response.json({ error: "No se pudieron eliminar todos los archivos de tu cuenta." }, { status: 500, headers: corsHeaders });
     }
   }
 

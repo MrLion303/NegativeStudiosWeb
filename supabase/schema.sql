@@ -31,10 +31,10 @@ create policy "All profiles are public"
   on public.profiles for select
   using (true);
 
+-- Los perfiles nuevos se crean desde el trigger de auth.users; el navegador
+-- no necesita insertar filas ni modificar columnas internas del perfil.
 drop policy if exists "Users can create their own profile" on public.profiles;
-create policy "Users can create their own profile"
-  on public.profiles for insert to authenticated
-  with check (id = (select auth.uid()));
+revoke insert, update on public.profiles from authenticated;
 
 drop policy if exists "Users can update their own profile" on public.profiles;
 create policy "Users can update their own profile"
@@ -43,7 +43,8 @@ create policy "Users can update their own profile"
   with check (id = (select auth.uid()));
 
 grant select on public.profiles to anon, authenticated;
-grant insert, update on public.profiles to authenticated;
+grant update (username, display_name, bio, avatar_url, banner_url)
+  on public.profiles to authenticated;
 
 -- El límite de dos semanas se aplica en el servidor y no puede alterarse desde el navegador.
 create or replace function public.enforce_public_profile_rules()
@@ -201,7 +202,9 @@ create policy "Users can delete their own comments"
   using (user_id = (select auth.uid()));
 
 grant select on public.project_comments to anon, authenticated;
-grant insert, delete on public.project_comments to authenticated;
+revoke insert on public.project_comments from authenticated;
+grant insert (project_slug, user_id, parent_comment_id, content) on public.project_comments to authenticated;
+grant delete on public.project_comments to authenticated;
 grant usage, select on sequence public.project_comments_id_seq to authenticated;
 
 -- Almacenamiento público para fotos de perfil (3 MB) y banners (6 MB).
@@ -403,6 +406,22 @@ create table if not exists public.forum_posts (
 );
 create index if not exists forum_posts_created_idx on public.forum_posts(created_at desc);
 create index if not exists forum_posts_user_created_idx on public.forum_posts(user_id,created_at desc);
+
+-- Los usuarios no pueden falsificar la fecha de publicación ni cambiar su autor.
+create or replace function public.enforce_forum_post_timestamps()
+returns trigger language plpgsql set search_path=''
+as $forum_post_timestamps$
+begin
+  new.user_id := old.user_id;
+  new.created_at := old.created_at;
+  new.updated_at := now();
+  return new;
+end;
+$forum_post_timestamps$;
+drop trigger if exists enforce_forum_post_timestamps on public.forum_posts;
+create trigger enforce_forum_post_timestamps before update on public.forum_posts
+for each row execute function public.enforce_forum_post_timestamps();
+
 alter table public.forum_posts enable row level security;
 drop policy if exists "Forum posts are publicly readable" on public.forum_posts;
 create policy "Forum posts are publicly readable" on public.forum_posts for select using(true);
@@ -413,7 +432,10 @@ create policy "Users can edit their own forum posts" on public.forum_posts for u
 drop policy if exists "Users can delete their own forum posts" on public.forum_posts;
 create policy "Users can delete their own forum posts" on public.forum_posts for delete to authenticated using(user_id=(select auth.uid()));
 grant select on public.forum_posts to anon,authenticated;
-grant insert,update,delete on public.forum_posts to authenticated;
+revoke insert, update on public.forum_posts from authenticated;
+grant insert (user_id, content_html, content_text, image_url) on public.forum_posts to authenticated;
+grant update (content_html, content_text, image_url) on public.forum_posts to authenticated;
+grant delete on public.forum_posts to authenticated;
 grant usage,select on sequence public.forum_posts_id_seq to authenticated;
 
 create table if not exists public.project_comment_likes (
@@ -431,7 +453,9 @@ create policy "Users can add their own comment hearts" on public.project_comment
 drop policy if exists "Users can remove their own comment hearts" on public.project_comment_likes;
 create policy "Users can remove their own comment hearts" on public.project_comment_likes for delete to authenticated using(user_id=(select auth.uid()));
 grant select on public.project_comment_likes to anon,authenticated;
-grant insert,delete on public.project_comment_likes to authenticated;
+revoke insert on public.project_comment_likes from authenticated;
+grant insert (comment_id, user_id) on public.project_comment_likes to authenticated;
+grant delete on public.project_comment_likes to authenticated;
 
 create table if not exists public.forum_post_likes (
  post_id bigint not null references public.forum_posts(id) on delete cascade,
@@ -448,7 +472,9 @@ create policy "Users can add their own forum hearts" on public.forum_post_likes 
 drop policy if exists "Users can remove their own forum hearts" on public.forum_post_likes;
 create policy "Users can remove their own forum hearts" on public.forum_post_likes for delete to authenticated using(user_id=(select auth.uid()));
 grant select on public.forum_post_likes to anon,authenticated;
-grant insert,delete on public.forum_post_likes to authenticated;
+revoke insert on public.forum_post_likes from authenticated;
+grant insert (post_id, user_id) on public.forum_post_likes to authenticated;
+grant delete on public.forum_post_likes to authenticated;
 
 -- Respuestas a publicaciones del foro, con respuestas anidadas.
 create table if not exists public.forum_post_comments (
@@ -471,12 +497,33 @@ drop policy if exists "Users can delete their own forum post replies" on public.
 create policy "Users can delete their own forum post replies" on public.forum_post_comments for delete to authenticated
   using(user_id=(select auth.uid()));
 grant select on public.forum_post_comments to anon,authenticated;
-grant insert,delete on public.forum_post_comments to authenticated;
+revoke insert on public.forum_post_comments from authenticated;
+grant insert (post_id, parent_comment_id, user_id, content) on public.forum_post_comments to authenticated;
+grant delete on public.forum_post_comments to authenticated;
 grant usage,select on sequence public.forum_post_comments_id_seq to authenticated;
+
+-- Permitir a los moderadores eliminar respuestas ajenas del foro.
+create or replace function public.moderator_delete_forum_comment(target_comment_id bigint)
+returns void language plpgsql security definer set search_path=''
+as $$
+begin
+  if auth.uid() is null or not exists (
+    select 1 from public.profile_badges where user_id = auth.uid() and is_mod = true
+  ) then
+    raise exception 'Necesitas el badge de moderador para eliminar respuestas.' using errcode='42501';
+  end if;
+  delete from public.forum_post_comments where id = target_comment_id;
+  if not found then
+    raise exception 'No se encontró la respuesta o ya fue eliminada.';
+  end if;
+end;
+$$;
+revoke all on function public.moderator_delete_forum_comment(bigint) from public, anon;
+grant execute on function public.moderator_delete_forum_comment(bigint) to authenticated;
 
 create or replace function public.validate_forum_post_comment_parent()
 returns trigger language plpgsql set search_path=''
-as $
+as $$
 declare parent_post bigint;
 begin
   new.content := trim(new.content);
@@ -488,7 +535,7 @@ begin
   end if;
   return new;
 end;
-$;
+$$;
 drop trigger if exists validate_forum_post_comment_parent on public.forum_post_comments;
 create trigger validate_forum_post_comment_parent before insert or update on public.forum_post_comments
 for each row execute function public.validate_forum_post_comment_parent();
@@ -632,7 +679,7 @@ for each row execute function public.notify_project_comment_reply();
 
 create or replace function public.notify_forum_post_comment()
 returns trigger language plpgsql security definer set search_path=''
-as $
+as $$
 declare post_owner uuid; parent_owner uuid;
 begin
   select user_id into post_owner from public.forum_posts where id=new.post_id;
@@ -644,7 +691,7 @@ begin
   end if;
   return new;
 end;
-$;
+$$;
 drop trigger if exists notify_forum_post_comment on public.forum_post_comments;
 create trigger notify_forum_post_comment after insert on public.forum_post_comments
 for each row execute function public.notify_forum_post_comment();
@@ -663,7 +710,8 @@ drop policy if exists "Authors can tag users in their own posts" on public.forum
 create policy "Authors can tag users in their own posts" on public.forum_post_mentions for insert to authenticated
   with check(exists(select 1 from public.forum_posts p where p.id=post_id and p.user_id=(select auth.uid())));
 grant select on public.forum_post_mentions to anon,authenticated;
-grant insert on public.forum_post_mentions to authenticated;
+revoke insert on public.forum_post_mentions from authenticated;
+grant insert (post_id, mentioned_user_id) on public.forum_post_mentions to authenticated;
 
 create or replace function public.notify_forum_post_mention()
 returns trigger language plpgsql security definer set search_path=''

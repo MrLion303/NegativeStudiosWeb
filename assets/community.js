@@ -940,14 +940,27 @@
       const meta = document.createElement('small'); meta.className = 'community-post-reply-meta';
       meta.textContent = '@' + (profile.username || 'usuario') + ' · ' + new Date(row.created_at).toLocaleString('es-MX', { dateStyle: 'medium', timeStyle: 'short' });
       head.append(nameLine, meta);
-      if (user && user.id === row.user_id) {
+      const ownsReply = Boolean(user && user.id === row.user_id);
+      const canModerateReply = Boolean(user && !ownsReply && viewerIsModerator());
+      if (ownsReply || canModerateReply) {
         const overflow = createOverflowMenu([{
-          label: 'Eliminar respuesta', danger: true, action: async button => {
-            if (!window.confirm('¿Eliminar esta respuesta?')) return;
+          label: canModerateReply ? 'Eliminar respuesta como moderador' : 'Eliminar respuesta',
+          danger: true,
+          action: async button => {
+            if (!window.confirm(canModerateReply
+              ? '¿Eliminar esta respuesta como moderador? Esta acción no se puede deshacer.'
+              : '¿Eliminar esta respuesta?')) return;
             button.disabled = true;
-            const deleted = await client.from('forum_post_comments').delete().eq('id', row.id).eq('user_id', user.id);
-            if (deleted.error) { alert(deleted.error.message); button.disabled = false; return; }
-            await loadPostComments(post, host, user);
+            try {
+              const deleted = canModerateReply
+                ? await client.rpc('moderator_delete_forum_comment', { target_comment_id: row.id })
+                : await client.from('forum_post_comments').delete().eq('id', row.id).eq('user_id', user.id);
+              if (deleted.error) throw deleted.error;
+              await loadPostComments(post, host, user);
+            } catch (error) {
+              alert(error?.message || 'No se pudo eliminar la respuesta.');
+              button.disabled = false;
+            }
           }
         }]);
         head.appendChild(overflow);
