@@ -631,6 +631,7 @@
     if (requested) activate('connections');
     else activate(buttons.find(button => button.classList.contains('is-active'))?.dataset.settingsTab || 'information');
     if (requested === 'microsoft-linked') message('connectionsMessage', 'Cuenta Microsoft vinculada de forma segura.', 'success');
+    else if (requested === 'linked') message('connectionsMessage', 'La cuenta externa se vinculó correctamente.', 'success');
     else if (requested?.startsWith('microsoft-error')) message('connectionsMessage', 'No se pudo vincular Microsoft. Comprueba las credenciales, permisos y URL de retorno en Supabase.', 'error');
   }
 
