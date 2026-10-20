@@ -747,50 +747,98 @@
     document.title = (profile.display_name || profile.username) + ' (@' + profile.username + ') — NegativeStudios';
   }
 
+  function ensureBadgeDialog() {
+    let dialog = $('#profileBadgeDialog');
+    if (dialog) return dialog;
+    dialog = document.createElement('dialog');
+    dialog.id = 'profileBadgeDialog';
+    dialog.className = 'ns-modal';
+    dialog.setAttribute('aria-labelledby', 'profileBadgeDialogTitle');
+    document.body.appendChild(dialog);
+    dialog.addEventListener('click', event => { if (event.target === dialog) dialog.close(); });
+    return dialog;
+  }
+
   function renderBadgeAdminControls(targetProfile, canManage) {
-    const actions = $('#publicProfileAdminActions'), host = $('#publicProfileBadgeAdmin');
-    if (!actions || !host) return;
-    actions.replaceChildren(); host.replaceChildren(); host.hidden = true; actions.hidden = !canManage;
+    const actions = $('#publicProfileAdminActions');
+    if (!actions) return;
+    actions.replaceChildren();
+    actions.hidden = !canManage;
     if (!canManage) return;
-    const button = document.createElement('button'); button.type = 'button'; button.className = 'btn ghost'; button.textContent = 'Badges';
-    button.setAttribute('aria-expanded', 'false');
-    const panel = document.createElement('div'); panel.className = 'ns-badge-admin-panel';
-    const title = document.createElement('strong'); title.textContent = 'Administrar emblemas';
-    const hint = document.createElement('p'); hint.textContent = 'Activa o desactiva los emblemas de este perfil.';
-    const modLabel = document.createElement('label'); modLabel.className = 'ns-badge-admin-option';
-    const mod = document.createElement('input'); mod.type = 'checkbox'; mod.checked = normalizedBadges(targetProfile).is_mod;
-    const modText = document.createElement('span'); modText.textContent = 'Moderador — puede eliminar comentarios de otras personas';
-    modLabel.append(mod, modText);
-    const verLabel = document.createElement('label'); verLabel.className = 'ns-badge-admin-option';
-    const ver = document.createElement('input'); ver.type = 'checkbox'; ver.checked = normalizedBadges(targetProfile).is_verified;
-    const verText = document.createElement('span'); verText.textContent = 'Verificado'; verLabel.append(ver, verText);
-    const status = document.createElement('p'); status.className = 'ns-badge-admin-status'; status.hidden = true;
-    const save = document.createElement('button'); save.type = 'button'; save.className = 'btn primary'; save.textContent = 'Guardar badges';
-    save.addEventListener('click', async () => {
-      if (!currentUser || !client) return;
-      save.disabled = true; save.textContent = 'Guardando…'; status.hidden = true;
-      try {
-        const result = await client.rpc('set_profile_badges', { target_profile_id: targetProfile.id, mod_enabled: mod.checked, verified_enabled: ver.checked });
-        if (result.error) throw result.error;
-        const fresh = await client.from('profiles').select('id, username, display_name, bio, avatar_url, banner_url, created_at, profile_badges(is_mod, is_verified)').eq('id', targetProfile.id).maybeSingle();
-        if (fresh.error) throw fresh.error;
-        if (fresh.data) {
-          renderNameBadges($('#publicProfileNameLine'), fresh.data);
-          renderBadgeAdminControls(fresh.data, true);
-          const panelHost = $('#publicProfileBadgeAdmin');
-          if (panelHost) panelHost.hidden = false;
-          const adminButton = $('#publicProfileAdminActions button');
-          if (adminButton) adminButton.setAttribute('aria-expanded', 'true');
-          const msg = $('#publicProfileBadgeAdmin .ns-badge-admin-status');
-          if (msg) { msg.textContent = 'Los badges se actualizaron correctamente.'; msg.dataset.kind = 'success'; msg.hidden = false; }
-        }
-      } catch (error) {
-        status.textContent = friendlyError(error); status.dataset.kind = 'error'; status.hidden = false;
-      } finally { save.disabled = false; save.textContent = 'Guardar badges'; }
+
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'btn ghost public-profile-edit-icon';
+    button.textContent = 'Badges';
+    button.setAttribute('aria-label', 'Administrar badges');
+    button.title = 'Administrar badges';
+    button.addEventListener('click', () => {
+      const dialog = ensureBadgeDialog();
+      dialog.replaceChildren();
+      const panel = document.createElement('section');
+      panel.className = 'ns-modal-panel ns-badge-dialog-panel';
+      const header = document.createElement('header');
+      header.className = 'ns-modal-header';
+      const headingWrap = document.createElement('div');
+      const eyebrow = document.createElement('span'); eyebrow.className = 'eyebrow'; eyebrow.textContent = 'Administración';
+      const title = document.createElement('h2'); title.id = 'profileBadgeDialogTitle'; title.textContent = 'Gestionar badges';
+      const subtitle = document.createElement('p'); subtitle.className = 'muted'; subtitle.textContent = 'Elige qué insignias aparecen junto al nombre de este perfil.';
+      headingWrap.append(eyebrow, title, subtitle);
+      const close = document.createElement('button'); close.type = 'button'; close.className = 'ns-modal-close';
+      close.setAttribute('aria-label', 'Cerrar'); close.textContent = '×'; close.addEventListener('click', () => dialog.close());
+      header.append(headingWrap, close);
+      const options = document.createElement('div'); options.className = 'ns-badge-admin-options';
+      const makeOption = (checked, textValue, badgeType) => {
+        const label = document.createElement('label'); label.className = 'ns-badge-admin-option';
+        const input = document.createElement('input'); input.type = 'checkbox'; input.checked = checked;
+        const badge = badgeNode(badgeType); badge.classList.add('ns-badge-dialog-preview');
+        const text = document.createElement('span'); text.textContent = textValue;
+        label.append(input, badge, text); options.appendChild(label); return input;
+      };
+      const mod = makeOption(normalizedBadges(targetProfile).is_mod, 'Moderador — puede moderar comentarios y publicaciones', 'mod');
+      const verified = makeOption(normalizedBadges(targetProfile).is_verified, 'Verificado — muestra la insignia de verificación', 'verified');
+      const status = document.createElement('p'); status.className = 'ns-badge-admin-status'; status.hidden = true; status.setAttribute('role', 'status');
+      const footer = document.createElement('div'); footer.className = 'ns-modal-footer';
+      const cancel = document.createElement('button'); cancel.type = 'button'; cancel.className = 'btn ghost'; cancel.textContent = 'Cancelar'; cancel.addEventListener('click', () => dialog.close());
+      const save = document.createElement('button'); save.type = 'button'; save.className = 'btn primary'; save.textContent = 'Guardar cambios';
+      save.addEventListener('click', async () => {
+        if (!currentUser || !client) { status.textContent = 'Inicia sesión para gestionar badges.'; status.dataset.kind = 'error'; status.hidden = false; return; }
+        save.disabled = true; cancel.disabled = true; save.textContent = 'Guardando…'; status.hidden = true;
+        try {
+          const result = await client.rpc('set_profile_badges', {
+            target_profile_id: targetProfile.id,
+            mod_enabled: mod.checked,
+            verified_enabled: verified.checked
+          });
+          if (result.error) throw result.error;
+          let fresh = await client.from('profiles')
+            .select('id, username, display_name, bio, avatar_url, banner_url, created_at, profile_badges(is_mod, is_verified)')
+            .eq('id', targetProfile.id).maybeSingle();
+          if (fresh.error) fresh = await client.from('profiles')
+            .select('id, username, display_name, bio, avatar_url, banner_url, created_at')
+            .eq('id', targetProfile.id).maybeSingle();
+          if (fresh.error) throw fresh.error;
+          if (fresh.data && targetProfile.id === currentViewedProfileId()) renderNameBadges($('#publicProfileNameLine'), fresh.data);
+          status.textContent = 'Los badges se actualizaron correctamente.';
+          status.dataset.kind = 'success'; status.hidden = false;
+          save.textContent = 'Guardado';
+        } catch (error) {
+          status.textContent = friendlyError(error); status.dataset.kind = 'error'; status.hidden = false;
+          save.textContent = 'Guardar cambios';
+        } finally { save.disabled = false; cancel.disabled = false; }
+      });
+      footer.append(cancel, save);
+      panel.append(header, options, status, footer);
+      dialog.appendChild(panel);
+      if (!dialog.open) dialog.showModal();
     });
-    panel.append(title, hint, modLabel, verLabel, save, status);
-    button.addEventListener('click', () => { host.hidden = !host.hidden; button.setAttribute('aria-expanded', String(!host.hidden)); });
-    actions.appendChild(button); host.appendChild(panel);
+    actions.appendChild(button);
+  }
+
+  function currentViewedProfileId() {
+    const username = normalizeUsername(new URLSearchParams(location.search).get('username'));
+    if (username) return $('#publicProfileUsername')?.textContent?.replace(/^@/, '') === username ? lastProfile?.id : null;
+    return currentUser?.id || null;
   }
 
   async function initPublicProfilePage(userFromSession) {
@@ -827,6 +875,7 @@
     if (user && profile) {
       try { const viewer = await loadProfileBrief(user); admin = viewer?.username?.toLowerCase() === 'mrlion303'; } catch (_) {}
     }
+    lastProfile = profile || lastProfile;
     drawPublicProfile(profile, Boolean(user && profile && user.id === profile.id), admin);
   }
 
