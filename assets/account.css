@@ -240,3 +240,24 @@
 .ns-badge-admin-status{font-size:.84rem;line-height:1.45}
 .ns-badge-admin-status[data-kind="success"]{color:#91e7b5}
 .ns-badge-admin-status[data-kind="error"]{color:#ffb6b6}
+
+.ns-name-badges{display:inline-flex;align-items:center;gap:6px;min-width:0;max-width:100%;flex-wrap:wrap}
+.ns-badges{display:inline-flex;align-items:center;gap:4px;vertical-align:middle;flex:0 0 auto}
+.ns-badges[hidden]{display:none!important}
+.ns-badge{display:inline-block;width:22px;height:22px;object-fit:contain;vertical-align:middle;flex:0 0 auto}
+.ns-badges--comment .ns-badge{width:20px;height:20px}
+.ns-badges--sidebar .ns-badge{width:16px;height:16px}
+.public-profile-name-line{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.public-profile-name-line .public-profile-name{margin:0}
+#publicProfileBadgeAdmin[hidden]{display:none!important}
+#publicProfileBadgeAdmin{margin-top:18px}
+.ns-badge-admin-panel{display:grid;gap:12px;padding:16px;border:1px solid rgba(102,194,255,.24);border-radius:14px;background:rgba(12,28,44,.7)}
+.ns-badge-admin-panel>strong{font-size:1rem}
+.ns-badge-admin-panel>p{margin:0;color:var(--muted);font-size:.84rem;line-height:1.5}
+.ns-badge-admin-option{display:flex;align-items:flex-start;gap:10px;padding:11px;border:1px solid var(--line);border-radius:10px;background:rgba(0,0,0,.13);cursor:pointer}
+.ns-badge-admin-option input{margin-top:4px;accent-color:var(--accent);flex:0 0 auto}
+.ns-badge-admin-option span{font-size:.87rem;line-height:1.45}
+.ns-badge-admin-panel .btn{justify-self:start}
+.ns-badge-admin-status{font-size:.84rem;line-height:1.45}
+.ns-badge-admin-status[data-kind="success"]{color:#91e7b5}
+.ns-badge-admin-status[data-kind="error"]{color:#ffb6b6}
