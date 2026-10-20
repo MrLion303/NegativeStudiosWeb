@@ -39,7 +39,7 @@
   }
 
   function ensureStyles() {
-    const href = new URL('assets/account.css?v=20261020i', SITE_ROOT).href;
+    const href = new URL('assets/account.css?v=20261020j', SITE_ROOT).href;
     if (!$$('link[rel="stylesheet"]').some(link => link.href === href)) {
       const link = document.createElement('link');
       link.rel = 'stylesheet';
@@ -1133,7 +1133,7 @@
     });
     window.NS_SUPABASE_CLIENT = client;
     initProjectComments();
-    try { await loadScript(new URL('assets/community.js?v=20261020c', SITE_ROOT).href, 'data-ns-community-script'); } catch (error) { console.warn('No se pudo cargar el módulo de comunidad.', error); }
+    try { await loadScript(new URL('assets/community.js?v=20261020d', SITE_ROOT).href, 'data-ns-community-script'); } catch (error) { console.warn('No se pudo cargar el módulo de comunidad.', error); }
 
     if (pageType === 'auth') initAuthPage();
     if (pageType === 'settings') initSettingsEvents();
