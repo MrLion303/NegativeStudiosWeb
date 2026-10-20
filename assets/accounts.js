@@ -938,13 +938,14 @@
   function renderBadgeAdminControls(targetProfile, canManage) {
     const actions = $('#publicProfileAdminActions');
     if (!actions) return;
+    let profileToManage = targetProfile;
     actions.replaceChildren();
     actions.hidden = !canManage;
     if (!canManage) return;
 
     const button = document.createElement('button');
     button.type = 'button';
-    button.className = 'btn ghost public-profile-edit-icon';
+    button.className = 'btn ghost public-profile-admin-button';
     button.textContent = 'Badges';
     button.setAttribute('aria-label', 'Administrar badges');
     button.title = 'Administrar badges';
@@ -971,8 +972,8 @@
         const text = document.createElement('span'); text.textContent = textValue;
         label.append(input, badge, text); options.appendChild(label); return input;
       };
-      const mod = makeOption(normalizedBadges(targetProfile).is_mod, 'Moderador — puede moderar comentarios y publicaciones', 'mod');
-      const verified = makeOption(normalizedBadges(targetProfile).is_verified, 'Verificado — muestra la insignia de verificación', 'verified');
+      const mod = makeOption(normalizedBadges(profileToManage).is_mod, 'Moderador — puede moderar comentarios y publicaciones', 'mod');
+      const verified = makeOption(normalizedBadges(profileToManage).is_verified, 'Verificado — muestra la insignia de verificación', 'verified');
       const status = document.createElement('p'); status.className = 'ns-badge-admin-status'; status.hidden = true; status.setAttribute('role', 'status');
       const footer = document.createElement('div'); footer.className = 'ns-modal-footer';
       const cancel = document.createElement('button'); cancel.type = 'button'; cancel.className = 'btn ghost'; cancel.textContent = 'Cancelar'; cancel.addEventListener('click', () => dialog.close());
@@ -982,19 +983,19 @@
         save.disabled = true; cancel.disabled = true; save.textContent = 'Guardando…'; status.hidden = true;
         try {
           const result = await client.rpc('set_profile_badges', {
-            target_profile_id: targetProfile.id,
+            target_profile_id: profileToManage.id,
             mod_enabled: mod.checked,
             verified_enabled: verified.checked
           });
           if (result.error) throw result.error;
           let fresh = await client.from('profiles')
             .select('id, username, display_name, bio, avatar_url, banner_url, created_at, profile_badges(is_mod, is_verified)')
-            .eq('id', targetProfile.id).maybeSingle();
+            .eq('id', profileToManage.id).maybeSingle();
           if (fresh.error) fresh = await client.from('profiles')
             .select('id, username, display_name, bio, avatar_url, banner_url, created_at')
-            .eq('id', targetProfile.id).maybeSingle();
+            .eq('id', profileToManage.id).maybeSingle();
           if (fresh.error) throw fresh.error;
-          if (fresh.data) renderNameBadges($('#publicProfileNameLine'), fresh.data);
+          if (fresh.data) { profileToManage = fresh.data; renderNameBadges($('#publicProfileNameLine'), fresh.data); }
           status.textContent = 'Los badges se actualizaron correctamente.';
           status.dataset.kind = 'success'; status.hidden = false;
           save.textContent = 'Guardado';
