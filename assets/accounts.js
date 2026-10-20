@@ -950,8 +950,10 @@
     sidebar.dataset.commentsObserverReady = 'true';
     if (!('IntersectionObserver' in window)) return;
     const observer = new IntersectionObserver(entries => {
-      const entry = entries[0];
-      sidebar.classList.toggle('is-comments-bottom', Boolean(entry?.isIntersecting));
+      if (!entries[0]?.isIntersecting) return;
+      sidebar.classList.add('is-comments-bottom');
+      observer.unobserve(comments);
+      observer.disconnect();
     }, { root: null, rootMargin: '0px 0px -20% 0px', threshold: 0 });
     observer.observe(comments);
   }
