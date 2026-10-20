@@ -148,7 +148,7 @@
   async function loadProfileBrief(user) {
     if (!client || !user) return null;
     const { data, error } = await client.from('profiles')
-      .select('id, username, display_name, avatar_url, banner_url, username_changed_at, created_at')
+      .select('id, username, display_name, avatar_url, banner_url, username_changed_at, created_at, profile_badges(is_mod, is_verified)')
       .eq('id', user.id).maybeSingle();
     if (error) throw error;
     return data;
@@ -669,11 +669,42 @@
     });
   }
 
-  function drawPublicProfile(profile, owner) {
+  function normalizedBadges(profile) {
+    const relation = profile?.profile_badges;
+    const badges = Array.isArray(relation) ? (relation[0] || {}) : (relation || {});
+    return { is_mod: Boolean(badges.is_mod), is_verified: Boolean(badges.is_verified) };
+  }
+  function badgeNode(kind) {
+    const config = kind === 'mod' ? { file: 'mod.png', label: 'Moderador' } : { file: 'verificado.png', label: 'Verificado' };
+    const image = document.createElement('img');
+    image.className = 'ns-badge ns-badge--' + kind;
+    image.src = new URL('assets/badges/' + config.file, SITE_ROOT).href;
+    image.alt = config.label; image.title = config.label; image.loading = 'lazy';
+    return image;
+  }
+  function badgeListNode(profile, className) {
+    const badges = normalizedBadges(profile);
+    const list = document.createElement('span');
+    list.className = 'ns-badges' + (className ? ' ' + className : '');
+    list.setAttribute('aria-label', 'Emblemas del usuario');
+    if (badges.is_mod) list.appendChild(badgeNode('mod'));
+    if (badges.is_verified) list.appendChild(badgeNode('verified'));
+    list.hidden = !list.childElementCount;
+    return list;
+  }
+  function renderNameBadges(container, profile) {
+    if (!container) return;
+    container.replaceChildren();
+    const name = document.createElement('h1');
+    name.className = 'public-profile-name'; name.id = 'publicProfileDisplayName';
+    name.textContent = profile.display_name || profile.username || 'Usuario';
+    container.append(name, badgeListNode(profile));
+  }
+  function drawPublicProfile(profile, owner, admin) {
     if (!profile) { showPublicProfileState('publicProfileMissing'); return; }
     showPublicProfileState('publicProfileCard');
     const setText = (id, value) => { const el = document.getElementById(id); if (el) el.textContent = value || ''; };
-    setText('publicProfileDisplayName', profile.display_name || profile.username || 'Usuario');
+    renderNameBadges($('#publicProfileNameLine'), profile);
     setText('publicProfileUsername', '@' + (profile.username || 'usuario'));
     setText('publicProfileBio', profile.bio || '');
     setText('publicProfileJoined', profile.created_at ? 'Se unió en ' + formatDate(profile.created_at, { month: 'long', year: 'numeric' }) : '');
@@ -687,7 +718,50 @@
     if (actions) actions.hidden = !owner;
     const custom = $('#customizeProfileButton');
     if (custom) custom.href = new URL('configurar-perfil.html', SITE_ROOT).href;
+    renderBadgeAdminControls(profile, Boolean(admin && !owner));
     document.title = (profile.display_name || profile.username) + ' (@' + profile.username + ') — NegativeStudios';
+  }
+
+  function renderBadgeAdminControls(targetProfile, canManage) {
+    const actions = $('#publicProfileAdminActions'), host = $('#publicProfileBadgeAdmin');
+    if (!actions || !host) return;
+    actions.replaceChildren(); host.replaceChildren(); host.hidden = true; actions.hidden = !canManage;
+    if (!canManage) return;
+    const button = document.createElement('button'); button.type = 'button'; button.className = 'btn ghost'; button.textContent = 'Badges';
+    button.setAttribute('aria-expanded', 'false');
+    const panel = document.createElement('div'); panel.className = 'ns-badge-admin-panel';
+    const title = document.createElement('strong'); title.textContent = 'Administrar emblemas';
+    const hint = document.createElement('p'); hint.textContent = 'Activa o desactiva los emblemas de este perfil.';
+    const modLabel = document.createElement('label'); modLabel.className = 'ns-badge-admin-option';
+    const mod = document.createElement('input'); mod.type = 'checkbox'; mod.checked = normalizedBadges(targetProfile).is_mod;
+    const modText = document.createElement('span'); modText.textContent = 'Moderador — puede eliminar comentarios de otras personas';
+    modLabel.append(mod, modText);
+    const verLabel = document.createElement('label'); verLabel.className = 'ns-badge-admin-option';
+    const ver = document.createElement('input'); ver.type = 'checkbox'; ver.checked = normalizedBadges(targetProfile).is_verified;
+    const verText = document.createElement('span'); verText.textContent = 'Verificado'; verLabel.append(ver, verText);
+    const status = document.createElement('p'); status.className = 'ns-badge-admin-status'; status.hidden = true;
+    const save = document.createElement('button'); save.type = 'button'; save.className = 'btn primary'; save.textContent = 'Guardar badges';
+    save.addEventListener('click', async () => {
+      if (!currentUser || !client) return;
+      save.disabled = true; save.textContent = 'Guardando…'; status.hidden = true;
+      try {
+        const result = await client.rpc('set_profile_badges', { target_profile_id: targetProfile.id, mod_enabled: mod.checked, verified_enabled: ver.checked });
+        if (result.error) throw result.error;
+        const fresh = await client.from('profiles').select('id, username, display_name, bio, avatar_url, banner_url, created_at, profile_badges(is_mod, is_verified)').eq('id', targetProfile.id).maybeSingle();
+        if (fresh.error) throw fresh.error;
+        if (fresh.data) {
+          renderNameBadges($('#publicProfileNameLine'), fresh.data);
+          renderBadgeAdminControls(fresh.data, true);
+          const msg = $('#publicProfileBadgeAdmin .ns-badge-admin-status');
+          if (msg) { msg.textContent = 'Los badges se actualizaron correctamente.'; msg.dataset.kind = 'success'; msg.hidden = false; }
+        }
+      } catch (error) {
+        status.textContent = friendlyError(error); status.dataset.kind = 'error'; status.hidden = false;
+      } finally { save.disabled = false; save.textContent = 'Guardar badges'; }
+    });
+    panel.append(title, hint, modLabel, verLabel, save, status);
+    button.addEventListener('click', () => { host.hidden = !host.hidden; button.setAttribute('aria-expanded', String(!host.hidden)); });
+    actions.appendChild(button); host.appendChild(panel);
   }
 
   async function initPublicProfilePage(userFromSession) {
@@ -708,14 +782,18 @@
       const username = normalizeUsername(requestedUsername);
       if (!username) { showPublicProfileState('publicProfileMissing'); return; }
       const { data, error } = await client.from('profiles')
-        .select('id, username, display_name, bio, avatar_url, banner_url, created_at')
+        .select('id, username, display_name, bio, avatar_url, banner_url, created_at, profile_badges(is_mod, is_verified)')
         .eq('username', username).maybeSingle();
       if (error) throw error;
       profile = data;
     } else {
       profile = await loadCurrentProfile(user);
     }
-    drawPublicProfile(profile, Boolean(user && profile && user.id === profile.id));
+    let admin = false;
+    if (user && profile && user.id !== profile.id) {
+      try { const viewer = await loadProfileBrief(user); admin = viewer?.username?.toLowerCase() === 'mrlion303'; } catch (_) {}
+    }
+    drawPublicProfile(profile, Boolean(user && profile && user.id === profile.id), admin);
   }
 
   function commentProfile(comment) {
@@ -801,9 +879,11 @@
     const link = document.createElement('a');
     link.href = profileHref(profile);
     link.textContent = profile.display_name || profile.username || 'Usuario';
+    const nameLine = document.createElement('span'); nameLine.className = 'ns-name-badges';
+    nameLine.append(link, badgeListNode(profile, 'ns-badges--comment'));
     const handle = document.createElement('small');
     handle.textContent = '@' + (profile.username || 'usuario') + ' · ' + formatCommentTimestamp(comment.created_at);
-    author.append(link, handle);
+    author.append(nameLine, handle);
     header.appendChild(author);
     article.appendChild(header);
     const content = document.createElement('div');
@@ -838,6 +918,21 @@
       });
       actions.appendChild(remove);
     }
+    if (currentUser && currentUser.id !== comment.user_id && normalizedBadges(lastProfile).is_mod) {
+      const moderatorDelete = document.createElement('button');
+      moderatorDelete.type = 'button'; moderatorDelete.className = 'project-comment-action project-comment-action--delete';
+      moderatorDelete.textContent = 'Eliminar como moderador';
+      moderatorDelete.addEventListener('click', async () => {
+        if (!window.confirm('¿Eliminar este comentario y todas sus respuestas? Esta acción no se puede deshacer.')) return;
+        moderatorDelete.disabled = true;
+        try {
+          const result = await client.rpc('moderator_delete_project_comment', { target_comment_id: comment.id });
+          if (result.error) throw result.error;
+          await loadProjectComments(slug);
+        } catch (error) { message('projectCommentsMessage', friendlyError(error), 'error'); moderatorDelete.disabled = false; }
+      });
+      actions.appendChild(moderatorDelete);
+    }
     if (actions.childElementCount) article.appendChild(actions);
     if (children.length) {
       const nested = document.createElement('div');
@@ -864,7 +959,7 @@
       feed.appendChild(loading);
     }
     const { data, error } = await client.from('project_comments')
-      .select('id, project_slug, parent_comment_id, user_id, content, created_at, profiles!project_comments_user_id_fkey(username, display_name, avatar_url)')
+      .select('id, project_slug, parent_comment_id, user_id, content, created_at, profiles!project_comments_user_id_fkey(username, display_name, avatar_url, profile_badges(is_mod, is_verified))')
       .eq('project_slug', slug).order('created_at', { ascending: true }).limit(1000);
     if (error) {
       if (feed) {
@@ -929,12 +1024,14 @@
             copy.className = 'project-sidebar-comment-copy';
             const author = document.createElement('strong');
             author.textContent = profile.display_name || profile.username || 'Usuario';
+            const nameLine = document.createElement('span'); nameLine.className = 'ns-name-badges';
+            nameLine.append(author, badgeListNode(profile, 'ns-badges--sidebar'));
             const date = document.createElement('time');
             date.dateTime = node.row.created_at || '';
             date.textContent = formatCommentTimestamp(node.row.created_at);
             const body = document.createElement('p');
             body.textContent = node.row.content;
-            copy.append(author, date, body);
+            copy.append(nameLine, date, body);
             item.appendChild(copy);
             preview.appendChild(item);
           });
