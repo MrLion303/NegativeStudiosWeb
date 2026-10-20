@@ -368,3 +368,22 @@ end;
 $$;
 revoke all on function public.set_profile_badges(uuid,boolean,boolean) from public, anon;
 grant execute on function public.set_profile_badges(uuid,boolean,boolean) to authenticated;
+
+
+-- La autorización se comprueba en el servidor antes de borrar comentarios ajenos.
+create or replace function public.moderator_delete_project_comment(target_comment_id bigint)
+returns void language plpgsql security definer set search_path = ''
+as $$
+begin
+  if auth.uid() is null or not exists (
+    select 1 from public.profile_badges where user_id = auth.uid() and is_mod = true
+  ) then
+    raise exception 'Necesitas el badge de moderador para eliminar comentarios de otras personas.'
+      using errcode = '42501';
+  end if;
+  delete from public.project_comments where id = target_comment_id;
+  if not found then raise exception 'No se encontró el comentario o ya fue eliminado.'; end if;
+end;
+$$;
+revoke all on function public.moderator_delete_project_comment(bigint) from public, anon;
+grant execute on function public.moderator_delete_project_comment(bigint) to authenticated;
