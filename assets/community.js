@@ -122,6 +122,7 @@
     target.hidden = !text;
     if (!text) return;
     target.className = 'community-status' + (kind ? ' community-status--' + kind : '');
+    if (kind) target.dataset.kind = kind; else delete target.dataset.kind;
     target.textContent = text;
     target.setAttribute('role', 'status');
   }
