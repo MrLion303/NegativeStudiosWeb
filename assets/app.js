@@ -23,6 +23,10 @@ document.addEventListener('DOMContentLoaded',()=>{
   const footer=document.querySelector('.footer');if(footer)footer.outerHTML=footerHTML();
 
   const oldCta=document.querySelector('.nav-cta');if(oldCta){const actions=document.createElement('div');actions.className='nav-actions';actions.innerHTML=`<a class="client-download" href="descargar.html"><span class="client-download-label">Descargar Negative Client</span><svg class="client-download-icon" aria-hidden="true" viewBox="0 0 24 24" fill="none"><path d="M12 3v11"></path><path d="m7 10 5 5 5-5"></path><path d="M5 20h14"></path></svg></a>`;oldCta.replaceWith(actions)}
+  const accountScript=document.createElement('script');
+  accountScript.src=new URL('accounts.js?v=20261019a',(document.querySelector('script[src*="assets/app.js"]')||{}).src||location.href).href;
+  accountScript.dataset.nsAccountScript='true';
+  document.head.appendChild(accountScript);
 
   const canonicalProjectRoutes={'overland':'proyectos/overland/index.html','proyecto-y':'proyectos/proyecto-y/index.html','parasites':'proyectos/parasites/index.html','jujutsu-kaisen':'proyectos/culling-games/index.html','pc-rebirth':'proyectos/pdc-rebirth/index.html','negative-awards':'proyectos/negative-awards/index.html','negativemc-ep3':'proyectos/negativemc-episodio-3/index.html','proyecto-x':'proyectos/proyecto-x/index.html','pc-final':'proyectos/pdc-final-chapter/index.html','permamuerte':'proyectos/permamuerte/index.html'};
   document.querySelectorAll('a[href^="proyecto.html?id="]').forEach(link=>{try{const u=new URL(link.getAttribute('href'),location.href);const id=u.searchParams.get('id');if(canonicalProjectRoutes[id])link.href=canonicalProjectRoutes[id]}catch(_){}});
