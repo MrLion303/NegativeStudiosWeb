@@ -75,12 +75,22 @@ begin
 
   visible_name := left(coalesce(
     nullif(trim(new.raw_user_meta_data ->> 'display_name'), ''),
+    nullif(trim(new.raw_user_meta_data ->> 'full_name'), ''),
+    nullif(trim(new.raw_user_meta_data ->> 'name'), ''),
     nullif(split_part(coalesce(new.email, ''), '@', 1), ''),
     'Usuario'
   ), 32);
 
-  insert into public.profiles (id, username, display_name)
-  values (new.id, candidate, visible_name)
+  insert into public.profiles (id, username, display_name, avatar_url)
+  values (
+    new.id,
+    candidate,
+    visible_name,
+    coalesce(
+      nullif(new.raw_user_meta_data ->> 'avatar_url', ''),
+      nullif(new.raw_user_meta_data ->> 'picture', '')
+    )
+  )
   on conflict (id) do nothing;
 
   return new;
