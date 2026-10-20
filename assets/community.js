@@ -790,8 +790,7 @@
     const menuItems = [];
     if (user && user.id === post.user_id) menuItems.push({ label: 'Eliminar publicación', danger: true, action: button => removePost(button, false) });
     else if (user && viewerIsModerator()) menuItems.push({ label: 'Eliminar como moderador', danger: true, action: button => removePost(button, true) });
-    const menu = createOverflowMenu(menuItems);
-    if (menu) header.appendChild(menu);
+    if (menuItems.length) header.appendChild(createOverflowMenu(menuItems));
     card.appendChild(header);
 
     if (post.content_html || post.content_text) {
