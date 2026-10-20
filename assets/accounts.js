@@ -996,7 +996,7 @@
     const baseSelect = 'id, project_slug, parent_comment_id, user_id, content, created_at';
     const profileRelation = 'profiles!project_comments_user_id_fkey(username, display_name, avatar_url';
     let response = await client.from('project_comments')
-      .select(baseSelect + ', ' + profileRelation + ', profile_badges(is_mod, is_verified)), project_comment_likes(user_id))')
+      .select(baseSelect + ', ' + profileRelation + ', profile_badges(is_mod, is_verified)), project_comment_likes(user_id)')
       .eq('project_slug', slug).order('created_at', { ascending: true }).limit(1000);
     if (response.error) {
       response = await client.from('project_comments')
