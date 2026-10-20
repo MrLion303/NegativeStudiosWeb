@@ -659,7 +659,7 @@
   }
 
   function createOverflowMenu(items) {
-    if (!items.length) return null;
+    if (!items.length) items = [{ label: 'Sin acciones disponibles', disabled: true, action: async () => {} }];
     const wrap = document.createElement('div');
     wrap.className = 'community-overflow';
     const trigger = document.createElement('button');
@@ -679,6 +679,7 @@
       option.type = 'button'; option.setAttribute('role', 'menuitem');
       option.textContent = item.label;
       if (item.danger) option.classList.add('is-danger');
+      if (item.disabled) option.disabled = true;
       option.addEventListener('click', async event => {
         event.stopPropagation();
         menu.hidden = true; trigger.setAttribute('aria-expanded', 'false');
