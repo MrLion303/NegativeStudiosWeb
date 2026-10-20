@@ -342,6 +342,7 @@
       if (result.error) throw result.error;
     }
     await refreshCommunityProfile();
+    if ($('#notificationsFeed')) { await renderFriendInbox(); await loadNotifications(); }
   }
 
   function friendControls(profile, requests, className) {
@@ -568,7 +569,7 @@
       const activate = async () => {
         if (!item.read_at) await markNotificationRead(item.id);
       };
-      open.addEventListener('click', () => { activate(); });
+      open.addEventListener('click', async event => { event.preventDefault(); await activate(); location.assign(open.href); });
       copy.addEventListener('click', async event => {
         if (event.target.closest('a')) return;
         await activate();
