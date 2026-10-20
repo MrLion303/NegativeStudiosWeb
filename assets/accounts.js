@@ -446,7 +446,7 @@
   async function loadCurrentProfile(user) {
     if (!user || !client) return null;
     const { data, error } = await client.from('profiles')
-      .select('id, username, display_name, bio, avatar_url, banner_url, username_changed_at, created_at, updated_at')
+      .select('id, username, display_name, bio, avatar_url, banner_url, username_changed_at, created_at, updated_at, profile_badges(is_mod, is_verified)')
       .eq('id', user.id).maybeSingle();
     if (error) throw error;
     if (!data) throw new Error('No se encontró tu perfil. Ejecuta el archivo supabase/schema.sql en el SQL Editor de Supabase.');
@@ -718,7 +718,7 @@
     if (actions) actions.hidden = !owner;
     const custom = $('#customizeProfileButton');
     if (custom) custom.href = new URL('configurar-perfil.html', SITE_ROOT).href;
-    renderBadgeAdminControls(profile, Boolean(admin && !owner));
+    renderBadgeAdminControls(profile, Boolean(admin));
     document.title = (profile.display_name || profile.username) + ' (@' + profile.username + ') — NegativeStudios';
   }
 
@@ -794,7 +794,7 @@
       profile = await loadCurrentProfile(user);
     }
     let admin = false;
-    if (user && profile && user.id !== profile.id) {
+    if (user && profile) {
       try { const viewer = await loadProfileBrief(user); admin = viewer?.username?.toLowerCase() === 'mrlion303'; } catch (_) {}
     }
     drawPublicProfile(profile, Boolean(user && profile && user.id === profile.id), admin);
