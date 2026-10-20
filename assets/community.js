@@ -1136,13 +1136,13 @@
     const counter = document.createElement('span'); counter.className = 'community-muted'; counter.textContent = '0 / 5000';
     const submit = document.createElement('button'); submit.type = 'submit'; submit.className = 'community-button community-button--primary'; submit.textContent = 'Publicar';
     const footerGroup = document.createElement('div'); footerGroup.className = 'community-composer-footer'; footerGroup.appendChild(submit);
-    footer.append(counter, footerGroup);
+    footer.append(toolbar, counter, footerGroup);
     function updateComposerCounter() {
       counter.textContent = Math.min(editor.innerText.length, 5000) + ' / 5000';
       updateMentions();
     }
     editor.addEventListener('input', updateComposerCounter);
-    main.append(editor, mentionSuggestions, toolbar, imageInput, imagePreview, status);
+    main.append(editor, mentionSuggestions, imageInput, imagePreview, status);
     layout.appendChild(main);
     form.append(layout, footer);
     form.addEventListener('submit', async event => {
