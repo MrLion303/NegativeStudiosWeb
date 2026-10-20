@@ -74,7 +74,7 @@ $$;
 
 drop trigger if exists enforce_public_profile_rules on public.profiles;
 create trigger enforce_public_profile_rules
-  before update on public.profiles
+  before insert or update on public.profiles
   for each row execute function public.enforce_public_profile_rules();
 
 -- Crear un perfil básico al crear una cuenta (correo/contraseña u OAuth).
