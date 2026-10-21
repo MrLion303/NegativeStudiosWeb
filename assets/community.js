@@ -899,7 +899,7 @@
     renderForm(null);
 
     const result = await client.from('forum_post_comments')
-      .select('id,post_id,parent_comment_id,user_id,content,created_at,profiles!forum_post_comments_user_id_fkey(username,display_name,avatar_url,profile_badges(is_mod,is_verified)),forum_post_comment_likes(user_id)'
+      .select('id,post_id,parent_comment_id,user_id,content,created_at,profiles!forum_post_comments_user_id_fkey(username,display_name,avatar_url,profile_badges(is_mod,is_verified)),forum_post_comment_likes(user_id)')
       .eq('post_id', post.id).order('created_at', { ascending: true }).limit(300);
     if (result.error) {
       list.replaceChildren();
