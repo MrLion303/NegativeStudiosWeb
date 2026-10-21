@@ -154,3 +154,11 @@ body .community-compose-login .community-button:hover {
   border-color: rgba(102,194,255,.55);
   color: #fff;
 }
+
+/* La tarjeta de cuenta regresiva se atenúa suavemente al pasar el cursor. */
+.ns-countdown-banner {
+  transition: opacity .2s ease;
+}
+.ns-countdown-banner:hover {
+  opacity: .5;
+}
