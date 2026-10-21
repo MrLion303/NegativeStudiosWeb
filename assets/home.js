@@ -2,9 +2,24 @@ document.addEventListener('DOMContentLoaded', () => {
   const motionPreference = window.matchMedia('(prefers-reduced-motion: reduce)');
   const prefersReducedMotion = () => motionPreference.matches;
   const slides = Array.from(document.querySelectorAll('.home-hero-slides .home-slide'));
+  const wasDiscarded = document.wasDiscarded === true;
+  const heroResumeKey = 'ns-home-hero-resume:v1:' + location.pathname + location.search;
+  const projectResumeKey = 'ns-home-project-resume:v1:' + location.pathname + location.search;
+  const readResumeIndex = (key, length) => {
+    try {
+      const saved = sessionStorage.getItem(key);
+      sessionStorage.removeItem(key);
+      const value = Number(saved);
+      if (wasDiscarded && saved !== null && Number.isFinite(value) && length > 0) return Math.max(0, Math.min(length - 1, value));
+    } catch (_) {}
+    return 0;
+  };
+  const saveResumeIndex = (key, value) => {
+    try { sessionStorage.setItem(key, String(value)); } catch (_) {}
+  };
 
   if (slides.length >= 2) {
-    let current = 0;
+    let current = readResumeIndex(heroResumeKey, slides.length);
     let timer = null;
     let transitionTimer = null;
     const DISPLAY_TIME = 12000;
@@ -55,12 +70,18 @@ document.addEventListener('DOMContentLoaded', () => {
       timer = window.setInterval(next, DISPLAY_TIME);
     };
 
-    slides.forEach((slide, index) => slide.classList.toggle('is-active', index === 0));
+    slides.forEach((slide, index) => slide.classList.toggle('is-active', index === current));
 
     if (prefersReducedMotion()) resetToFirstSlide();
     else start();
 
-    document.addEventListener('visibilitychange', () => document.hidden ? stop() : start());
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) {
+        stop();
+        saveResumeIndex(heroResumeKey, current);
+      } else start();
+    });
+    window.addEventListener('pagehide', () => saveResumeIndex(heroResumeKey, current));
     motionPreference.addEventListener('change', () => {
       if (prefersReducedMotion()) resetToFirstSlide();
       else start();
@@ -77,7 +98,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   if (projectSlides.length < 2) return;
 
-  let currentProject = 0;
+  let currentProject = readResumeIndex(projectResumeKey, projectSlides.length);
   let projectTimer = null;
   const PROJECT_TIME = 5000;
 
@@ -145,11 +166,17 @@ document.addEventListener('DOMContentLoaded', () => {
   carousel.addEventListener('focusout', event => {
     if (!carousel.contains(event.relatedTarget)) startProjectTimer();
   });
-  document.addEventListener('visibilitychange', () => document.hidden ? stopProjectTimer() : startProjectTimer());
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      stopProjectTimer();
+      saveResumeIndex(projectResumeKey, currentProject);
+    } else startProjectTimer();
+  });
+  window.addEventListener('pagehide', () => saveResumeIndex(projectResumeKey, currentProject));
   motionPreference.addEventListener('change', () => {
     if (prefersReducedMotion()) {
       stopProjectTimer();
-      showProject(0, false);
+      showProject(currentProject, false);
     } else {
       startProjectTimer();
     }
