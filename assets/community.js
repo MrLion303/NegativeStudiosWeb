@@ -943,29 +943,27 @@
       head.append(nameLine, meta);
       const ownsReply = Boolean(user && user.id === row.user_id);
       const canModerateReply = Boolean(user && !ownsReply && viewerIsModerator());
-      if (ownsReply || canModerateReply) {
-        const overflow = createOverflowMenu([{
-          label: canModerateReply ? 'Eliminar respuesta como moderador' : 'Eliminar respuesta',
-          danger: true,
-          action: async button => {
-            if (!window.confirm(canModerateReply
-              ? '¿Eliminar esta respuesta como moderador? Esta acción no se puede deshacer.'
-              : '¿Eliminar esta respuesta?')) return;
-            button.disabled = true;
-            try {
-              const deleted = canModerateReply
-                ? await client.rpc('moderator_delete_forum_comment', { target_comment_id: row.id })
-                : await client.from('forum_post_comments').delete().eq('id', row.id).eq('user_id', user.id);
-              if (deleted.error) throw deleted.error;
-              await loadPostComments(post, host, user);
-            } catch (error) {
-              alert(error?.message || 'No se pudo eliminar la respuesta.');
-              button.disabled = false;
-            }
+      const replyMenuItems = (ownsReply || canModerateReply) ? [{
+        label: canModerateReply ? 'Eliminar respuesta como moderador' : 'Eliminar respuesta',
+        danger: true,
+        action: async button => {
+          if (!window.confirm(canModerateReply
+            ? '¿Eliminar esta respuesta como moderador? Esta acción no se puede deshacer.'
+            : '¿Eliminar esta respuesta?')) return;
+          button.disabled = true;
+          try {
+            const deleted = canModerateReply
+              ? await client.rpc('moderator_delete_forum_comment', { target_comment_id: row.id })
+              : await client.from('forum_post_comments').delete().eq('id', row.id).eq('user_id', user.id);
+            if (deleted.error) throw deleted.error;
+            await loadPostComments(post, host, user);
+          } catch (error) {
+            alert(error?.message || 'No se pudo eliminar la respuesta.');
+            button.disabled = false;
           }
-        }]);
-        head.appendChild(overflow);
-      }
+        }
+      }] : [{ label: 'No tienes acciones disponibles', disabled: true, action: async () => {} }];
+      head.appendChild(createOverflowMenu(replyMenuItems));
       const textNode = document.createElement('p'); textNode.className = 'community-post-reply-text'; textNode.textContent = row.content;
       body.append(head, textNode);
       const replyLikes = Array.isArray(row.forum_post_comment_likes) ? row.forum_post_comment_likes : [];
