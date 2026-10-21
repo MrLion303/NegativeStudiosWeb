@@ -38,7 +38,8 @@
 
   function ensureNotificationLink() {
     const nav = $('#navLinks');
-    if (!nav || nav.querySelector('a[data-ns-notifications-link]')) return;
+    const actions = document.querySelector('.nav-inner .nav-actions');
+    if (!nav || !actions || actions.querySelector('a[data-ns-notifications-link]')) return;
     const link = document.createElement('a');
     link.href = new URL('notificaciones.html', SITE_ROOT).href;
     link.className = 'ns-notifications-link';
@@ -47,9 +48,9 @@
     link.title = 'Notificaciones';
     link.innerHTML = '<svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg><span class="ns-notifications-label">Notificaciones</span><span class="ns-notification-count" hidden>0</span>';
     if (location.pathname.endsWith('/notificaciones.html')) link.classList.add('active');
-    const forum = nav.querySelector('a[data-ns-forum-link]');
-    if (forum?.nextSibling) nav.insertBefore(link, forum.nextSibling);
-    else nav.appendChild(link);
+    const account = actions.querySelector('a.ns-account-link');
+    if (account) actions.insertBefore(link, account);
+    else actions.appendChild(link);
   }
 
   async function updateNotificationCount() {
