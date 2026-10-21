@@ -1,6 +1,6 @@
 document.addEventListener('DOMContentLoaded',()=>{
   document.documentElement.classList.remove('ns-loading');document.documentElement.classList.add('ns-ready');if(!document.querySelector('script[src*="dev-runtime.js"]')){const ds=document.createElement('script');ds.src='assets/dev-runtime.js?v=8';document.head.appendChild(ds)}
-  const actionLayout=document.createElement('link');actionLayout.rel='stylesheet';actionLayout.href='assets/action-layout.css?v=20261020a';document.head.appendChild(actionLayout);
+  const appScript=document.querySelector('script[src*="assets/app.js"]');const actionLayout=document.createElement('link');actionLayout.rel='stylesheet';actionLayout.href=new URL('action-layout.css?v=20261020a',appScript?.src||location.href).href;document.head.appendChild(actionLayout);
   const VERSION='20261012a';
   const projectArtworkReady=window.NS_PROJECT_ARTWORK_READY||new Promise(resolve=>{const script=document.createElement('script');script.src='assets/project-artwork.js?v=20261012a';script.onload=()=>Promise.resolve(window.NS_PROJECT_ARTWORK_READY).then(resolve);script.onerror=resolve;document.head.appendChild(script)});
   const icon=document.querySelector('link[rel="icon"]');if(icon)icon.href='assets/media/brand-icon.webp';
