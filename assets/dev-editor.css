@@ -23,3 +23,8 @@ html,body{margin:0;background:#070a0f;color:#edf5ff;font-family:Inter,system-ui,
 .inline-text-editor{min-height:150px;max-height:360px;overflow:auto;padding:12px;border:1px solid #355068;border-radius:8px;background:#0b121a;color:#fff;line-height:1.45;outline:none;white-space:pre-wrap;word-break:break-word}.inline-text-editor:focus{border-color:#66c2ff;box-shadow:0 0 0 2px rgba(102,194,255,.12)}.inline-text-editor span,.inline-text-editor font{display:inline}.inline-format-row{margin-bottom:8px}
 
 .repo-version{padding:5px 8px;border:1px solid #24384a;border-radius:7px;background:#09121a;color:#66c2ff;white-space:nowrap;font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:.7rem;max-width:180px;overflow:hidden;text-overflow:ellipsis}
+
+/* Tipografía global del editor. */
+html, body, body *:not(i):not(svg):not(path):not(code):not(pre):not(kbd):not(samp):not([class*="icon"]):not([class*="fa-"]):not([class*="material-icons"]):not([class*="material-symbols"]):not([class*="lucide"]):not([class*="bi-"]):not([class*="ph-"]):not([class*="tabler-icon"]):not([class*="ri-"]) {
+  font-family: "Quicksand", sans-serif !important;
+}
