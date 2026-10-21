@@ -1263,8 +1263,23 @@
       await loadForumFeed();
       await renderSuggestions([]);
     }
-    client.auth.onAuthStateChange(() => {
-      window.setTimeout(async () => { await refreshCommunityProfile().catch(() => {}); await updateNotificationCount(); if ($('#notificationsFeed')) { await renderFriendInbox(); await loadNotifications(); } }, 0);
+    client.auth.onAuthStateChange((event, session) => {
+      // La renovación del token y la sesión inicial no cambian al usuario visible.
+      if (event === 'INITIAL_SESSION' || event === 'TOKEN_REFRESHED') return;
+      const nextUserId = session?.user?.id || null;
+      if (nextUserId === (sessionUser?.id || null)) return;
+      window.setTimeout(async () => {
+        // Otra notificación puede haber actualizado ya la sesión mientras esperábamos.
+        const latest = await client.auth.getSession();
+        const latestUserId = latest.data?.session?.user?.id || null;
+        if (latestUserId === (sessionUser?.id || null)) return;
+        await refreshCommunityProfile().catch(() => {});
+        await updateNotificationCount();
+        if ($('#notificationsFeed')) {
+          await renderFriendInbox();
+          await loadNotifications();
+        }
+      }, 0);
     });
   }
 
