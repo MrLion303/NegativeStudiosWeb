@@ -1,0 +1,96 @@
+/* Cuenta regresiva compartida con el launcher Negative Client. */
+.ns-global-countdowns {
+  position: fixed;
+  top: 92px;
+  right: 20px;
+  z-index: 49;
+  display: grid;
+  gap: 8px;
+  width: min(390px, calc(100vw - 36px));
+  max-height: calc(100vh - 112px);
+  overflow: auto;
+  padding: 0;
+  pointer-events: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(88, 208, 227, .42) transparent;
+}
+.ns-global-countdowns[hidden] {
+  display: none !important;
+}
+.ns-countdown-banner {
+  display: grid;
+  grid-template-columns: 10px minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  padding: 12px 15px;
+  border: 1px solid rgba(54, 67, 79, .96);
+  border-radius: 12px;
+  background: rgba(22, 28, 35, .94);
+  color: #eef4f7;
+  box-shadow: 0 12px 34px rgba(0, 0, 0, .24);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+.ns-countdown-dot {
+  display: block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #58d0e3;
+  box-shadow: 0 0 14px rgba(88, 208, 227, .4);
+}
+.ns-countdown-copy {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+.ns-countdown-name {
+  display: block;
+  min-width: 0;
+  color: #eef4f7;
+  font-size: .88rem;
+  font-weight: 700;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+.ns-countdown-detail {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 5px;
+  color: #b8c8d1;
+  font-size: .79rem;
+  font-weight: 600;
+  line-height: 1.35;
+}
+.ns-countdown-remaining {
+  color: #58d0e3;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: .025em;
+  white-space: nowrap;
+}
+@media (max-width: 640px) {
+  .ns-global-countdowns {
+    top: 78px;
+    right: 10px;
+    width: min(350px, calc(100vw - 20px));
+    max-height: 45vh;
+    gap: 6px;
+  }
+  .ns-countdown-banner {
+    gap: 9px;
+    padding: 10px 12px;
+  }
+  .ns-countdown-name {
+    font-size: .82rem;
+  }
+  .ns-countdown-detail {
+    font-size: .74rem;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ns-countdown-banner {
+    scroll-behavior: auto;
+  }
+}
