@@ -227,7 +227,7 @@
 .community-post-reply{display:grid;grid-template-columns:30px minmax(0,1fr);gap:9px;min-width:0}
 .community-avatar--reply{width:30px;height:30px;flex:0 0 30px;font-size:.72rem}
 .community-post-reply-body{min-width:0}
-.community-post-reply-head{display:flex;align-items:flex-start;gap:8px;min-width:0}
+.community-post-reply-head{position:relative;display:flex;align-items:flex-start;gap:8px;min-width:0;padding-right:30px}
 .community-post-reply-head>.community-name-line{flex:1;min-width:0;flex-wrap:wrap}
 .community-post-reply-meta{display:block;color:var(--muted);font-size:.69rem;margin-top:3px}
 .community-post-reply-text{white-space:pre-wrap;overflow-wrap:anywhere;margin:7px 0 4px;font-size:.86rem;line-height:1.55}
@@ -240,7 +240,7 @@
 .community-post-reply-form textarea:focus{outline:2px solid rgba(70,157,255,.35);border-color:#2386f4}
 .community-post-reply-form-actions{display:flex;justify-content:flex-end;align-items:center;gap:7px}
 .community-post-reply-form-actions .community-button{min-height:32px;padding:6px 12px}
-.community-post-reply .community-overflow{margin-left:auto;flex:0 0 auto}
+.community-post-reply .community-overflow{position:absolute;top:0;right:0;z-index:5;margin-left:0;flex:0 0 auto}
 .community-post-reply .community-overflow-trigger{width:28px;height:28px}
 .ns-notifications-link{width:42px;height:42px;justify-content:center;gap:0;padding:0!important;border:1px solid rgba(74,157,255,.38)!important;border-radius:50%;background:rgba(35,134,244,.14)!important;color:#8ac7ff!important;position:relative}
 .ns-notifications-link svg{width:20px;height:20px}
