@@ -899,7 +899,7 @@
     renderForm(null);
 
     const result = await client.from('forum_post_comments')
-      .select('id,post_id,parent_comment_id,user_id,content,created_at,profiles!forum_post_comments_user_id_fkey(username,display_name,avatar_url,profile_badges(is_mod,is_verified))')
+      .select('id,post_id,parent_comment_id,user_id,content,created_at,profiles!forum_post_comments_user_id_fkey(username,display_name,avatar_url,profile_badges(is_mod,is_verified)),forum_post_comment_likes(user_id))'
       .eq('post_id', post.id).order('created_at', { ascending: true }).limit(300);
     if (result.error) {
       list.replaceChildren();
@@ -968,6 +968,8 @@
       }
       const textNode = document.createElement('p'); textNode.className = 'community-post-reply-text'; textNode.textContent = row.content;
       body.append(head, textNode);
+      const replyLikes = Array.isArray(row.forum_post_comment_likes) ? row.forum_post_comment_likes : [];
+      body.appendChild(renderHeartButton('forum_post_comment_likes', 'comment_id', row, user, replyLikes));
       if (user) {
         const reply = document.createElement('button'); reply.type = 'button';
         reply.className = 'community-post-reply-button'; reply.textContent = 'Responder';
