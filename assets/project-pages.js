@@ -1,3 +1,12 @@
+(function () {
+  if (document.querySelector('script[data-ns-tab-resume]')) return;
+  var source = document.currentScript;
+  if (!source || !source.src) return;
+  var script = document.createElement('script');
+  script.src = new URL('tab-resume.js?v=20261020a', source.src).href;
+  script.dataset.nsTabResume = 'true';
+  document.head.appendChild(script);
+})();
 (function(){
 const SCRIPT_URL=document.currentScript&&document.currentScript.src;
 const PAGES={
