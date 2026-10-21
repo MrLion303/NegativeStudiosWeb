@@ -526,7 +526,7 @@ grant delete on public.forum_post_comment_likes to authenticated;
 -- Evitar que al borrar una respuesta propia se borren respuestas ajenas en cascada.
 create or replace function public.protect_foreign_forum_replies()
 returns trigger language plpgsql security definer set search_path=''
-as $
+as $$
 begin
   if auth.uid() is not null
     and not exists(select 1 from public.profile_badges where user_id=auth.uid() and is_mod=true)
@@ -543,7 +543,7 @@ begin
   end if;
   return old;
 end;
-$;
+$$;
 drop trigger if exists protect_foreign_forum_replies on public.forum_post_comments;
 create trigger protect_foreign_forum_replies before delete on public.forum_post_comments
 for each row execute function public.protect_foreign_forum_replies();
