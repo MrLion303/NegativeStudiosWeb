@@ -5,10 +5,10 @@
   const REPOSITORY = 'negativeclient-countdowns';
   const BRANCH = 'main';
   const DATA_PATH = 'data/countdowns.json';
-  const API_URL = `https://api.github.com/repos/${OWNER}/${REPOSITORY}/commits/${BRANCH}`;
-  const RAW_MAIN_URL = `https://raw.githubusercontent.com/${OWNER}/${REPOSITORY}/${BRANCH}/${DATA_PATH}`;
+  const RAW_URL = `https://raw.githubusercontent.com/${OWNER}/${REPOSITORY}/${BRANCH}/${DATA_PATH}`;
+  const REFRESH_INTERVAL_MS = 3000;
   const sourceScript = document.currentScript;
-  const cssUrl = new URL('countdown-widget.css?v=20261021a', sourceScript?.src || location.href).href;
+  const cssUrl = new URL('countdown-widget.css?v=20261021b', sourceScript?.src || location.href).href;
 
   if (!document.querySelector('[data-ns-countdown-styles]')) {
     const stylesheet = document.createElement('link');
@@ -28,10 +28,10 @@
   document.body.appendChild(host);
 
   let feed = [];
-  let lastCommitSha = '';
-  let lastRenderSignature = '';
+  let lastFeedSignature = '';
+  let lastSourceUpdatedAt = 0;
   let refreshInProgress = false;
-  let lastRefreshAt = 0;
+  let lastWarningAt = 0;
   let renderedItems = [];
 
   function normalizeFeed(data) {
@@ -89,8 +89,8 @@
     const items = getActiveCountdowns();
     const signature = JSON.stringify(items.map(item => [item.id, item.name, item.endAtUtc]));
 
-    if (signature !== lastRenderSignature) {
-      lastRenderSignature = signature;
+    if (signature !== lastFeedSignature) {
+      lastFeedSignature = signature;
       host.replaceChildren();
       renderedItems = [];
 
@@ -115,78 +115,72 @@
 
         banner.append(dot, copy);
         host.appendChild(banner);
-        renderedItems.push({ item, remaining, banner });
+        renderedItems.push({ item, remaining });
       });
     }
 
     host.hidden = items.length === 0;
 
     renderedItems.forEach(entry => {
-      const end = Date.parse(entry.item.endAtUtc);
-      if (end <= Date.now()) {
-        entry.remaining.textContent = '00:00:00:00';
-      } else {
-        entry.remaining.textContent = formatRemaining(entry.item.endAtUtc);
-      }
+      entry.remaining.textContent = formatRemaining(entry.item.endAtUtc);
     });
   }
 
-  async function fetchJson(url, accept) {
-    const separator = url.includes('?') ? '&' : '?';
-    const response = await fetch(`${url}${separator}ns_countdown_live=${Date.now()}`, {
+  async function fetchFeed() {
+    // Usar siempre la rama pública con una URL nueva evita el límite de la API REST
+    // de GitHub y reduce la posibilidad de recibir una respuesta guardada en caché.
+    const separator = RAW_URL.includes('?') ? '&' : '?';
+    const url = `${RAW_URL}${separator}ns_countdown_live=${Date.now()}`;
+    const response = await fetch(url, {
       cache: 'no-store',
-      headers: accept ? { Accept: accept } : {}
+      headers: { Accept: 'application/json' }
     });
     if (!response.ok) throw new Error(`GitHub devolvió ${response.status}`);
     return response.json();
   }
 
   async function refresh() {
-    if (refreshInProgress) return;
+    if (refreshInProgress || document.hidden) return;
     refreshInProgress = true;
-    lastRefreshAt = Date.now();
 
     try {
-      let commitSha = '';
+      const data = await fetchFeed();
+      const nextFeed = normalizeFeed(data);
+      const sourceUpdatedAt = Date.parse(data?.updatedAt ?? data?.UpdatedAt ?? '');
+      const nextSignature = JSON.stringify(nextFeed.map(item => [
+        item.id, item.name, item.endAtUtc, item.active
+      ]));
 
-      try {
-        const commit = await fetchJson(API_URL, 'application/vnd.github+json');
-        if (typeof commit?.sha === 'string' && /^[a-f0-9]{40}$/i.test(commit.sha)) {
-          commitSha = commit.sha;
-        }
-      } catch (_) {
-        // Si la API de GitHub está temporalmente limitada, se prueba la URL pública del JSON.
-      }
-
-      if (commitSha && commitSha === lastCommitSha) {
-        render();
+      // No permitir que una respuesta antigua de la CDN revierta un cambio reciente.
+      if (
+        Number.isFinite(sourceUpdatedAt) &&
+        sourceUpdatedAt > 0 &&
+        lastSourceUpdatedAt > 0 &&
+        sourceUpdatedAt < lastSourceUpdatedAt
+      ) {
         return;
       }
 
-      let data = null;
-
-      if (commitSha) {
-        try {
-          data = await fetchJson(
-            `https://raw.githubusercontent.com/${OWNER}/${REPOSITORY}/${commitSha}/${DATA_PATH}`,
-            'application/json'
-          );
-          lastCommitSha = commitSha;
-        } catch (_) {
-          data = null;
-        }
+      if (
+        Number.isFinite(sourceUpdatedAt) &&
+        sourceUpdatedAt > 0
+      ) {
+        lastSourceUpdatedAt = Math.max(lastSourceUpdatedAt, sourceUpdatedAt);
       }
 
-      if (!data) {
-        data = await fetchJson(RAW_MAIN_URL, 'application/json');
-        lastCommitSha = '';
+      if (nextSignature !== JSON.stringify(feed.map(item => [
+        item.id, item.name, item.endAtUtc, item.active
+      ]))) {
+        feed = nextFeed;
+        lastFeedSignature = '';
+        render();
       }
-
-      feed = normalizeFeed(data);
-      render();
     } catch (error) {
-      // Si la red falla, se conserva el último estado conocido y no se interrumpe la página.
-      console.warn('[NegativeStudios] No se pudo actualizar la cuenta regresiva.', error);
+      // Mantener el último estado visible si hay un fallo de red transitorio.
+      if (Date.now() - lastWarningAt > 30000) {
+        console.warn('[NegativeStudios] No se pudo actualizar la cuenta regresiva.', error);
+        lastWarningAt = Date.now();
+      }
     } finally {
       refreshInProgress = false;
     }
@@ -194,10 +188,13 @@
 
   render();
   refresh();
+
+  // GitHub Pages es estático y no puede recibir eventos push del repositorio:
+  // la consulta cada 3 segundos hace que los cambios publicados aparezcan casi al momento.
   window.setInterval(render, 1000);
-  window.setInterval(refresh, 90000);
+  window.setInterval(refresh, REFRESH_INTERVAL_MS);
 
   document.addEventListener('visibilitychange', () => {
-    if (!document.hidden && Date.now() - lastRefreshAt > 30000) refresh();
+    if (!document.hidden) refresh();
   });
 })();
