@@ -1410,17 +1410,28 @@
 
     if (!authListenerRegistered) {
       client.auth.onAuthStateChange((event, session) => {
+        // INITIAL_SESSION ya se atiende con getSession() debajo. TOKEN_REFRESHED
+        // ocurre al renovar la sesión y no debe reiniciar la vista del perfil.
+        if (event === 'INITIAL_SESSION' || event === 'TOKEN_REFRESHED') return;
         window.setTimeout(async () => {
           const user = session?.user || null;
+          const previousUserId = currentUser?.id || null;
+          const nextUserId = user?.id || null;
+          const identityChanged = previousUserId !== nextUserId;
+
+          // Supabase puede notificar el mismo usuario al volver a una pestaña.
+          // Actualizamos la navegación, pero no volvemos a mostrar estados de carga.
+          if (!identityChanged && event !== 'USER_UPDATED' && event !== 'PASSWORD_RECOVERY') return;
+
           await refreshNav(user);
-          if (user) {
+          if (user && (event === 'SIGNED_IN' || event === 'USER_UPDATED')) {
             try { await syncOAuthAvatar(user); } catch (_) {}
             await refreshNav(user);
           }
-          if (pageType === 'settings') await initSettingsPage(user);
-          if (pageType === 'public-profile') await initPublicProfilePage(user);
-          initProjectComments();
-          if (pageType === 'auth' && user && !isRecoveryFlow() && !$('#authVerifyPanel')?.hidden) {
+          if (identityChanged && pageType === 'settings') await initSettingsPage(user);
+          if (identityChanged && pageType === 'public-profile') await initPublicProfilePage(user);
+          if (identityChanged) initProjectComments();
+          if (pageType === 'auth' && user && event === 'SIGNED_IN' && !isRecoveryFlow() && !$('#authVerifyPanel')?.hidden) {
             location.assign(profileHref(null));
           }
         }, 0);
