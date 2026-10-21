@@ -58,3 +58,19 @@
   .public-profile-admin-button svg,.public-profile-edit-icon svg{width:19px!important;height:19px!important;flex-basis:19px!important}
 }
 @media(prefers-reduced-motion:reduce){.nav-actions .client-download,.public-profile-admin-button,.public-profile-edit-icon{transition:none!important}}
+
+/* Notificaciones entre descarga y perfil. */
+.nav-actions .ns-notifications-link{display:inline-flex!important;align-items:center!important;justify-content:center!important;gap:7px!important;position:relative!important;flex:0 0 auto!important;min-width:42px!important;min-height:42px!important;padding:0 11px!important;border:1px solid rgba(122,184,255,.2)!important;border-radius:12px!important;background:rgba(255,255,255,.035)!important;color:var(--text,#eaf2ff)!important;text-decoration:none!important;white-space:nowrap!important;font-size:.82rem!important;font-weight:800!important;line-height:1.1!important}
+.nav-actions .ns-notifications-link:hover{background:rgba(102,194,255,.1)!important;border-color:rgba(122,184,255,.4)!important}
+.nav-actions .ns-notifications-link svg{display:block!important;width:19px!important;height:19px!important;flex:0 0 19px!important}
+.nav-actions .ns-notifications-link .ns-notification-count{position:absolute!important;top:-6px!important;right:-6px!important;min-width:17px!important;height:17px!important;padding:0 4px!important;font-size:.65rem!important;border:2px solid var(--bg,#08111e)!important}
+@media(max-width:920px){
+  .nav-actions .ns-notifications-link{width:42px!important;min-width:42px!important;max-width:42px!important;height:42px!important;min-height:42px!important;padding:0!important;border-radius:10px!important}
+  .nav-actions .ns-notifications-link .ns-notifications-label{display:none!important}
+}
+@media(max-width:620px){
+  .nav-actions .ns-notifications-link{width:40px!important;min-width:40px!important;max-width:40px!important;height:40px!important;min-height:40px!important;padding:0!important;flex-basis:40px!important}
+}
+@media(max-width:360px){
+  .nav-actions .ns-notifications-link{width:36px!important;min-width:36px!important;max-width:36px!important;height:36px!important;min-height:36px!important;flex-basis:36px!important}
+}
