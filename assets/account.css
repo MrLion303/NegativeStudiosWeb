@@ -430,3 +430,37 @@ dialog.ns-modal::backdrop{background:rgba(1,6,13,.75);backdrop-filter:blur(5px)}
     min-height: 38px !important;
   }
 }
+
+
+/* Alinea Editar perfil con el botón de badges y evita que la regla global .btn lo haga más alto. */
+#publicProfileOwnerActions {
+  align-items: center !important;
+  padding-top: 16px !important;
+}
+#publicProfileOwnerActions #customizeProfileButton {
+  box-sizing: border-box;
+  width: 42px !important;
+  height: 42px !important;
+  min-width: 42px !important;
+  max-width: 42px !important;
+  min-height: 42px !important;
+  max-height: 42px !important;
+  padding: 0 !important;
+}
+#publicProfileOwnerActions #customizeProfileButton svg {
+  width: 18px;
+  height: 18px;
+}
+@media (max-width: 620px) {
+  #publicProfileOwnerActions {
+    padding-top: 10px !important;
+  }
+  #publicProfileOwnerActions #customizeProfileButton {
+    width: 38px !important;
+    height: 38px !important;
+    min-width: 38px !important;
+    max-width: 38px !important;
+    min-height: 38px !important;
+    max-height: 38px !important;
+  }
+}
