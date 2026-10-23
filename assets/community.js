@@ -16,7 +16,7 @@
     if (document.querySelector('link[data-ns-community-css]')) return;
     const link = document.createElement('link');
     link.rel = 'stylesheet';
-    link.href = new URL('assets/community.css?v=20261020g', SITE_ROOT).href;
+    link.href = new URL('assets/community.css?v=20261022a', SITE_ROOT).href;
     link.dataset.nsCommunityCss = 'true';
     document.head.appendChild(link);
   }
