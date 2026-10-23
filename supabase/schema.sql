@@ -678,10 +678,12 @@ as $$
 begin
   if new.status='pending' and (tg_op='INSERT' or old.status is distinct from 'pending') then
     perform public.create_activity_notification(new.recipient_id,new.requester_id,'friend_request','Te envió una solicitud de amistad','',null,null,new.id,null);
+  elsif new.status='accepted' and (tg_op='INSERT' or old.status is distinct from 'accepted') then
+    perform public.create_activity_notification(new.requester_id,new.recipient_id,'friend_request_accepted','Aceptó tu solicitud de amistad','',null,null,new.id,null);
   end if;
   return new;
 end;
-$$;
+$;
 drop trigger if exists notify_friend_request_activity on public.friend_requests;
 create trigger notify_friend_request_activity after insert or update of status on public.friend_requests
 for each row execute function public.notify_friend_request_activity();
