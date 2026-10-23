@@ -633,11 +633,17 @@ create table if not exists public.notifications (
   body text not null default '',
   post_id bigint references public.forum_posts(id) on delete cascade,
   comment_id bigint references public.project_comments(id) on delete cascade,
+  forum_post_comment_id bigint references public.forum_post_comments(id) on delete cascade,
   friend_request_id uuid references public.friend_requests(id) on delete cascade,
   project_slug text,
   created_at timestamptz not null default now(),
   read_at timestamptz
 );
+alter table public.notifications
+  add column if not exists forum_post_comment_id bigint references public.forum_post_comments(id) on delete cascade;
+create index if not exists notifications_forum_post_comment_idx
+  on public.notifications (forum_post_comment_id)
+  where forum_post_comment_id is not null;
 create index if not exists notifications_user_unread_created_idx
   on public.notifications(user_id, read_at, created_at desc);
 alter table public.notifications enable row level security;
@@ -725,22 +731,52 @@ for each row execute function public.notify_project_comment_reply();
 
 create or replace function public.notify_forum_post_comment()
 returns trigger language plpgsql security definer set search_path=''
-as $$
+as $
 declare post_owner uuid; parent_owner uuid;
 begin
   select user_id into post_owner from public.forum_posts where id=new.post_id;
   if new.parent_comment_id is null then
-    perform public.create_activity_notification(post_owner,new.user_id,'post_reply','Respondieron a tu publicación',left(new.content,180),new.post_id,null,null,null);
+    if post_owner is not null and post_owner <> new.user_id then
+      insert into public.notifications(user_id,actor_id,type,title,body,post_id,forum_post_comment_id)
+      values(post_owner,new.user_id,'post_reply','Respondieron a tu publicación',left(new.content,180),new.post_id,new.id);
+    end if;
   else
     select user_id into parent_owner from public.forum_post_comments where id=new.parent_comment_id;
-    perform public.create_activity_notification(parent_owner,new.user_id,'post_comment_reply','Respondieron a tu comentario',left(new.content,180),new.post_id,null,null,null);
+    if parent_owner is not null and parent_owner <> new.user_id then
+      insert into public.notifications(user_id,actor_id,type,title,body,post_id,forum_post_comment_id)
+      values(parent_owner,new.user_id,'post_comment_reply','Respondieron a tu comentario',left(new.content,180),new.post_id,new.id);
+    end if;
   end if;
   return new;
 end;
-$$;
+$;
 drop trigger if exists notify_forum_post_comment on public.forum_post_comments;
 create trigger notify_forum_post_comment after insert on public.forum_post_comments
 for each row execute function public.notify_forum_post_comment();
+
+-- Enlazar notificaciones antiguas con su respuesta cuando coinciden el autor, el texto y el momento.
+with possible_matches as (
+  select n.id as notification_id, c.id as comment_id,
+         row_number() over (
+           partition by n.id
+           order by abs(extract(epoch from (n.created_at - c.created_at))) asc
+         ) as match_rank
+  from public.notifications n
+  join public.forum_post_comments c
+    on c.post_id = n.post_id
+   and c.user_id = n.actor_id
+   and left(c.content, 180) = n.body
+   and c.created_at between n.created_at - interval '10 seconds' and n.created_at + interval '10 seconds'
+  where n.type in ('post_reply', 'post_comment_reply')
+    and n.forum_post_comment_id is null
+    and n.post_id is not null
+)
+update public.notifications n
+set forum_post_comment_id = possible_matches.comment_id
+from possible_matches
+where n.id = possible_matches.notification_id
+  and possible_matches.match_rank = 1
+  and n.forum_post_comment_id is null;
 
 create table if not exists public.forum_post_mentions (
   post_id bigint not null references public.forum_posts(id) on delete cascade,
