@@ -161,9 +161,9 @@ body .community-compose-login .community-button:hover {
 }
 
 
-/* La acción de cuenta debe conservar las mismas esquinas redondeadas en todas las páginas. */
+/* El botón de cuenta conserva las esquinas rectas del botón de descarga. */
 .nav-inner .nav-actions > a.ns-account-link:not(.ns-account-link--profile) {
-  border-radius: 12px !important;
+  border-radius: 0 !important;
   clip-path: none !important;
   -webkit-clip-path: none !important;
   overflow: visible !important;
