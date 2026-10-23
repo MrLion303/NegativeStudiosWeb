@@ -361,3 +361,40 @@ dialog.ns-modal::backdrop{background:rgba(1,6,13,.75);backdrop-filter:blur(5px)}
   clip-path: none !important;
   -webkit-clip-path: none !important;
 }
+
+
+/* Las acciones de amistad del perfil comparten el acabado azul de «Personalizar perfil». */
+#publicProfileFriendAction .community-friend-actions .community-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 42px;
+  padding: 0 15px;
+  border: 1px solid var(--primary, #2386f4) !important;
+  border-radius: 999px !important;
+  background: var(--primary, #2386f4) !important;
+  color: #fff !important;
+  font-size: .84rem;
+  font-weight: 850;
+  line-height: 1.2;
+  box-shadow: 0 6px 18px rgba(35, 134, 244, .2);
+  transition: transform .2s ease, filter .2s ease, box-shadow .2s ease;
+}
+#publicProfileFriendAction .community-friend-actions .community-button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  filter: brightness(1.08);
+  box-shadow: 0 9px 22px rgba(35, 134, 244, .26);
+}
+#publicProfileFriendAction .community-friend-actions .community-button:disabled {
+  opacity: .58;
+  cursor: wait;
+  transform: none;
+  filter: none;
+}
+@media (max-width: 620px) {
+  #publicProfileFriendAction .community-friend-actions .community-button {
+    min-height: 38px;
+    padding: 0 12px;
+    font-size: .78rem;
+  }
+}
