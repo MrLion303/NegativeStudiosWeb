@@ -1320,7 +1320,7 @@
   }
 
   async function loadForumPostDetail(host, postId) {
-    if (/^\d+$/.test(String(postId))) {
+    if (!/^\d+$/.test(String(postId))) {
       host.replaceChildren();
       const message = document.createElement('p');
       message.className = 'community-empty';
