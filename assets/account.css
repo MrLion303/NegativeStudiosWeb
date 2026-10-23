@@ -403,3 +403,30 @@ dialog.ns-modal::backdrop{background:rgba(1,6,13,.75);backdrop-filter:blur(5px)}
     font-size: .78rem;
   }
 }
+
+
+/* El botón de administrar badges debe quedar alineado con Agregar/Eliminar amistad. */
+#publicProfileAdminActions {
+  align-items: center !important;
+  padding-top: 16px !important;
+}
+#publicProfileAdminActions .public-profile-admin-button {
+  box-sizing: border-box;
+  width: 42px !important;
+  height: 42px !important;
+  min-width: 42px !important;
+  min-height: 42px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+@media (max-width: 620px) {
+  #publicProfileAdminActions {
+    padding-top: 10px !important;
+  }
+  #publicProfileAdminActions .public-profile-admin-button {
+    width: 38px !important;
+    height: 38px !important;
+    min-width: 38px !important;
+    min-height: 38px !important;
+  }
+}
