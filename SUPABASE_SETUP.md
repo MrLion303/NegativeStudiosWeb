@@ -23,9 +23,9 @@ El script crea o actualiza `public.profiles`, la tabla `public.project_comments`
 
 En **Authentication / URL Configuration**:
 
-- Site URL: `https://mrlion303.github.io/NegativeStudiosWeb/`
+- Site URL: `https://negativestudios.akjon.dev/`
 - Añade como Redirect URLs:
-  - `https://mrlion303.github.io/NegativeStudiosWeb/**`
+  - `https://negativestudios.akjon.dev/**`
   - `http://localhost:5500/**` (solo si haces pruebas locales en ese puerto).
 
 Si cambias de dominio, actualiza también `siteUrl` en `assets/supabase-config.js` y las URL permitidas en Supabase.
@@ -85,11 +85,11 @@ La web ya incluye botones para los dos proveedores. Para que funcionen, hay que 
 
 En Supabase → **Authentication** → **URL Configuration**, mantén como **Site URL**:
 
-`https://mrlion303.github.io/NegativeStudiosWeb/`
+`https://negativestudios.akjon.dev/`
 
 En **Redirect URLs**, asegúrate de que exista:
 
-`https://mrlion303.github.io/NegativeStudiosWeb/**`
+`https://negativestudios.akjon.dev/**`
 
 Los proveedores Discord y Twitch deben tener configurada la URL de callback de Supabase; esa URL no es la misma que la dirección de GitHub Pages. Las credenciales de cliente y los secretos OAuth se introducen en los paneles de los proveedores y en Supabase, nunca en el JavaScript de la web ni en GitHub.
 
