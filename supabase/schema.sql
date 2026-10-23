@@ -683,7 +683,7 @@ begin
   end if;
   return new;
 end;
-$;
+$$;
 drop trigger if exists notify_friend_request_activity on public.friend_requests;
 create trigger notify_friend_request_activity after insert or update of status on public.friend_requests
 for each row execute function public.notify_friend_request_activity();
