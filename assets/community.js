@@ -120,6 +120,16 @@
     return new URL('perfil.html?username=' + encodeURIComponent(profile?.username || ''), SITE_ROOT).href;
   }
 
+  function forumPostUrl(postId, commentId) {
+    const url = new URL('foro.html', SITE_ROOT);
+    url.searchParams.set('post', String(postId));
+    if (commentId) {
+      url.searchParams.set('comment', String(commentId));
+      url.hash = 'post-comment-' + commentId;
+    }
+    return url.href;
+  }
+
   function showStatus(target, text, kind) {
     if (!target) return;
     target.replaceChildren();
@@ -495,7 +505,12 @@
 
   function notificationDestination(item) {
     if (item.type === 'friend_request') return new URL('notificaciones.html#friendRequestsInbox', SITE_ROOT).href;
-    if (item.post_id) return new URL('foro.html#post-' + item.post_id, SITE_ROOT).href;
+    if (item.type === 'post_like' && item.actor_id && item.groupedLikes?.length > 1) {
+      const url = new URL('foro.html', SITE_ROOT);
+      url.searchParams.set('likedBy', item.actor_id);
+      return url.href;
+    }
+    if (item.post_id) return forumPostUrl(item.post_id, item.forum_post_comment_id);
     if (item.project_slug) return new URL('proyectos/' + encodeURIComponent(item.project_slug) + '/index.html' + (item.comment_id ? '#comment-' + item.comment_id : ''), SITE_ROOT).href;
     return new URL('notificaciones.html', SITE_ROOT).href;
   }
@@ -521,7 +536,7 @@
     const loading = document.createElement('p');
     loading.className = 'community-muted'; loading.textContent = 'Cargando actividad…'; host.appendChild(loading);
     let result = await client.from('notifications')
-      .select('id,type,title,body,post_id,comment_id,friend_request_id,project_slug,created_at,read_at,actor_id,profiles!notifications_actor_id_fkey(username,display_name,avatar_url,profile_badges(is_mod,is_verified))')
+      .select('id,type,title,body,post_id,comment_id,forum_post_comment_id,friend_request_id,project_slug,created_at,read_at,actor_id,profiles!notifications_actor_id_fkey(username,display_name,avatar_url,profile_badges(is_mod,is_verified))')
       .order('created_at', { ascending: false }).limit(100);
     if (result.error) {
       result = await client.from('notifications')
@@ -535,6 +550,25 @@
       host.appendChild(error); return;
     }
     const entries = result.data || [];
+    const displayEntries = [];
+    const likeGroups = new Map();
+    entries.forEach(item => {
+      if (item.type !== 'post_like' || !item.actor_id || !item.post_id) {
+        displayEntries.push(item);
+        return;
+      }
+      let group = likeGroups.get(item.actor_id);
+      if (!group) {
+        group = { ...item, groupedLikes: [item] };
+        likeGroups.set(item.actor_id, group);
+        displayEntries.push(group);
+      } else {
+        group.groupedLikes.push(item);
+      }
+    });
+    displayEntries.forEach(item => {
+      if (item.groupedLikes?.length > 1 && !item.groupedLikes.every(row => row.read_at)) item.read_at = null;
+    });
     const unread = entries.filter(item => !item.read_at).length;
     const markAll = $('#markAllNotificationsRead');
     if (markAll) {
@@ -558,7 +592,7 @@
       empty.textContent = 'Todavía no tienes actividad. Aquí aparecerán solicitudes, corazones, respuestas y menciones.';
       host.appendChild(empty); return;
     }
-    entries.forEach(item => {
+    displayEntries.forEach(item => {
       let actor = item.profiles || {};
       if (Array.isArray(actor)) actor = actor[0] || {};
       const card = document.createElement('article');
@@ -567,16 +601,27 @@
       actorLink.className = 'community-notification-avatar'; actorLink.href = actor.username ? profileUrl(actor) : '#';
       actorLink.appendChild(avatar(actor, 'community-avatar'));
       const copy = document.createElement('div'); copy.className = 'community-notification-copy';
-      const headline = document.createElement('strong'); headline.textContent = item.title || 'Nueva actividad';
+      const likeCount = item.groupedLikes?.length > 1
+        ? new Set(item.groupedLikes.map(row => String(row.post_id))).size
+        : 0;
+      const headline = document.createElement('strong');
+      headline.textContent = likeCount > 1 ? 'Le gustaron ' + likeCount + ' publicaciones' : (item.title || 'Nueva actividad');
       const body = document.createElement('p');
-      body.textContent = item.body || (actor.display_name || actor.username ? (actor.display_name || '@' + actor.username) : 'La comunidad') + ' interactuó con tu contenido.';
+      if (likeCount > 1) {
+        body.textContent = (actor.display_name || (actor.username ? '@' + actor.username : 'Esta persona')) +
+          ' le dio me gusta a ' + likeCount + ' de tus publicaciones. Pulsa para recorrerlas.';
+      } else {
+        body.textContent = item.body || (actor.display_name || actor.username ? (actor.display_name || '@' + actor.username) : 'La comunidad') + ' interactuó con tu contenido.';
+      }
       const meta = document.createElement('small');
       meta.textContent = new Date(item.created_at).toLocaleString('es-MX', { dateStyle: 'medium', timeStyle: 'short' });
       copy.append(headline, body, meta);
       const open = document.createElement('a'); open.className = 'community-notification-open';
-      open.href = notificationDestination(item); open.textContent = 'Ver'; open.setAttribute('aria-label', 'Ver actividad');
+      open.href = notificationDestination(item); open.textContent = likeCount > 1 ? 'Ver publicaciones' : 'Ver';
+      open.setAttribute('aria-label', likeCount > 1 ? 'Ver publicaciones a las que dio me gusta' : 'Ver actividad');
       const activate = async () => {
-        if (!item.read_at) await markNotificationRead(item.id);
+        const notifications = item.groupedLikes?.length ? item.groupedLikes : [item];
+        await Promise.all(notifications.filter(row => !row.read_at).map(row => markNotificationRead(row.id)));
       };
       open.addEventListener('click', async event => { event.preventDefault(); await activate(); location.assign(open.href); });
       copy.addEventListener('click', async event => {
@@ -758,11 +803,31 @@
     return Boolean(relation?.is_mod);
   }
 
-  function renderPostCard(post, user) {
+  function renderPostCard(post, user, options = {}) {
+    const detail = Boolean(options.detail);
+    const loadReplies = options.loadReplies !== false;
+    const openable = options.openable !== false && !detail;
     const profile = postProfile(post);
     const card = document.createElement('article');
-    card.className = 'community-post';
+    card.className = 'community-post' + (detail ? ' community-post--detail' : '');
     card.dataset.postId = String(post.id);
+    if (openable) {
+      card.dataset.openable = 'true';
+      card.tabIndex = 0;
+      card.setAttribute('aria-label', 'Abrir publicación de ' + (profile.display_name || profile.username || 'usuario'));
+      const openPost = () => location.assign(forumPostUrl(post.id));
+      card.addEventListener('click', event => {
+        if (event.target.closest('a,button,textarea,input,select,[contenteditable="true"],.community-post-actions,.community-post-replies,.community-overflow')) return;
+        openPost();
+      });
+      card.addEventListener('keydown', event => {
+        if ((event.key === 'Enter' || event.key === ' ') &&
+          !event.target.closest('a,button,textarea,input,select,[contenteditable="true"],.community-post-actions,.community-post-replies,.community-overflow')) {
+          event.preventDefault();
+          openPost();
+        }
+      });
+    }
     card.id = 'post-' + post.id;
     const header = document.createElement('header');
     header.className = 'community-post-head';
@@ -813,16 +878,18 @@
     actions.appendChild(renderHeartButton('forum_post_likes', 'post_id', post, user, likes));
     card.appendChild(actions);
 
-    const replies = document.createElement('section');
-    replies.className = 'community-post-replies';
-    replies.dataset.postReplies = String(post.id);
-    card.appendChild(replies);
-    loadPostComments(post, replies, user).catch(() => {
-      const error = document.createElement('p');
-      error.className = 'community-muted';
-      error.textContent = 'No se pudieron cargar las respuestas.';
-      replies.replaceChildren(error);
-    });
+    if (loadReplies) {
+      const replies = document.createElement('section');
+      replies.className = 'community-post-replies';
+      replies.dataset.postReplies = String(post.id);
+      card.appendChild(replies);
+      loadPostComments(post, replies, user).catch(() => {
+        const error = document.createElement('p');
+        error.className = 'community-muted';
+        error.textContent = 'No se pudieron cargar las respuestas.';
+        replies.replaceChildren(error);
+      });
+    }
     return card;
   }
 
@@ -982,6 +1049,15 @@
     };
     function inputFocus() { formHost.querySelector('textarea')?.focus(); }
     roots.forEach(node => list.appendChild(renderOne(node, 0)));
+    const params = new URLSearchParams(location.search);
+    const focusedCommentId = params.get('comment');
+    if (focusedCommentId && params.get('post') === String(post.id)) {
+      const focusedReply = document.getElementById('post-comment-' + focusedCommentId);
+      if (focusedReply) {
+        focusedReply.classList.add('is-notification-focus');
+        window.requestAnimationFrame(() => focusedReply.scrollIntoView({ behavior: 'smooth', block: 'center' }));
+      }
+    }
   }
 
   async function loadPostsForProfile(profileId, target) {
@@ -1211,9 +1287,164 @@
     host.appendChild(form);
   }
 
+  function setupForumDetailView(mode) {
+    const intro = $('.community-page-intro');
+    const title = intro?.querySelector('h1');
+    const description = intro?.querySelector('p');
+    if (title) title.textContent = mode === 'likes' ? 'Actividad de la comunidad' : 'Publicación';
+    if (description) description.textContent = mode === 'likes'
+      ? 'Publicaciones a las que una persona le dio me gusta. Desplázate para revisar cada una.'
+      : 'La publicación completa y toda la conversación, en un solo lugar.';
+    const layout = document.querySelector('.forum-layout');
+    layout?.classList.add('forum-layout--detail');
+    const composer = $('#forumComposer');
+    if (composer) composer.hidden = true;
+    const sidebar = document.querySelector('.forum-sidebar');
+    if (sidebar) sidebar.hidden = true;
+    const main = document.querySelector('.forum-main');
+    if (main && !$('#forumBackLink')) {
+      const back = document.createElement('a');
+      back.id = 'forumBackLink';
+      back.className = 'community-forum-back';
+      back.href = new URL('foro.html', SITE_ROOT).href;
+      back.textContent = '← Volver al foro';
+      main.prepend(back);
+    }
+  }
+
+  function forumPostSelect(withBadges) {
+    const profileFields = withBadges
+      ? 'profiles!forum_posts_user_id_fkey(username,display_name,avatar_url,profile_badges(is_mod,is_verified))'
+      : 'profiles!forum_posts_user_id_fkey(username,display_name,avatar_url)';
+    return 'id,user_id,content_html,content_text,image_url,created_at,' + profileFields + ',forum_post_likes(user_id)';
+  }
+
+  async function loadForumPostDetail(host, postId) {
+    if (!/^\\d+$/.test(String(postId))) {
+      host.replaceChildren();
+      const message = document.createElement('p');
+      message.className = 'community-empty';
+      message.textContent = 'El enlace de la publicación no es válido.';
+      host.appendChild(message);
+      return;
+    }
+    host.replaceChildren();
+    const loading = document.createElement('p');
+    loading.className = 'community-muted';
+    loading.textContent = 'Cargando publicación…';
+    host.appendChild(loading);
+    let result = await client.from('forum_posts').select(forumPostSelect(true)).eq('id', postId).maybeSingle();
+    if (result.error) result = await client.from('forum_posts').select(forumPostSelect(false)).eq('id', postId).maybeSingle();
+    host.replaceChildren();
+    if (result.error) {
+      const message = document.createElement('p');
+      message.className = 'community-status community-status--error';
+      message.textContent = 'No se pudo cargar la publicación. Comprueba la conexión con Supabase.';
+      host.appendChild(message);
+      return;
+    }
+    if (!result.data) {
+      const message = document.createElement('p');
+      message.className = 'community-empty';
+      message.textContent = 'Esta publicación ya no existe o no está disponible.';
+      host.appendChild(message);
+      return;
+    }
+    host.appendChild(renderPostCard(result.data, sessionUser, { detail: true, loadReplies: true, openable: false }));
+  }
+
+  async function loadLikedPosts(host, actorId) {
+    host.replaceChildren();
+    if (!sessionUser) {
+      const message = document.createElement('p');
+      message.className = 'community-empty';
+      message.textContent = 'Inicia sesión para consultar las publicaciones de esta actividad.';
+      host.appendChild(message);
+      return;
+    }
+    if (!actorId) {
+      const message = document.createElement('p');
+      message.className = 'community-status community-status--error';
+      message.textContent = 'No se encontró la persona de esta notificación.';
+      host.appendChild(message);
+      return;
+    }
+    const loading = document.createElement('p');
+    loading.className = 'community-muted';
+    loading.textContent = 'Buscando publicaciones…';
+    host.appendChild(loading);
+    const notifications = await client.from('notifications')
+      .select('post_id,created_at')
+      .eq('user_id', sessionUser.id)
+      .eq('actor_id', actorId)
+      .eq('type', 'post_like')
+      .not('post_id', 'is', null)
+      .order('created_at', { ascending: false })
+      .limit(200);
+    host.replaceChildren();
+    if (notifications.error) {
+      const message = document.createElement('p');
+      message.className = 'community-status community-status--error';
+      message.textContent = 'No se pudieron consultar las publicaciones de esta actividad.';
+      host.appendChild(message);
+      return;
+    }
+    const postIds = Array.from(new Set((notifications.data || []).map(row => String(row.post_id)).filter(Boolean)));
+    if (!postIds.length) {
+      const message = document.createElement('p');
+      message.className = 'community-empty';
+      message.textContent = 'No quedan publicaciones disponibles para esta actividad.';
+      host.appendChild(message);
+      return;
+    }
+    let actor = null;
+    try {
+      const person = await client.from('profiles').select('id,username,display_name').eq('id', actorId).maybeSingle();
+      actor = person.data || null;
+    } catch (_) {}
+    const introTitle = $('.community-page-intro h1');
+    const introDescription = $('.community-page-intro p');
+    const label = actor?.display_name || (actor?.username ? '@' + actor.username : 'Esta persona');
+    if (introTitle) introTitle.textContent = 'Me gusta de ' + label;
+    if (introDescription) introDescription.textContent = 'Estas son las publicaciones a las que ' + label + ' le dio me gusta. Abre cualquiera para ver sus respuestas.';
+    let result = await client.from('forum_posts').select(forumPostSelect(true)).in('id', postIds);
+    if (result.error) result = await client.from('forum_posts').select(forumPostSelect(false)).in('id', postIds);
+    host.replaceChildren();
+    if (result.error) {
+      const message = document.createElement('p');
+      message.className = 'community-status community-status--error';
+      message.textContent = 'No se pudieron cargar las publicaciones de esta actividad.';
+      host.appendChild(message);
+      return;
+    }
+    const postsById = new Map((result.data || []).map(post => [String(post.id), post]));
+    const orderedPosts = postIds.map(id => postsById.get(id)).filter(Boolean);
+    if (!orderedPosts.length) {
+      const message = document.createElement('p');
+      message.className = 'community-empty';
+      message.textContent = 'Las publicaciones de esta actividad ya no están disponibles.';
+      host.appendChild(message);
+      return;
+    }
+    orderedPosts.forEach(post => host.appendChild(renderPostCard(post, sessionUser, {
+      loadReplies: false,
+      openable: true
+    })));
+  }
+
   async function loadForumFeed() {
     const host = $('#forumFeed');
     if (!host || !client) return;
+    const params = new URLSearchParams(location.search);
+    const legacyPost = location.hash.match(/^#post-(\\d+)$/)?.[1];
+    const postId = params.get('post') || legacyPost;
+    const likedBy = params.get('likedBy');
+    if (postId || likedBy) {
+      setupForumDetailView(likedBy ? 'likes' : 'post');
+      if (postId) await loadForumPostDetail(host, postId);
+      else await loadLikedPosts(host, likedBy);
+      return;
+    }
     host.replaceChildren();
     const loading = document.createElement('p'); loading.className = 'community-muted'; loading.textContent = 'Cargando publicaciones…'; host.appendChild(loading);
     let result = await client.from('forum_posts')
