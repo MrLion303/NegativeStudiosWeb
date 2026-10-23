@@ -55,7 +55,7 @@ El servicio de correo predeterminado puede tener límites de envío. Para produc
 2. En Supabase, abre **Authentication / Sign In / Providers / Google** y habilita el proveedor.
 3. Añade los datos de Google en Supabase.
 4. En Google Cloud, registra como URI de redirección autorizada la URL de callback que muestra Supabase, normalmente `https://<project-ref>.supabase.co/auth/v1/callback`.
-5. Asegúrate de que la URL del sitio de NegativeStudios esté en los orígenes web autorizados y en la lista de redirecciones de Supabase.
+5. En Google Cloud Console, añade `https://negativestudios.akjon.dev` como origen JavaScript autorizado. En Supabase, añade `https://negativestudios.akjon.dev/**` a las URL de redirección permitidas.
 
 La web usa Google como proveedor social inicial; pueden añadirse otros proveedores desde Supabase sin almacenar contraseñas sociales en el sitio.
 
