@@ -376,6 +376,8 @@
       const btn = document.createElement('button');
       btn.type = 'button';
       btn.className = 'community-button' + (variant ? ' community-button--' + variant : '');
+      if (action === 'send') btn.classList.add('community-button--profile-add');
+      else if (action === 'remove') btn.classList.add('community-button--profile-remove');
       btn.textContent = label;
       btn.addEventListener('click', async () => {
         btn.disabled = true;
