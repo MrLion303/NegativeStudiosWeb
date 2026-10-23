@@ -125,8 +125,8 @@
     url.searchParams.set('post', String(postId));
     if (commentId) {
       url.searchParams.set('comment', String(commentId));
-      url.hash = 'post-comment-' + commentId;
     }
+    // Evita el salto nativo del navegador al comentario; la vista debe abrir arriba del post.
     return url.href;
   }
 
@@ -1301,6 +1301,15 @@
   }
 
   function setupForumDetailView(mode) {
+    // Una notificación debe abrir desde el inicio del post, no restaurar ni anclar el scroll anterior.
+    if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+    document.documentElement.style.scrollBehavior = 'auto';
+    if (location.hash) {
+      const cleanUrl = new URL(location.href);
+      cleanUrl.hash = '';
+      history.replaceState(history.state, '', cleanUrl.href);
+    }
+    window.scrollTo(0, 0);
     const intro = $('.community-page-intro');
     const title = intro?.querySelector('h1');
     const description = intro?.querySelector('p');
@@ -1364,6 +1373,8 @@
       return;
     }
     host.appendChild(renderPostCard(result.data, sessionUser, { detail: true, loadReplies: true, openable: false }));
+    // El contenido se monta de forma asíncrona; asegura que la página permanezca en la cabecera del post.
+    window.requestAnimationFrame(() => window.scrollTo(0, 0));
   }
 
   async function loadLikedPosts(host, actorId) {
