@@ -6,7 +6,8 @@
   const BRANCH = 'main';
   const DATA_PATH = 'data/countdowns.json';
   const RAW_URL = `https://raw.githubusercontent.com/${OWNER}/${REPOSITORY}/${BRANCH}/${DATA_PATH}`;
-  const REFRESH_INTERVAL_MS = 3000;
+  const REFRESH_INTERVAL_MS = 1500;
+  const CACHE_KEY = 'ns-global-countdowns:v1';
   const sourceScript = document.currentScript;
   const cssUrl = new URL('countdown-widget.css?v=20261021b', sourceScript?.src || location.href).href;
 
@@ -168,6 +169,10 @@
         lastSourceUpdatedAt = Math.max(lastSourceUpdatedAt, sourceUpdatedAt);
       }
 
+      // Guardar cada lectura válida, incluso si el contenido no cambió, para
+      // poder recuperar la cuenta rápidamente en la siguiente visita.
+      cacheFeed(data, nextFeed);
+
       if (nextSignature !== JSON.stringify(feed.map(item => [
         item.id, item.name, item.endAtUtc, item.active
       ]))) {
@@ -186,15 +191,55 @@
     }
   }
 
+  // Reutilizar el último estado válido para mostrar la cuenta regresiva sin esperar la red.
+  // La consulta remota sigue siendo la fuente de verdad y sustituye la caché al actualizarse.
+  function restoreCachedFeed() {
+    try {
+      const cached = JSON.parse(localStorage.getItem(CACHE_KEY) || 'null');
+      if (!cached || !Array.isArray(cached.countdowns)) return;
+      const cachedStamp = Date.parse(cached.updatedAt || '');
+      if (Number.isFinite(cachedStamp) && cachedStamp > 0) lastSourceUpdatedAt = cachedStamp;
+      feed = normalizeFeed(cached);
+    } catch (_) {}
+  }
+
+  function cacheFeed(data, nextFeed) {
+    try {
+      localStorage.setItem(CACHE_KEY, JSON.stringify({
+        schema: Number(data?.schema) || 1,
+        updatedAt: data?.updatedAt || null,
+        countdowns: nextFeed
+      }));
+    } catch (_) {}
+  }
+
+  restoreCachedFeed();
   render();
   refresh();
 
-  // GitHub Pages es estático y no puede recibir eventos push del repositorio:
-  // la consulta cada 3 segundos hace que los cambios publicados aparezcan casi al momento.
+  // La cuenta visible se actualiza cada segundo; los cambios publicados se consultan
+  // más rápido y también al regresar a la pestaña o recuperar conexión.
   window.setInterval(render, 1000);
   window.setInterval(refresh, REFRESH_INTERVAL_MS);
 
   document.addEventListener('visibilitychange', () => {
     if (!document.hidden) refresh();
+  });
+  window.addEventListener('focus', refresh);
+  window.addEventListener('online', refresh);
+  window.addEventListener('pageshow', refresh);
+
+  // Sincroniza el estado visible entre pestañas de este mismo sitio.
+  window.addEventListener('storage', event => {
+    if (event.key !== CACHE_KEY || !event.newValue) return;
+    try {
+      const cached = JSON.parse(event.newValue);
+      const stamp = Date.parse(cached.updatedAt || '');
+      if (Number.isFinite(stamp) && lastSourceUpdatedAt && stamp < lastSourceUpdatedAt) return;
+      if (Number.isFinite(stamp) && stamp > 0) lastSourceUpdatedAt = stamp;
+      feed = normalizeFeed(cached);
+      lastFeedSignature = '';
+      render();
+    } catch (_) {}
   });
 })();
