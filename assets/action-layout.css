@@ -74,3 +74,47 @@
 @media(max-width:360px){
   .nav-actions .ns-notifications-link{width:36px!important;min-width:36px!important;max-width:36px!important;height:36px!important;min-height:36px!important;flex-basis:36px!important}
 }
+
+/* Alineación definitiva de las acciones del perfil: ambos botones comparten posición y tamaño. */
+.public-profile-topline {
+  align-items: center !important;
+}
+.public-profile-admin-actions:not([hidden]),
+#publicProfileOwnerActions:not([hidden]) {
+  align-self: center !important;
+  align-items: center !important;
+  padding: 0 !important;
+  margin-top: 0 !important;
+  transform: none !important;
+}
+.public-profile-admin-button,
+.public-profile-edit-icon {
+  box-sizing: border-box !important;
+  width: 42px !important;
+  height: 42px !important;
+  min-width: 42px !important;
+  max-width: 42px !important;
+  min-height: 42px !important;
+  max-height: 42px !important;
+  flex: 0 0 42px !important;
+  padding: 0 !important;
+}
+.public-profile-admin-button svg,
+.public-profile-edit-icon svg {
+  width: 18px !important;
+  height: 18px !important;
+  flex: 0 0 18px !important;
+}
+@media (max-width: 620px) {
+  .public-profile-admin-button,
+  .public-profile-edit-icon {
+    width: 38px !important;
+    height: 38px !important;
+    min-width: 38px !important;
+    max-width: 38px !important;
+    min-height: 38px !important;
+    max-height: 38px !important;
+    flex-basis: 38px !important;
+  }
+}
+
