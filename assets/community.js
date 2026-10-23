@@ -503,8 +503,11 @@
     }
   }
 
-  function notificationDestination(item) {
-    if (item.type === 'friend_request') return new URL('notificaciones.html#friendRequestsInbox', SITE_ROOT).href;
+  function notificationDestination(item, actor) {
+    if (item.type === 'friend_request' || item.type === 'friend_request_accepted') {
+      if (actor?.username) return profileUrl(actor);
+      return new URL('notificaciones.html#friendRequestsInbox', SITE_ROOT).href;
+    }
     if (item.type === 'post_like' && item.actor_id && item.groupedLikes?.length > 1) {
       const url = new URL('foro.html', SITE_ROOT);
       url.searchParams.set('likedBy', item.actor_id);
@@ -617,7 +620,7 @@
       meta.textContent = new Date(item.created_at).toLocaleString('es-MX', { dateStyle: 'medium', timeStyle: 'short' });
       copy.append(headline, body, meta);
       const open = document.createElement('a'); open.className = 'community-notification-open';
-      open.href = notificationDestination(item); open.textContent = likeCount > 1 ? 'Ver publicaciones' : 'Ver';
+      open.href = notificationDestination(item, actor); open.textContent = likeCount > 1 ? 'Ver publicaciones' : (item.type === 'friend_request' || item.type === 'friend_request_accepted' ? 'Ver perfil' : 'Ver');
       open.setAttribute('aria-label', likeCount > 1 ? 'Ver publicaciones a las que dio me gusta' : 'Ver actividad');
       const activate = async () => {
         const notifications = item.groupedLikes?.length ? item.groupedLikes : [item];
