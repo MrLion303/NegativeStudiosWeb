@@ -1403,7 +1403,7 @@
     });
     window.NS_SUPABASE_CLIENT = client;
     initProjectComments();
-    try { await loadScript(new URL('assets/community.js?v=20261023a', SITE_ROOT).href, 'data-ns-community-script'); } catch (error) { console.warn('No se pudo cargar el módulo de comunidad.', error); }
+    try { await loadScript(new URL('assets/community.js?v=20261023b', SITE_ROOT).href, 'data-ns-community-script'); } catch (error) { console.warn('No se pudo cargar el módulo de comunidad.', error); }
 
     if (pageType === 'auth') initAuthPage();
     if (pageType === 'settings') initSettingsEvents();
