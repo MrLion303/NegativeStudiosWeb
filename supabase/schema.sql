@@ -731,7 +731,7 @@ for each row execute function public.notify_project_comment_reply();
 
 create or replace function public.notify_forum_post_comment()
 returns trigger language plpgsql security definer set search_path=''
-as $
+as $$
 declare post_owner uuid; parent_owner uuid;
 begin
   select user_id into post_owner from public.forum_posts where id=new.post_id;
@@ -749,7 +749,7 @@ begin
   end if;
   return new;
 end;
-$;
+$$;
 drop trigger if exists notify_forum_post_comment on public.forum_post_comments;
 create trigger notify_forum_post_comment after insert on public.forum_post_comments
 for each row execute function public.notify_forum_post_comment();
