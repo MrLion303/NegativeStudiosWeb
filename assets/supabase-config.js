@@ -4,7 +4,7 @@
  * Nunca coloques aquí una service_role key ni secretos privados.
  */
 window.NS_SUPABASE_CONFIG = {
-  siteUrl: "https://mrlion303.github.io/NegativeStudiosWeb/",
+  siteUrl: "https://negativestudios.akjon.dev/",
   url: "https://fdoqiddixjxzaugkqquo.supabase.co",
   publishableKey: "sb_publishable_nxwKxUTaKoK8bByjiQzQ5A_DVjaGFjq"
 };
