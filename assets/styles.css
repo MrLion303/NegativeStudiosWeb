@@ -159,3 +159,12 @@ body .community-compose-login .community-button:hover {
 .ns-countdown-banner:hover {
   opacity: .5;
 }
+
+
+/* La acción de cuenta debe conservar las mismas esquinas redondeadas en todas las páginas. */
+.nav-inner .nav-actions > a.ns-account-link:not(.ns-account-link--profile) {
+  border-radius: 12px !important;
+  clip-path: none !important;
+  -webkit-clip-path: none !important;
+  overflow: visible !important;
+}
