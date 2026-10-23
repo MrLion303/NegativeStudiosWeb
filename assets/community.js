@@ -1320,7 +1320,7 @@
   }
 
   async function loadForumPostDetail(host, postId) {
-    if (!/^\\d+$/.test(String(postId))) {
+    if (/^\d+$/.test(String(postId))) {
       host.replaceChildren();
       const message = document.createElement('p');
       message.className = 'community-empty';
@@ -1436,7 +1436,7 @@
     const host = $('#forumFeed');
     if (!host || !client) return;
     const params = new URLSearchParams(location.search);
-    const legacyPost = location.hash.match(/^#post-(\\d+)$/)?.[1];
+    const legacyPost = location.hash.match(/^#post-(\d+)$/)?.[1];
     const postId = params.get('post') || legacyPost;
     const likedBy = params.get('likedBy');
     if (postId || likedBy) {
