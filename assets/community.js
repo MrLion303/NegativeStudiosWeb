@@ -992,6 +992,24 @@
       const parent = row.parent_comment_id ? byId.get(row.parent_comment_id) : null;
       if (parent) parent.children.push(node); else roots.push(node);
     });
+    const params = new URLSearchParams(location.search);
+    const focusedCommentId = params.get('comment');
+    if (focusedCommentId && params.get('post') === String(post.id)) {
+      let focusNode = byId.get(Number(focusedCommentId));
+      const focusPath = [];
+      while (focusNode) {
+        focusPath.unshift(focusNode);
+        focusNode = focusNode.row.parent_comment_id ? byId.get(focusNode.row.parent_comment_id) : null;
+      }
+      if (focusPath.length) {
+        const focusRoot = focusPath[0];
+        roots.sort((a, b) => a === focusRoot ? -1 : b === focusRoot ? 1 : 0);
+        focusPath.forEach((node, index) => {
+          const next = focusPath[index + 1];
+          if (next) node.children.sort((a, b) => a === next ? -1 : b === next ? 1 : 0);
+        });
+      }
+    }
     const renderOne = (node, depth) => {
       const row = node.row;
       const profile = row.profiles || {};
@@ -1049,14 +1067,9 @@
     };
     function inputFocus() { formHost.querySelector('textarea')?.focus(); }
     roots.forEach(node => list.appendChild(renderOne(node, 0)));
-    const params = new URLSearchParams(location.search);
-    const focusedCommentId = params.get('comment');
     if (focusedCommentId && params.get('post') === String(post.id)) {
       const focusedReply = document.getElementById('post-comment-' + focusedCommentId);
-      if (focusedReply) {
-        focusedReply.classList.add('is-notification-focus');
-        window.requestAnimationFrame(() => focusedReply.scrollIntoView({ behavior: 'smooth', block: 'center' }));
-      }
+      focusedReply?.classList.add('is-notification-focus');
     }
   }
 
