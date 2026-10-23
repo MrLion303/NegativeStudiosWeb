@@ -1,34 +1,46 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "https://mrlion303.github.io",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-  "Vary": "Origin",
-};
+const allowedOrigins = new Set([
+  "https://negativestudios.akjon.dev",
+  "https://mrlion303.github.io",
+  "http://localhost:5500",
+]);
+
+function corsHeadersFor(origin: string | null): Record<string, string> {
+  const headers: Record<string, string> = {
+    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Vary": "Origin",
+  };
+  if (origin && allowedOrigins.has(origin)) {
+    headers["Access-Control-Allow-Origin"] = origin;
+  }
+  return headers;
+}
 
 Deno.serve(async (req: Request) => {
+  const origin = req.headers.get("origin");
+  const headers = corsHeadersFor(origin);
+  if (origin && !allowedOrigins.has(origin)) {
+    return Response.json({ error: "Origen no autorizado." }, { status: 403, headers });
+  }
   if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
+    return new Response("ok", { headers });
   }
   if (req.method !== "POST") {
-    return Response.json({ error: "Método no permitido." }, { status: 405, headers: corsHeaders });
-  }
-  const origin = req.headers.get("origin");
-  if (origin && origin !== "https://mrlion303.github.io") {
-    return Response.json({ error: "Origen no autorizado." }, { status: 403, headers: corsHeaders });
+    return Response.json({ error: "Método no permitido." }, { status: 405, headers });
   }
 
   const authorization = req.headers.get("authorization");
   if (!authorization?.startsWith("Bearer ")) {
-    return Response.json({ error: "Inicia sesión para continuar." }, { status: 401, headers: corsHeaders });
+    return Response.json({ error: "Inicia sesión para continuar." }, { status: 401, headers });
   }
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
   const anonKey = Deno.env.get("SUPABASE_ANON_KEY");
   const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
   if (!supabaseUrl || !anonKey || !serviceRoleKey) {
-    return Response.json({ error: "La función de eliminación no está configurada en Supabase." }, { status: 500, headers: corsHeaders });
+    return Response.json({ error: "La función de eliminación no está configurada en Supabase." }, { status: 500, headers });
   }
 
   const userClient = createClient(supabaseUrl, anonKey, {
@@ -37,7 +49,7 @@ Deno.serve(async (req: Request) => {
   });
   const { data: userData, error: userError } = await userClient.auth.getUser();
   if (userError || !userData.user) {
-    return Response.json({ error: "La sesión ha caducado. Inicia sesión de nuevo." }, { status: 401, headers: corsHeaders });
+    return Response.json({ error: "La sesión ha caducado. Inicia sesión de nuevo." }, { status: 401, headers });
   }
 
   const adminClient = createClient(supabaseUrl, serviceRoleKey, {
@@ -74,14 +86,14 @@ Deno.serve(async (req: Request) => {
 
   for (const bucket of ["avatars", "banners", "post-images"]) {
     if (!await removeUserFiles(bucket, userData.user.id)) {
-      return Response.json({ error: "No se pudieron eliminar todos los archivos de tu cuenta." }, { status: 500, headers: corsHeaders });
+      return Response.json({ error: "No se pudieron eliminar todos los archivos de tu cuenta." }, { status: 500, headers });
     }
   }
 
   const { error: deleteError } = await adminClient.auth.admin.deleteUser(userData.user.id);
   if (deleteError) {
-    return Response.json({ error: "No se pudo eliminar la cuenta. Inténtalo de nuevo o contacta con NegativeStudios." }, { status: 500, headers: corsHeaders });
+    return Response.json({ error: "No se pudo eliminar la cuenta. Inténtalo de nuevo o contacta con NegativeStudios." }, { status: 500, headers });
   }
 
-  return Response.json({ success: true }, { status: 200, headers: corsHeaders });
+  return Response.json({ success: true }, { status: 200, headers });
 });
