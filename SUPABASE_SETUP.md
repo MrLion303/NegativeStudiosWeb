@@ -128,7 +128,7 @@ La eliminación usa una Supabase Edge Function. Puedes desplegarla desde el nave
 5. Pulsa **Deploy function** y espera a que Supabase confirme que se publicó. La función permite el dominio actual `https://negativestudios.akjon.dev`, además de GitHub Pages y `http://localhost:5500` para pruebas locales.
 6. Cada vez que cambie `supabase/functions/delete-account/index.ts` en GitHub, vuelve a copiar el archivo completo en la función `delete-account` del panel y pulsa **Deploy function**. El despliegue de la página web por GitHub Pages no actualiza automáticamente esta función.
 7. No crees secretos manuales llamados `SUPABASE_URL`, `SUPABASE_ANON_KEY` o `SUPABASE_SERVICE_ROLE_KEY`: Supabase los proporciona a las Edge Functions. Nunca pongas una clave administrativa en GitHub o en JavaScript del navegador.
-7. Para probarlo, inicia sesión en la web y usa la sección **Eliminar mi cuenta** de `configurar-perfil.html`. Es una operación permanente; haz la primera prueba únicamente con una cuenta que estés dispuesto a borrar.
+8. Para probarlo, inicia sesión en la web y usa la sección **Eliminar mi cuenta** de `configurar-perfil.html`. Es una operación permanente; haz la primera prueba únicamente con una cuenta que estés dispuesto a borrar.
 
 
 ## 10. Inicio de sesión con nombre de usuario
