@@ -844,8 +844,12 @@
     $('#deleteAccountButton')?.addEventListener('click', async () => {
       if (!requireClient() || !currentUser) return;
       const confirmation = window.prompt('Esta acción es permanente. Escribe ELIMINAR para borrar tu cuenta y tus comentarios.');
-      if (confirmation !== 'ELIMINAR') {
-        message('deleteAccountMessage', 'No se eliminó la cuenta.', 'success');
+      if (confirmation === null) {
+        message('deleteAccountMessage', 'Eliminación cancelada. Tu cuenta sigue activa.');
+        return;
+      }
+      if (String(confirmation).trim().toUpperCase() !== 'ELIMINAR') {
+        message('deleteAccountMessage', 'Para confirmar, escribe ELIMINAR. No se hicieron cambios.', 'error');
         return;
       }
       const button = $('#deleteAccountButton');
