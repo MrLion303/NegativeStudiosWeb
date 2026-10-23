@@ -506,7 +506,7 @@
   function notificationDestination(item, actor) {
     if (item.type === 'friend_request' || item.type === 'friend_request_accepted') {
       if (actor?.username) return profileUrl(actor);
-      return new URL('notificaciones.html#friendRequestsInbox', SITE_ROOT).href;
+      return new URL('notificaciones.html', SITE_ROOT).href;
     }
     if (item.type === 'post_like' && item.actor_id && item.groupedLikes?.length > 1) {
       const url = new URL('foro.html', SITE_ROOT);
@@ -541,6 +541,16 @@
     let result = await client.from('notifications')
       .select('id,type,title,body,post_id,comment_id,forum_post_comment_id,friend_request_id,project_slug,created_at,read_at,actor_id,profiles!notifications_actor_id_fkey(username,display_name,avatar_url,profile_badges(is_mod,is_verified))')
       .order('created_at', { ascending: false }).limit(100);
+    if (result.error) {
+      result = await client.from('notifications')
+        .select('id,type,title,body,post_id,comment_id,forum_post_comment_id,friend_request_id,project_slug,created_at,read_at,actor_id,profiles!notifications_actor_id_fkey(username,display_name,avatar_url)')
+        .order('created_at', { ascending: false }).limit(100);
+    }
+    if (result.error) {
+      result = await client.from('notifications')
+        .select('id,type,title,body,post_id,comment_id,friend_request_id,project_slug,created_at,read_at,actor_id,profiles!notifications_actor_id_fkey(username,display_name,avatar_url)')
+        .order('created_at', { ascending: false }).limit(100);
+    }
     if (result.error) {
       result = await client.from('notifications')
         .select('id,type,title,body,post_id,comment_id,friend_request_id,project_slug,created_at,read_at,actor_id')
@@ -601,27 +611,44 @@
       const card = document.createElement('article');
       card.className = 'community-notification' + (item.read_at ? '' : ' is-unread');
       const actorLink = document.createElement('a');
-      actorLink.className = 'community-notification-avatar'; actorLink.href = actor.username ? profileUrl(actor) : '#';
+      actorLink.className = 'community-notification-avatar';
+      actorLink.href = actor.username ? profileUrl(actor) : new URL('notificaciones.html', SITE_ROOT).href;
       actorLink.appendChild(avatar(actor, 'community-avatar'));
       const copy = document.createElement('div'); copy.className = 'community-notification-copy';
       const likeCount = item.groupedLikes?.length > 1
         ? new Set(item.groupedLikes.map(row => String(row.post_id))).size
         : 0;
+      const friendNotification = item.type === 'friend_request' || item.type === 'friend_request_accepted';
+      const commentNotification = ['post_reply', 'post_comment_reply', 'comment_reply'].includes(item.type);
+      const actorName = actor.display_name || actor.username || 'Alguien';
       const headline = document.createElement('strong');
-      headline.textContent = likeCount > 1 ? 'Le gustaron ' + likeCount + ' publicaciones' : (item.title || 'Nueva actividad');
+      if (friendNotification) {
+        headline.textContent = item.type === 'friend_request'
+          ? actorName + ' te envió solicitud de amistad.'
+          : actorName + ' aceptó tu solicitud de amistad.';
+      } else if (commentNotification) {
+        headline.textContent = item.type === 'post_reply'
+          ? actorName + ' comentó en tu publicación.'
+          : actorName + ' respondió a tu comentario.';
+      } else {
+        headline.textContent = likeCount > 1 ? 'Le gustaron ' + likeCount + ' publicaciones' : (item.title || 'Nueva actividad');
+      }
       const body = document.createElement('p');
       if (likeCount > 1) {
-        body.textContent = (actor.display_name || (actor.username ? '@' + actor.username : 'Esta persona')) +
-          ' le dio me gusta a ' + likeCount + ' de tus publicaciones. Pulsa para recorrerlas.';
+        body.textContent = actorName + ' le dio me gusta a ' + likeCount + ' de tus publicaciones. Pulsa para recorrerlas.';
+      } else if (commentNotification) {
+        body.textContent = String(item.body || '').trim() || 'El comentario ya no está disponible.';
       } else {
-        body.textContent = item.body || (actor.display_name || actor.username ? (actor.display_name || '@' + actor.username) : 'La comunidad') + ' interactuó con tu contenido.';
+        body.textContent = item.body || actorName + ' interactuó con tu contenido.';
       }
       const meta = document.createElement('small');
       meta.textContent = new Date(item.created_at).toLocaleString('es-MX', { dateStyle: 'medium', timeStyle: 'short' });
-      copy.append(headline, body, meta);
+      if (friendNotification) copy.append(headline, meta);
+      else copy.append(headline, body, meta);
       const open = document.createElement('a'); open.className = 'community-notification-open';
-      open.href = notificationDestination(item, actor); open.textContent = likeCount > 1 ? 'Ver publicaciones' : (item.type === 'friend_request' || item.type === 'friend_request_accepted' ? 'Ver perfil' : 'Ver');
-      open.setAttribute('aria-label', likeCount > 1 ? 'Ver publicaciones a las que dio me gusta' : 'Ver actividad');
+      open.href = notificationDestination(item, actor);
+      open.textContent = likeCount > 1 ? 'Ver publicaciones' : friendNotification ? 'Ver perfil' : commentNotification ? 'Ver comentario' : 'Ver';
+      open.setAttribute('aria-label', likeCount > 1 ? 'Ver publicaciones a las que dio me gusta' : commentNotification ? 'Ver comentario' : friendNotification ? 'Ver perfil del usuario' : 'Ver actividad');
       const activate = async () => {
         const notifications = item.groupedLikes?.length ? item.groupedLikes : [item];
         await Promise.all(notifications.filter(row => !row.read_at).map(row => markNotificationRead(row.id)));
