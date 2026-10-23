@@ -354,3 +354,10 @@ dialog.ns-modal::backdrop{background:rgba(1,6,13,.75);backdrop-filter:blur(5px)}
 
 #publicProfileAdminActions{order:2}
 #publicProfileOwnerActions{order:3;margin-left:0}
+
+/* Mantiene el botón de cuenta con las mismas esquinas que Descargar Negative Client. */
+.nav-inner .nav-actions > a.ns-account-link:not(.ns-account-link--profile) {
+  border-radius: 12px !important;
+  clip-path: none !important;
+  -webkit-clip-path: none !important;
+}
