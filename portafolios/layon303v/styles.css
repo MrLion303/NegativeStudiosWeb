@@ -289,6 +289,11 @@ button { color: inherit; font: inherit; }
 .about-label { position: relative; min-height: 360px; }
 .about-label .section-kicker { align-items: center; }
 .about-drawing { position: relative; width: min(305px, 88%); aspect-ratio: 1; margin: 28px auto 0; border: 2px solid var(--ink); border-radius: 49% 51% 47% 53%; background: var(--yellow); box-shadow: 6px 7px 0 var(--ink); transform: rotate(-5deg); overflow: hidden; }
+.about-profile-visual { position: relative; width: min(340px, 94%); margin: 31px auto 0; padding-bottom: 77px; }
+.profile-banner-frame { position: relative; padding: 7px; background: var(--paper); border: 2px solid var(--ink); border-radius: 5px 13px 7px 10px; box-shadow: 6px 7px 0 var(--ink); transform: rotate(-1.5deg); }
+.profile-banner-image { display: block; width: 100%; height: auto; max-height: 190px; aspect-ratio: 2 / 1; object-fit: cover; object-position: center; border: 1px solid rgba(41, 43, 43, .28); }
+.profile-photo-wrap { position: absolute; z-index: 2; left: 20px; bottom: 0; width: 132px; aspect-ratio: 1; padding: 5px; overflow: hidden; border: 2px solid var(--ink); border-radius: 50%; background: var(--paper-warm); box-shadow: 4px 5px 0 var(--ink); transform: rotate(-5deg); }
+.profile-photo { display: block; width: 100%; height: 100%; object-fit: cover; object-position: center; border-radius: 50%; }
 .about-sun { position: absolute; width: 90%; aspect-ratio: 1; left: 5%; top: 8%; border: 1px dashed rgba(41,43,43,.4); border-radius: 50%; }
 .about-cloud { position: absolute; width: 85px; height: 29px; top: 18%; right: 10%; border: 2px solid var(--ink); border-radius: 30px; background: var(--paper); }
 .about-cloud::before, .about-cloud::after { content: ""; position: absolute; bottom: 7px; width: 31px; height: 31px; border: 2px solid var(--ink); border-bottom: 0; border-radius: 50% 50% 0 0; background: var(--paper); }
@@ -300,6 +305,7 @@ button { color: inherit; font: inherit; }
 .about-star { position: absolute; z-index: 3; font-size: 40px; color: #14899b; }
 .star-left { top: 36%; left: 10%; }.star-right { top: 55%; right: 8%; color: var(--ink); }
 .about-caption { position: absolute; bottom: 5px; right: 2%; font-family: var(--hand); font-size: 17px; transform: rotate(-4deg); color: #117d8e; }
+.about-label .about-caption { bottom: -2px; right: 0; }
 .about-copy h2 { margin-bottom: 22px; font-size: clamp(44px, 5.1vw, 66px); }
 .about-copy h2 span { display: inline-block; color: #117f90; font-style: italic; transform: rotate(-1deg); }
 .about-copy p { color: var(--ink-soft); font-size: 13px; line-height: 1.95; }
@@ -406,6 +412,9 @@ button { color: inherit; font: inherit; }
   .about { grid-template-columns: 1fr; gap: 42px; padding-block: 90px 95px; }
   .about-label { min-height: 345px; }
   .about-drawing { width: min(285px, 81%); }
+  .about-profile-visual { width: min(340px, 94%); margin-top: 25px; padding-bottom: 70px; }
+  .profile-banner-image { max-height: 180px; }
+  .profile-photo-wrap { left: 15px; width: 118px; }
   .about-caption { right: 3%; bottom: 0; }
   .about-copy h2 { margin-bottom: 20px; }
   .about-copy .about-lead { font-size: 16px; }
