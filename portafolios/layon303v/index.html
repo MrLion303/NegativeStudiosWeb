@@ -3,11 +3,14 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#f8f7f1">
+  <meta name="theme-color" content="#ffda4d">
   <meta name="robots" content="noindex, nofollow, noarchive, nosnippet">
   <meta name="googlebot" content="noindex, nofollow, noarchive, nosnippet">
-  <meta name="description" content="Portafolio independiente de LAYON303V: mundos interactivos, programación, sonido y experimentación visual.">
-  <title>LAYON303V — Portafolio creativo</title>
+  <meta name="description" content="El cuaderno creativo de LAYON303V: mundos, código, música e ideas visuales en proceso.">
+  <title>LAYON303V — Mi cuaderno creativo</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Fraunces:opsz,wght,SOFT,WONK@9..144,500,20,1;9..144,600,20,1;9..144,700,20,1&family=Patrick+Hand&family=Nunito:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
   <script src="script.js" defer></script>
 </head>
@@ -15,146 +18,198 @@
   <div class="reading-progress" aria-hidden="true"><span id="readingProgress"></span></div>
 
   <header class="site-header">
-    <a class="wordmark" href="#inicio" aria-label="LAYON303V, inicio">
-      <span class="wordmark-symbol" aria-hidden="true">L<span>.</span></span>
-      <span class="wordmark-copy"><strong>LAYON303V</strong><small>PORTAFOLIO INDEPENDIENTE</small></span>
+    <a class="wordmark" href="#inicio" aria-label="LAYON303V, volver al inicio">
+      <span class="brand-stamp" aria-hidden="true">L<span>!</span></span>
+      <span class="wordmark-copy"><strong>LAYON303V</strong><small>MI CUADERNO CREATIVO</small></span>
     </a>
     <button class="menu-toggle" type="button" aria-label="Abrir menú" aria-controls="siteNav" aria-expanded="false">
       <span></span><span></span>
     </button>
     <nav class="site-nav" id="siteNav" aria-label="Navegación principal">
-      <a href="#trabajo">Trabajo</a>
-      <a href="#enfoque">Enfoque</a>
-      <a href="#sobre-mi">Sobre mí</a>
-      <a class="nav-contact" href="#contacto">Conectar <span aria-hidden="true">↗</span></a>
+      <a href="#cosas">Cosas que hago</a>
+      <a href="#proceso">Mi proceso</a>
+      <a href="#sobre-mi">Quién soy</a>
+      <a class="nav-contact" href="#contacto">¡Hablemos! <span aria-hidden="true">↗</span></a>
     </nav>
   </header>
 
   <main id="inicio">
     <section class="hero section-wrap">
-      <div class="hero-copy">
-        <div class="eyebrow"><span class="eyebrow-dot"></span> CREATIVIDAD EN VARIAS DIMENSIONES <span class="eyebrow-year">/ 2026</span></div>
-        <h1>Ideas que se<br>convierten en <span class="highlight-word">mundos<span class="highlight-spark" aria-hidden="true">✳</span></span></h1>
-        <p class="hero-intro">Soy <strong>LAYON303V</strong>. Exploro lo que pasa cuando se cruzan código, sonido, mundos interactivos y dirección visual.</p>
-        <div class="hero-actions">
-          <a class="button button-dark" href="#trabajo">Explorar mi trabajo <span aria-hidden="true">↓</span></a>
-          <a class="text-link" href="#sobre-mi">Conocer el enfoque <span aria-hidden="true">↗</span></a>
+      <div class="hero-sheet">
+        <div class="sheet-holes" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
+        <div class="hero-copy">
+          <div class="hand-label"><span class="tiny-sun" aria-hidden="true">✳</span> HOLA, QUÉ BUENO QUE LLEGASTE <span class="label-squiggle" aria-hidden="true">〰</span></div>
+          <h1>No sé quedarme<br>quieto. <span class="hero-blue">Y qué bueno.</span></h1>
+          <p class="hero-intro">Soy <strong>LAYON303V</strong>. Me gusta inventar mundos, romper cosas para entenderlas y convertir ideas medio locas en algo que puedas ver, escuchar o jugar.</p>
+          <div class="hero-actions">
+            <a class="button button-dark" href="#cosas">Mira lo que hago <span aria-hidden="true">↓</span></a>
+            <a class="hand-link" href="#sobre-mi">Un poquito sobre mí <span aria-hidden="true">↗</span></a>
+          </div>
+          <div class="hero-signoff"><span class="signature">hecho con curiosidad</span><span class="signoff-star" aria-hidden="true">✳</span></div>
         </div>
-        <div class="hero-footnote"><span class="footnote-line"></span><span>UN ESPACIO PARA EXPERIMENTAR<br>Y DAR FORMA A LAS IDEAS.</span></div>
-      </div>
 
-      <div class="hero-art" role="img" aria-label="Composición geométrica en amarillo, celeste y negro, creada para el portafolio de LAYON303V">
-        <div class="art-grid"></div>
-        <div class="art-orbit art-orbit-one"></div>
-        <div class="art-orbit art-orbit-two"></div>
-        <div class="art-sun"></div>
-        <div class="art-cyan-block"></div>
-        <div class="art-panel">
-          <div class="panel-top"><span>STUDY Nº 001</span><span>● ● ●</span></div>
-          <div class="panel-glyph">L<span>.</span></div>
-          <div class="panel-bottom"><span>IDEA → FORMA</span><span>↗</span></div>
+        <div class="hero-doodle" aria-label="Ilustración decorativa de un pequeño planeta creativo">
+          <div class="doodle-note note-top"><span>IDEA Nº 001</span><strong>¿Y si lo intento?</strong><i aria-hidden="true">↘</i></div>
+          <div class="planet-orbit orbit-a"></div>
+          <div class="planet-orbit orbit-b"></div>
+          <div class="planet">
+            <div class="planet-face"><span class="face-eye eye-a"></span><span class="face-eye eye-b"></span><span class="face-smile"></span></div>
+            <span class="planet-ring"></span>
+          </div>
+          <span class="doodle-star star-a" aria-hidden="true">✳</span>
+          <span class="doodle-star star-b" aria-hidden="true">✦</span>
+          <span class="doodle-star star-c" aria-hidden="true">✳</span>
+          <span class="doodle-spark spark-a" aria-hidden="true">✧</span>
+          <div class="doodle-note note-bottom"><span>ESTADO ACTUAL</span><strong>Probando cosas</strong><span class="note-smile" aria-hidden="true">☺</span></div>
+          <span class="doodle-loop" aria-hidden="true">〰</span>
         </div>
-        <div class="art-sticker"><span>MAKE</span><span>IT</span><strong>REAL.</strong></div>
-        <div class="art-caption art-caption-top">CURIOSIDAD<br>EN MOVIMIENTO</div>
-        <div class="art-caption art-caption-bottom"><span class="caption-cross">✳</span> DISEÑADO PARA<br>IR MÁS ALLÁ</div>
-        <span class="art-number">01—04</span>
+        <span class="corner-note">UN POCO DE TODO,<br>MUCHO DE MÍ.</span>
       </div>
-      <div class="hero-scroll" aria-hidden="true"><span></span> DESLIZA PARA EXPLORAR</div>
+      <div class="hero-under-note"><span class="under-arrow" aria-hidden="true">↗</span><span>UN ESPACIO PERSONAL PARA JUGAR, APRENDER Y CREAR.</span><span class="under-doodle" aria-hidden="true">✳ ☆ ✳</span></div>
     </section>
 
     <section class="ticker" aria-label="Áreas creativas">
       <div class="ticker-track">
-        <span>MUNDOS INTERACTIVOS</span><i>✳</i><span>CÓDIGO</span><i>✳</i><span>SONIDO</span><i>✳</i><span>VFX</span><i>✳</i><span>DISEÑO DIGITAL</span><i>✳</i>
-        <span>MUNDOS INTERACTIVOS</span><i>✳</i><span>CÓDIGO</span><i>✳</i><span>SONIDO</span><i>✳</i><span>VFX</span><i>✳</i><span>DISEÑO DIGITAL</span><i>✳</i>
+        <span>MUNDOS INVENTADOS</span><i>✳</i><span>CÓDIGO Y MODS</span><i>✿</i><span>MÚSICA</span><i>✳</i><span>VFX Y COLOR</span><i>✿</i><span>IDEAS EN PROCESO</span><i>✳</i>
+        <span>MUNDOS INVENTADOS</span><i>✳</i><span>CÓDIGO Y MODS</span><i>✿</i><span>MÚSICA</span><i>✳</i><span>VFX Y COLOR</span><i>✿</i><span>IDEAS EN PROCESO</span><i>✳</i>
       </div>
     </section>
 
-    <section class="work section-wrap" id="trabajo">
+    <section class="work section-wrap" id="cosas">
       <div class="section-heading reveal">
         <div>
-          <p class="section-kicker"><span>01</span> / ARCHIVO CREATIVO</p>
-          <h2>Un montón de formas<br>de <span class="underline-word">crear.</span></h2>
+          <p class="section-kicker"><span class="chapter-number">01</span><span class="section-kicker-text">COSAS QUE ME GUSTA HACER</span></p>
+          <h2>Mi cabeza tiene<br>muchas <span class="scribble-word">pestañas.</span></h2>
         </div>
-        <p class="section-intro">No todo cabe en una sola categoría. Este espacio reúne las áreas que me gusta explorar y conectar para construir experiencias con personalidad.</p>
+        <div class="section-side-note">
+          <span class="side-note-arrow" aria-hidden="true">↙</span>
+          <p>No todo tiene que ir en la misma caja. Estas son algunas de las cosas que me gusta explorar.</p>
+        </div>
       </div>
 
       <div class="work-grid">
-        <article class="work-card work-card-world reveal">
-          <div class="work-card-top"><span>ÁREA 001</span><span>↗</span></div>
+        <article class="work-card card-world reveal">
+          <div class="card-tape" aria-hidden="true"></div>
+          <div class="work-card-top"><span>01 / CONSTRUIR</span><span class="card-doodle" aria-hidden="true">✳</span></div>
           <div class="work-visual world-visual" aria-hidden="true">
-            <div class="world-sun"></div><div class="world-horizon"></div>
-            <div class="world-block block-one"></div><div class="world-block block-two"></div><div class="world-block block-three"></div>
-            <span class="visual-label">BUILD / EXPLORE</span>
+            <span class="world-caption">un lugar que antes<br>solo existía en mi cabeza</span>
+            <div class="world-sun"></div><div class="world-cloud cloud-a"></div><div class="world-cloud cloud-b"></div>
+            <div class="world-hill hill-back"></div><div class="world-hill hill-front"></div>
+            <div class="world-cube cube-a"><i></i><b></b><em></em></div><div class="world-cube cube-b"><i></i><b></b><em></em></div>
+            <span class="world-flower flower-a">✿</span><span class="world-flower flower-b">✳</span>
           </div>
-          <div class="work-card-bottom"><div><p>MUNDOS & EXPERIENCIAS</p><h3>Universos jugables</h3></div><span class="card-arrow">↗</span></div>
+          <div class="work-card-bottom"><div><p>MUNDOS & EXPERIENCIAS</p><h3>Pequeños universos</h3><span>Mapas, historias y experiencias para perderse un rato.</span></div><span class="card-arrow" aria-hidden="true">↗</span></div>
         </article>
 
-        <article class="work-card work-card-code reveal">
-          <div class="work-card-top"><span>ÁREA 002</span><span>↗</span></div>
+        <article class="work-card card-code reveal">
+          <div class="card-tape tape-blue" aria-hidden="true"></div>
+          <div class="work-card-top"><span>02 / DESCUBRIR</span><span class="card-doodle" aria-hidden="true">⌘</span></div>
           <div class="work-visual code-visual" aria-hidden="true">
-            <div class="code-window"><div class="code-window-bar"><b></b><b></b><b></b></div><div class="code-lines"><i></i><i></i><i></i><i></i><i></i><i></i></div><span class="code-bracket">{ }</span></div>
-            <span class="visual-label">THINK / BUILD / TEST</span>
+            <div class="code-paper">
+              <div class="code-paper-title"><span>mis apuntes</span><span>✎</span></div>
+              <div class="code-row"><b>01</b><i class="line long"></i><span>{ }</span></div>
+              <div class="code-row"><b>02</b><i class="line short"></i><span>↗</span></div>
+              <div class="code-row"><b>03</b><i class="line medium"></i><span>★</span></div>
+              <div class="code-row"><b>04</b><i class="line long"></i><span>;</span></div>
+              <div class="code-row"><b>05</b><i class="line tiny"></i><span>!</span></div>
+            </div>
+            <span class="code-sticker">FUNCIONA<br>EN MI PC :)</span>
+            <span class="code-pencil" aria-hidden="true">✎</span>
           </div>
-          <div class="work-card-bottom"><div><p>PROGRAMACIÓN</p><h3>Ideas que funcionan</h3></div><span class="card-arrow">↗</span></div>
+          <div class="work-card-bottom"><div><p>PROGRAMACIÓN & MODS</p><h3>Que las ideas funcionen</h3><span>Probar, arreglar, volver a probar. Y celebrar cuando compila.</span></div><span class="card-arrow" aria-hidden="true">↗</span></div>
         </article>
 
-        <article class="work-card work-card-sound reveal">
-          <div class="work-card-top"><span>ÁREA 003</span><span>↗</span></div>
+        <article class="work-card card-sound reveal">
+          <div class="card-tape" aria-hidden="true"></div>
+          <div class="work-card-top"><span>03 / ESCUCHAR</span><span class="card-doodle" aria-hidden="true">♫</span></div>
           <div class="work-visual sound-visual" aria-hidden="true">
-            <div class="sound-disc"><div></div></div><div class="sound-wave"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
-            <span class="visual-label">FEEL THE FREQUENCY</span>
+            <div class="cassette">
+              <div class="cassette-label">LADO A <span>♪</span></div>
+              <div class="cassette-reels"><i></i><i></i></div>
+              <div class="cassette-lines"></div>
+              <div class="cassette-bottom">PLAY / REPEAT / DREAM</div>
+            </div>
+            <span class="sound-note note-one">♪</span><span class="sound-note note-two">♫</span><span class="sound-note note-three">♬</span>
+            <div class="sound-scribble" aria-hidden="true">〰〰</div>
           </div>
-          <div class="work-card-bottom"><div><p>MÚSICA & SONIDO</p><h3>Diseñar sensaciones</h3></div><span class="card-arrow">↗</span></div>
+          <div class="work-card-bottom"><div><p>MÚSICA & SONIDO</p><h3>Ruiditos con intención</h3><span>Voces, canciones, arreglos y obsesiones musicales.</span></div><span class="card-arrow" aria-hidden="true">↗</span></div>
         </article>
 
-        <article class="work-card work-card-visual reveal">
-          <div class="work-card-top"><span>ÁREA 004</span><span>↗</span></div>
+        <article class="work-card card-visual reveal">
+          <div class="card-tape tape-blue" aria-hidden="true"></div>
+          <div class="work-card-top"><span>04 / IMAGINAR</span><span class="card-doodle" aria-hidden="true">☼</span></div>
           <div class="work-visual visual-visual" aria-hidden="true">
-            <div class="visual-ring ring-one"></div><div class="visual-ring ring-two"></div><div class="visual-cross">✳</div><div class="visual-square"></div>
-            <span class="visual-label">LIGHT / MOTION / MOOD</span>
+            <div class="sun-paper"></div><div class="blue-paper"></div>
+            <span class="visual-flower">✿</span><span class="visual-star">✦</span>
+            <span class="visual-word">¡PUM!</span><span class="visual-subword">luz, color<br>y movimiento</span>
+            <span class="visual-frame"></span>
           </div>
-          <div class="work-card-bottom"><div><p>VFX & DIRECCIÓN VISUAL</p><h3>Atmósferas con carácter</h3></div><span class="card-arrow">↗</span></div>
+          <div class="work-card-bottom"><div><p>VFX & EXPLORACIÓN VISUAL</p><h3>Que se sienta distinto</h3><span>Luz, atmósfera, edición y experimentos que salen de la pantalla.</span></div><span class="card-arrow" aria-hidden="true">↗</span></div>
         </article>
       </div>
-      <p class="work-note"><span>✳</span> Este archivo irá creciendo a medida que se incorporen proyectos y casos completos.</p>
+      <div class="work-footnote"><span class="tiny-sun" aria-hidden="true">✳</span><p>Esto es solo la primera página del cuaderno. <strong>Hay más ideas cocinándose.</strong></p><span class="footnote-doodle" aria-hidden="true">☻</span></div>
     </section>
 
-    <section class="manifesto" id="enfoque">
-      <div class="manifesto-pattern" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
-      <div class="manifesto-content reveal">
-        <p class="section-kicker"><span>02</span> / FORMA DE PENSAR</p>
-        <h2>La herramienta cambia.<br><span>La curiosidad se queda.</span></h2>
-        <p>Me interesa aprender cómo están hechas las cosas, probar caminos distintos y combinar disciplinas para llegar a resultados que no existirían usando una sola herramienta.</p>
-        <div class="manifesto-tags"><span>PROBAR</span><span>APRENDER</span><span>MEZCLAR</span><span>VOLVER A EMPEZAR</span></div>
+    <section class="process-section" id="proceso">
+      <div class="process-inner section-wrap">
+        <div class="process-drawing reveal" aria-hidden="true">
+          <div class="process-paper">
+            <span class="paper-tag">RECETA CREATIVA</span>
+            <div class="recipe-step step-one"><b>1</b><span>tener una idea</span><i>✳</i></div>
+            <div class="recipe-step step-two"><b>2</b><span>hacer un desastre</span><i>〰</i></div>
+            <div class="recipe-step step-three"><b>3</b><span>aprender algo</span><i>✎</i></div>
+            <div class="recipe-step step-four"><b>4</b><span>volver a empezar</span><i>↻</i></div>
+            <span class="recipe-stamp">APROBADO<br>POR MI YO<br>DEL FUTURO</span>
+          </div>
+          <span class="process-flower flower-left">✿</span><span class="process-flower flower-right">✳</span>
+        </div>
+        <div class="process-copy reveal">
+          <p class="section-kicker"><span class="chapter-number">02</span><span class="section-kicker-text">NO HAY MAGIA, HAY PRUEBAS</span></p>
+          <h2>Primero lo imagino.<br>Luego veo <span class="process-highlight">qué pasa.</span></h2>
+          <p>No siempre sé cómo va a terminar una idea, y justo eso me gusta. Empiezo por curiosidad, investigo, hago pruebas y voy encontrando mi camino sobre la marcha.</p>
+          <p>Este portafolio no es una vitrina de cosas perfectas. Es un lugar para compartir lo que hago, lo que aprendo y lo que todavía estoy intentando resolver.</p>
+          <span class="handwritten-note">pasito a pasito ✿</span>
+        </div>
       </div>
-      <div class="manifesto-stamp" aria-hidden="true"><span>STAY</span><strong>CURIOUS</strong><span>✳ ALWAYS</span></div>
     </section>
 
     <section class="about section-wrap" id="sobre-mi">
-      <div class="about-label reveal"><p class="section-kicker"><span>03</span> / DETRÁS DE LAS IDEAS</p><div class="about-monogram" aria-hidden="true">L<span>.</span></div><span class="about-caption">CREADO CON CURIOSIDAD<br>Y MUCHAS PRUEBAS.</span></div>
+      <div class="about-label reveal">
+        <p class="section-kicker"><span class="chapter-number">03</span><span class="section-kicker-text">LA PERSONA DETRÁS DEL LÍO</span></p>
+        <div class="about-drawing" aria-hidden="true">
+          <div class="about-sun"></div><div class="about-cloud"></div>
+          <div class="about-face"><span class="about-eye eye-left"></span><span class="about-eye eye-right"></span><span class="about-mouth"></span></div>
+          <span class="about-star star-left">✳</span><span class="about-star star-right">✦</span>
+        </div>
+        <span class="about-caption">sí, esa personita soy yo</span>
+      </div>
       <div class="about-copy reveal">
-        <h2>Hola, soy <span>LAYON303V.</span></h2>
-        <p class="about-lead">Me muevo entre lo técnico y lo creativo.</p>
-        <p>Me gusta desarrollar proyectos desde distintos ángulos: construir sistemas, imaginar espacios, experimentar con sonido y buscar una identidad visual que haga que cada idea se sienta propia.</p>
-        <p>Este sitio es mi pequeño laboratorio digital: una base para reunir proyectos, compartir procesos y seguir explorando cosas nuevas.</p>
-        <div class="about-facts"><div><strong>01</strong><span>PENSAR EN SISTEMAS</span></div><div><strong>02</strong><span>CREAR CON INTENCIÓN</span></div><div><strong>03</strong><span>SEGUIR EXPERIMENTANDO</span></div></div>
+        <h2>Ah, por cierto:<br>soy <span>LAYON303V.</span></h2>
+        <p class="about-lead">Una persona curiosa con demasiadas ideas abiertas al mismo tiempo.</p>
+        <p>Me muevo entre el mundo técnico y el creativo. Un día puedo estar armando algo con código, otro ajustando una canción y otro intentando que un efecto visual se vea exactamente como lo imaginé.</p>
+        <p>Hice este espacio para juntar esas partes sin tener que elegir una sola. Es mi rincón, mi archivo y mi recordatorio de seguir creando.</p>
+        <div class="about-stickers"><span>MUCHA CURIOSIDAD</span><span>CAFÉ IMAGINARIO ☕</span><span>UNA IDEA MÁS...</span></div>
       </div>
     </section>
 
     <section class="contact-wrap" id="contacto">
       <div class="contact-card reveal">
-        <div class="contact-top"><span>¿Y SI HACEMOS ALGO NUEVO?</span><span>04 / SIGUIENTE PASO</span></div>
-        <div class="contact-main"><h2>Las buenas ideas<br>no se quedan quietas<span>.</span></h2><button class="button button-light" id="sharePortfolio" type="button">Compartir portafolio <span aria-hidden="true">↗</span></button></div>
-        <div class="contact-bottom"><span>UN ESPACIO PERSONAL DE LAYON303V</span><span class="contact-symbol" aria-hidden="true">✳</span></div>
+        <span class="contact-sticker" aria-hidden="true">¡HEY!</span>
+        <div class="contact-doodles" aria-hidden="true"><span>✳</span><span>〰</span><span>✿</span><span>✦</span></div>
+        <p class="contact-eyebrow">HASTA AQUÍ LLEGA ESTA PÁGINA...</p>
+        <h2>Pero las ideas<br><span>siguen dando vueltas.</span></h2>
+        <p class="contact-copy">Gracias por darte una vuelta por mi pequeño rincón de internet.</p>
+        <button class="button button-dark" id="sharePortfolio" type="button">Pásale el cuaderno a alguien <span aria-hidden="true">↗</span></button>
+        <div class="contact-bottom"><span class="signature">con cariño y muchos bocetos, LAYON</span><span aria-hidden="true">✿ ☆ ✿</span></div>
       </div>
     </section>
   </main>
 
   <footer class="site-footer">
-    <a class="footer-brand" href="#inicio">LAYON303V<span>.</span></a>
-    <p>Hecho para probar ideas, conectar disciplinas y seguir creando.</p>
-    <a class="back-top" href="#inicio">VOLVER ARRIBA ↑</a>
-    <small>© <span id="currentYear">2026</span> LAYON303V · PORTAFOLIO PERSONAL</small>
+    <a class="footer-brand" href="#inicio">LAYON303V<span>!</span></a>
+    <p>Un cuaderno en internet. Hecho a ratitos y con mucha curiosidad.</p>
+    <a class="back-top" href="#inicio">VOLVER AL PRINCIPIO ↑</a>
+    <small>© <span id="currentYear">2026</span> LAYON303V · ESTE RINCÓN SIGUE EN PROCESO.</small>
   </footer>
   <div class="toast" id="shareToast" role="status" aria-live="polite"></div>
 </body>
