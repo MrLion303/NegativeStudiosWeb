@@ -41,31 +41,56 @@
   }
 
 
-  // Carrusel continuo: mide una copia real para que el empalme nunca dependa
-  // del ancho estimado del contenedor ni del porcentaje total de la pista.
+  // Carrusel continuo: repite suficientes copias para cubrir toda la pantalla
+  // incluso cuando el contenido de una vuelta es más estrecho que el viewport.
   const tickerTrack = document.querySelector(".ticker-track");
   const tickerSets = tickerTrack ? tickerTrack.querySelectorAll(".ticker-set") : [];
   if (tickerTrack && tickerSets.length >= 2) {
     const firstTickerSet = tickerSets[0];
+    const tickerViewport = tickerTrack.parentElement;
     let tickerMeasureFrame = 0;
+    let lastDistance = 0;
+    let lastCopyCount = tickerSets.length;
 
     const measureTicker = () => {
-      const distance = firstTickerSet.getBoundingClientRect().width;
-      if (!Number.isFinite(distance) || distance <= 0) return;
+      // offsetWidth usa el ancho de maquetación y no el bounding box transformado
+      // por la inclinación decorativa del contenedor.
+      const distance = firstTickerSet.offsetWidth;
+      const viewportWidth = tickerViewport
+        ? tickerViewport.clientWidth
+        : window.innerWidth;
 
-      const previousDistance = Number.parseFloat(
-        tickerTrack.style.getPropertyValue("--ticker-distance")
-      ) || 0;
+      if (!Number.isFinite(distance) || distance <= 0 || viewportWidth <= 0) return;
 
-      if (Math.abs(distance - previousDistance) < 0.5) return;
+      // Al terminar una vuelta, las copias restantes aún deben cubrir la pantalla.
+      // El margen contempla la escala decorativa del carrusel.
+      const copyCount = Math.max(2, Math.ceil((viewportWidth * 1.04) / distance) + 1);
+      const copyCountChanged = copyCount !== lastCopyCount;
+      const distanceChanged = Math.abs(distance - lastDistance) >= 1;
 
-      // Aproximadamente 46 px/s: mantiene la misma sensación al cambiar de
-      // tamaño, fuente o espaciado en escritorio y móvil.
+      if (copyCountChanged) {
+        tickerTrack.replaceChildren();
+        for (let i = 0; i < copyCount; i += 1) {
+          const set = i === 0 ? firstTickerSet : firstTickerSet.cloneNode(true);
+          if (i === 0) {
+            set.removeAttribute("aria-hidden");
+          } else {
+            set.setAttribute("aria-hidden", "true");
+          }
+          tickerTrack.appendChild(set);
+        }
+        lastCopyCount = copyCount;
+      }
+
+      if (!copyCountChanged && !distanceChanged) return;
+
+      // Velocidad constante aproximada: 46 píxeles por segundo.
       const duration = Math.max(14, distance / 46);
       tickerTrack.style.setProperty("--ticker-distance", distance + "px");
       tickerTrack.style.setProperty("--ticker-duration", duration + "s");
+      lastDistance = distance;
 
-      // Reinicia solo al cambiar el tamaño medido; no hay reinicios por frame.
+      // Reinicia únicamente cuando cambia el ancho o el número de copias.
       tickerTrack.style.animation = "none";
       void tickerTrack.offsetWidth;
       tickerTrack.style.animation = "";
@@ -79,6 +104,7 @@
     if ("ResizeObserver" in window) {
       const tickerObserver = new ResizeObserver(scheduleTickerMeasure);
       tickerObserver.observe(firstTickerSet);
+      if (tickerViewport) tickerObserver.observe(tickerViewport);
     }
     window.addEventListener("resize", scheduleTickerMeasure, { passive: true });
 
