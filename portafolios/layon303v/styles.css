@@ -180,9 +180,8 @@ button { color: inherit; font: inherit; }
 .section-heading h2, .process-copy h2, .about-copy h2 { margin: 0; font-family: var(--display); font-size: clamp(43px, 5.2vw, 68px); font-weight: 600; line-height: 1.04; letter-spacing: -.05em; }
 .scribble-word { position: relative; display: inline-block; z-index: 0; }
 .scribble-word::after { content: ""; position: absolute; left: -3%; right: -5%; bottom: -1px; height: 13px; z-index: -1; background: var(--yellow); border-radius: 50% 40% 55% 30%; transform: rotate(-2deg); }
-.section-side-note { position: relative; max-width: 310px; margin: 0 0 8px auto; }
-.section-side-note p { margin: 0; max-width: 270px; font-family: var(--hand); font-size: 20px; line-height: 1.45; color: var(--ink-soft); }
-.side-note-arrow { display: block; font-size: 30px; color: #138a9a; margin-bottom: 5px; transform: rotate(-22deg); }
+.section-side-note { position: relative; width: min(100%, 470px); max-width: 470px; margin: 0 0 8px auto; }
+.section-side-note p { margin: 0; max-width: none; font-family: var(--hand); font-size: 20px; line-height: 1.45; color: var(--ink-soft); }
 
 .work-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 34px 30px; align-items: start; }
 .work-card { position: relative; min-width: 0; padding: 21px 20px 19px; border: 2px solid var(--ink); box-shadow: 5px 6px 0 var(--ink); background: var(--paper); transition: transform .25s, box-shadow .25s; }
@@ -391,9 +390,8 @@ button { color: inherit; font: inherit; }
   .work { padding-block: 89px 84px; }
   .section-heading { display: block; margin-bottom: 34px; }
   .section-heading h2, .process-copy h2, .about-copy h2 { font-size: clamp(42px, 10.5vw, 58px); }
-  .section-side-note { max-width: 300px; margin: 20px 0 0 auto; }
+  .section-side-note { width: 100%; max-width: 470px; margin: 20px 0 0 auto; }
   .section-side-note p { font-size: 18px; }
-  .side-note-arrow { margin-bottom: -1px; }
   .work-grid { grid-template-columns: 1fr; gap: 30px; }
   .work-card:nth-child(1), .work-card:nth-child(2), .work-card:nth-child(3), .work-card:nth-child(4) { margin-top: 0; transform: rotate(0); }
   .work-card { padding: 17px 15px 15px; }
