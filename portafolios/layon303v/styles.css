@@ -165,9 +165,7 @@ button { color: inherit; font: inherit; }
 }
 .ticker-track i { color: #087f91; font-size: 20px; font-style: normal; flex: 0 0 auto; }
 @keyframes ticker-drift { from { transform: translateX(0); } to { transform: translateX(-50%); } }
-@media (hover: hover) {
-  .ticker:hover .ticker-track { animation-play-state: paused; }
-} }
+ }
 
 .work { padding-block: 125px 112px; }
 .section-heading { display: grid; grid-template-columns: 1fr .56fr; align-items: end; gap: 55px; margin-bottom: 42px; }
