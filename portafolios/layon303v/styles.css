@@ -40,7 +40,7 @@ button { color: inherit; font: inherit; }
   min-height: 98px;
   display: flex; align-items: center; justify-content: space-between; gap: 25px;
   margin: auto; position: relative; z-index: 30;
-  border-bottom: 2px dashed rgba(41,43,43,.35);
+  border-bottom: none;
 }
 .wordmark { display: inline-flex; align-items: center; gap: 13px; flex-shrink: 0; }
 .brand-stamp {
@@ -126,6 +126,7 @@ button { color: inherit; font: inherit; }
 
 .ticker {
   position: relative;
+  margin: 12px 0 36px;
   overflow: hidden;
   border-block: 2px solid var(--ink);
   background: var(--cyan);
