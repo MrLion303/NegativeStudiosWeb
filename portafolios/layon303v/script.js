@@ -151,7 +151,7 @@
     shareButton.addEventListener("click", async () => {
       const shareData = {
         title: document.title,
-        text: "Portafolio creativo de LAYON303V",
+        text: "Portafolio creativo de LAYON",
         url: window.location.href
       };
 
