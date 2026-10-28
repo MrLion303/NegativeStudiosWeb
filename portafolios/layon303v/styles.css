@@ -168,7 +168,7 @@ button { color: inherit; font: inherit; }
 .ticker-track i { color: #087f91; font-size: 20px; font-style: normal; flex: 0 0 auto; }
 @keyframes ticker-drift {
   from { transform: translate3d(0, 0, 0); }
-  to { transform: translate3d(calc(-1 * var(--ticker-distance, 900px)), 0, 0); }
+  to { transform: translate3d(calc(0px - var(--ticker-distance, 900px)), 0, 0); }
 }
 
 .work { padding-block: 125px 112px; }
