@@ -147,7 +147,8 @@ button { color: inherit; font: inherit; }
   align-items: center;
   width: max-content;
   min-height: 56px;
-  animation: ticker-drift 36s linear infinite;
+  animation: ticker-drift var(--ticker-duration, 28s) linear infinite;
+  transform: translate3d(0, 0, 0);
   will-change: transform;
 }
 .ticker-set {
@@ -156,6 +157,7 @@ button { color: inherit; font: inherit; }
   align-items: center;
   gap: 26px;
   padding: 0 26px 0 18px;
+  white-space: nowrap;
 }
 .ticker-track span {
   font-family: var(--hand);
@@ -164,8 +166,10 @@ button { color: inherit; font: inherit; }
   white-space: nowrap;
 }
 .ticker-track i { color: #087f91; font-size: 20px; font-style: normal; flex: 0 0 auto; }
-@keyframes ticker-drift { from { transform: translateX(0); } to { transform: translateX(-50%); } }
- }
+@keyframes ticker-drift {
+  from { transform: translate3d(0, 0, 0); }
+  to { transform: translate3d(calc(-1 * var(--ticker-distance, 900px)), 0, 0); }
+}
 
 .work { padding-block: 125px 112px; }
 .section-heading { display: grid; grid-template-columns: 1fr .56fr; align-items: end; gap: 55px; margin-bottom: 42px; }
@@ -440,5 +444,7 @@ button { color: inherit; font: inherit; }
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+  /* El carrusel sigue avanzando porque su movimiento continuo es intencional. */
+  .ticker-track { animation-duration: var(--ticker-duration, 28s) !important; animation-iteration-count: infinite !important; }
   .reveal { opacity: 1; transform: none; }
 }

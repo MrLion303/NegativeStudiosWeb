@@ -40,6 +40,54 @@
     });
   }
 
+
+  // Carrusel continuo: mide una copia real para que el empalme nunca dependa
+  // del ancho estimado del contenedor ni del porcentaje total de la pista.
+  const tickerTrack = document.querySelector(".ticker-track");
+  const tickerSets = tickerTrack ? tickerTrack.querySelectorAll(".ticker-set") : [];
+  if (tickerTrack && tickerSets.length >= 2) {
+    const firstTickerSet = tickerSets[0];
+    let tickerMeasureFrame = 0;
+
+    const measureTicker = () => {
+      const distance = firstTickerSet.getBoundingClientRect().width;
+      if (!Number.isFinite(distance) || distance <= 0) return;
+
+      const previousDistance = Number.parseFloat(
+        tickerTrack.style.getPropertyValue("--ticker-distance")
+      ) || 0;
+
+      if (Math.abs(distance - previousDistance) < 0.5) return;
+
+      // Aproximadamente 46 px/s: mantiene la misma sensación al cambiar de
+      // tamaño, fuente o espaciado en escritorio y móvil.
+      const duration = Math.max(14, distance / 46);
+      tickerTrack.style.setProperty("--ticker-distance", distance + "px");
+      tickerTrack.style.setProperty("--ticker-duration", duration + "s");
+
+      // Reinicia solo al cambiar el tamaño medido; no hay reinicios por frame.
+      tickerTrack.style.animation = "none";
+      void tickerTrack.offsetWidth;
+      tickerTrack.style.animation = "";
+    };
+
+    const scheduleTickerMeasure = () => {
+      window.cancelAnimationFrame(tickerMeasureFrame);
+      tickerMeasureFrame = window.requestAnimationFrame(measureTicker);
+    };
+
+    if ("ResizeObserver" in window) {
+      const tickerObserver = new ResizeObserver(scheduleTickerMeasure);
+      tickerObserver.observe(firstTickerSet);
+    }
+    window.addEventListener("resize", scheduleTickerMeasure, { passive: true });
+
+    if (document.fonts && document.fonts.ready) {
+      document.fonts.ready.then(scheduleTickerMeasure);
+    }
+    scheduleTickerMeasure();
+  }
+
   let scrollQueued = false;
   function updateProgress() {
     if (!progressBar) return;
