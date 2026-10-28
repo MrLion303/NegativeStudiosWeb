@@ -87,7 +87,7 @@ button { color: inherit; font: inherit; }
 .button-dark { background: var(--ink); color: var(--paper); border-radius: 6px 3px 5px 4px; box-shadow: 4px 4px 0 rgba(41,43,43,.28); }
 .button-dark span { color: var(--yellow); font-size: 17px; }
 .button:hover { transform: translate(3px, 3px) rotate(-1deg); box-shadow: 1px 1px 0 rgba(41,43,43,.3); }
-.hand-link { font-family: var(--hand); font-size: 17px; transform: rotate(-1.5deg); border-bottom: 2px wavy var(--cyan-deep); }
+.hand-link { font-family: var(--hand); font-size: 17px; transform: rotate(-1.5deg); text-decoration-line: underline; text-decoration-style: wavy; text-decoration-color: var(--cyan-deep); text-underline-offset: 5px; }
 .hand-link span { color: #127d8d; margin-left: 5px; }
 .hero-signoff { display: flex; align-items: center; gap: 12px; margin-top: 43px; }
 .signature { font-family: var(--hand); font-size: 19px; color: #236977; transform: rotate(-4deg); display: inline-block; }
