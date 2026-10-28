@@ -677,3 +677,12 @@ button { color: inherit; font: inherit; }
   .social-grid { grid-template-columns: 1fr; gap: 11px; }
   .social-link { grid-template-columns: 39px minmax(0, 1fr) auto; }
 }
+
+
+/* Ajustes de composición tras retirar los hero iniciales */
+#cosas.work { padding-top: 66px; padding-bottom: 70px; }
+.video-section { padding-top: 34px; padding-bottom: 42px; }
+@media (max-width: 720px) {
+  #cosas.work { padding-top: 47px; padding-bottom: 52px; }
+  .video-section { padding-top: 24px; padding-bottom: 32px; }
+}
