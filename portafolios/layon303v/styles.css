@@ -714,3 +714,102 @@ button { color: inherit; font: inherit; }
   z-index: 1;
   padding-block: clamp(58px, 8vw, 90px);
 }
+
+
+/* Perfil de LAYON: imágenes más grandes y equilibradas con la biografía */
+.process-section.about-panel .about {
+  grid-template-columns: minmax(0, .95fr) minmax(0, 1.05fr);
+  gap: clamp(30px, 5vw, 64px);
+}
+
+.process-section.about-panel .about-label {
+  min-height: 0;
+}
+
+.process-section.about-panel .about-profile-visual {
+  width: 100%;
+  max-width: 480px;
+  margin: 31px auto 0;
+  padding-bottom: 100px;
+}
+
+.process-section.about-panel .profile-banner-image {
+  max-height: 275px;
+  aspect-ratio: 1.8 / 1;
+}
+
+.process-section.about-panel .profile-photo-wrap {
+  left: clamp(18px, 4vw, 34px);
+  width: 170px;
+}
+
+.process-section.about-panel .about-caption {
+  right: 0;
+  bottom: 11px;
+  font-size: 18px;
+}
+
+.process-section.about-panel .about-copy h2 {
+  margin-bottom: 22px;
+  font-size: clamp(48px, 5.3vw, 72px);
+}
+
+.process-section.about-panel .about-bio {
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: clamp(15px, 1.25vw, 17px);
+  line-height: 1.85;
+}
+
+@media (max-width: 720px) {
+  .process-section.about-panel .about {
+    grid-template-columns: 1fr;
+    gap: 28px;
+  }
+
+  .process-section.about-panel .about-profile-visual {
+    width: min(100%, 470px);
+    margin-top: 25px;
+    padding-bottom: 94px;
+  }
+
+  .process-section.about-panel .profile-banner-image {
+    max-height: 260px;
+  }
+
+  .process-section.about-panel .profile-photo-wrap {
+    left: 20px;
+    width: 152px;
+  }
+
+  .process-section.about-panel .about-caption {
+    right: 0;
+    bottom: 8px;
+    font-size: 16px;
+  }
+
+  .process-section.about-panel .about-copy h2 {
+    font-size: clamp(44px, 10.5vw, 60px);
+    margin-bottom: 18px;
+  }
+
+  .process-section.about-panel .about-bio {
+    font-size: 15px;
+    line-height: 1.8;
+  }
+}
+
+@media (max-width: 390px) {
+  .process-section.about-panel .profile-photo-wrap {
+    width: 128px;
+    left: 14px;
+  }
+
+  .process-section.about-panel .about-profile-visual {
+    padding-bottom: 86px;
+  }
+
+  .process-section.about-panel .about-caption {
+    font-size: 14px;
+  }
+}
