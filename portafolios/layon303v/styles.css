@@ -704,3 +704,13 @@ button { color: inherit; font: inherit; }
   object-fit: cover;
   object-position: center;
 }
+
+/* El perfil de LAYON ahora ocupa el panel celeste */
+.process-section.about-panel {
+  padding: 0;
+}
+.process-section.about-panel .about {
+  position: relative;
+  z-index: 1;
+  padding-block: clamp(58px, 8vw, 90px);
+}
