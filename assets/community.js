@@ -6,6 +6,8 @@
     (ownScript?.src ? new URL('../', ownScript.src).href : new URL('./', location.href).href);
   const $ = selector => document.querySelector(selector);
   let client = null;
+  let publicClient = null;
+  const readClient = () => publicClient || client;
   let sessionUser = null;
   let sessionProfile = null;
   let activeProfile = null;
@@ -151,11 +153,11 @@
   }
 
   async function getProfileByUsername(username) {
-    let result = await client.from('profiles')
+    let result = await readClient().from('profiles')
       .select('id, username, display_name, avatar_url, created_at, profile_badges(is_mod, is_verified)')
       .eq('username', username).maybeSingle();
     if (result.error) {
-      result = await client.from('profiles')
+      result = await readClient().from('profiles')
         .select('id, username, display_name, avatar_url, created_at')
         .eq('username', username).maybeSingle();
     }
@@ -165,11 +167,11 @@
 
   async function getCurrentProfile(user) {
     if (!user) return null;
-    let result = await client.from('profiles')
+    let result = await readClient().from('profiles')
       .select('id, username, display_name, avatar_url, created_at, profile_badges(is_mod, is_verified)')
       .eq('id', user.id).maybeSingle();
     if (result.error) {
-      result = await client.from('profiles')
+      result = await readClient().from('profiles')
         .select('id, username, display_name, avatar_url, created_at')
         .eq('id', user.id).maybeSingle();
     }
@@ -282,7 +284,7 @@
       }
       const people = await loadProfiles(
         'id, username, display_name, avatar_url, created_at, profile_badges(is_mod, is_verified)',
-        fields => client.from('profiles').select(fields).in('id', ids)
+        fields => readClient().from('profiles').select(fields).in('id', ids)
       );
       const byId = new Map(people.map(person => [person.id, person]));
       ids.forEach(id => { const person = byId.get(id); if (person) list.appendChild(renderFriendListItem(person)); });
@@ -436,7 +438,7 @@
     try {
       const profiles = await loadProfiles(
         'id, username, display_name, avatar_url, created_at, profile_badges(is_mod, is_verified)',
-        fields => client.from('profiles').select(fields).order('created_at', { ascending: false }).limit(40)
+        fields => readClient().from('profiles').select(fields).order('created_at', { ascending: false }).limit(40)
       );
       let requests = [];
       if (sessionUser) { try { requests = await getFriendRequests(sessionUser); } catch (_) {} }
@@ -483,7 +485,7 @@
       }
       const ids = incoming.map(row => row.requester_id);
       const people = await loadProfiles('id, username, display_name, avatar_url, profile_badges(is_mod, is_verified)',
-        fields => client.from('profiles').select(fields).in('id', ids));
+        fields => readClient().from('profiles').select(fields).in('id', ids));
       people.forEach(profile => {
         const row = document.createElement('article');
         row.className = 'community-suggestion';
@@ -880,7 +882,7 @@
       try {
         let result;
         if (moderator) result = await client.rpc('moderator_delete_forum_post', { target_post_id: post.id });
-        else result = await client.from('forum_posts').delete().eq('id', post.id).eq('user_id', user.id);
+        else result = await readClient().from('forum_posts').delete().eq('id', post.id).eq('user_id', user.id);
         if (result.error) throw result.error;
         if ($('#forumFeed')) await loadForumFeed();
         if ($('#publicProfilePosts') && activeProfile?.id) await loadPostsForProfile(activeProfile.id, $('#publicProfilePosts'));
@@ -997,7 +999,7 @@
     };
     renderForm(null);
 
-    const result = await client.from('forum_post_comments')
+    const result = await readClient().from('forum_post_comments')
       .select('id,post_id,parent_comment_id,user_id,content,created_at,profiles!forum_post_comments_user_id_fkey(username,display_name,avatar_url,profile_badges(is_mod,is_verified)),forum_post_comment_likes(user_id)')
       .eq('post_id', post.id).order('created_at', { ascending: true }).limit(300);
     if (result.error) {
@@ -1110,11 +1112,11 @@
     target.replaceChildren();
     const loading = document.createElement('p'); loading.className = 'community-muted'; loading.textContent = 'Cargando publicaciones…';
     target.appendChild(loading);
-    let result = await client.from('forum_posts')
+    let result = await readClient().from('forum_posts')
       .select('id,user_id,content_html,content_text,image_url,created_at,profiles!forum_posts_user_id_fkey(username,display_name,avatar_url,profile_badges(is_mod,is_verified)),forum_post_likes(user_id)')
       .eq('user_id', profileId).order('created_at', { ascending: false }).limit(30);
     if (result.error) {
-      result = await client.from('forum_posts')
+      result = await readClient().from('forum_posts')
         .select('id,user_id,content_html,content_text,image_url,created_at,profiles!forum_posts_user_id_fkey(username,display_name,avatar_url),forum_post_likes(user_id)')
         .eq('user_id', profileId).order('created_at', { ascending: false }).limit(30);
     }
@@ -1220,7 +1222,7 @@
         people = await loadProfiles(
           'id,username,display_name,avatar_url,profile_badges(is_mod, is_verified)',
           fields => {
-            let request = client.from('profiles').select(fields).neq('id', user.id).limit(6);
+            let request = readClient().from('profiles').select(fields).neq('id', user.id).limit(6);
             if (query) request = request.ilike('username', query + '%');
             return request;
           }
@@ -1301,7 +1303,7 @@
           if (upload.error) throw upload.error;
           imageUrl = client.storage.from('post-images').getPublicUrl(uploadedPath).data.publicUrl;
         }
-        const result = await client.from('forum_posts').insert({
+        const result = await readClient().from('forum_posts').insert({
           user_id: user.id, content_html: contentHtml, content_text: contentText, image_url: imageUrl
         }).select('id').single();
         if (result.error) throw result.error;
@@ -1387,8 +1389,8 @@
     loading.className = 'community-muted';
     loading.textContent = 'Cargando publicación…';
     host.appendChild(loading);
-    let result = await client.from('forum_posts').select(forumPostSelect(true)).eq('id', postId).maybeSingle();
-    if (result.error) result = await client.from('forum_posts').select(forumPostSelect(false)).eq('id', postId).maybeSingle();
+    let result = await readClient().from('forum_posts').select(forumPostSelect(true)).eq('id', postId).maybeSingle();
+    if (result.error) result = await readClient().from('forum_posts').select(forumPostSelect(false)).eq('id', postId).maybeSingle();
     host.replaceChildren();
     if (result.error) {
       const message = document.createElement('p');
@@ -1455,7 +1457,7 @@
     }
     let actor = null;
     try {
-      const person = await client.from('profiles').select('id,username,display_name').eq('id', actorId).maybeSingle();
+      const person = await readClient().from('profiles').select('id,username,display_name').eq('id', actorId).maybeSingle();
       actor = person.data || null;
     } catch (_) {}
     const introTitle = $('.community-page-intro h1');
@@ -1463,8 +1465,8 @@
     const label = actor?.display_name || (actor?.username ? '@' + actor.username : 'Esta persona');
     if (introTitle) introTitle.textContent = 'Me gusta de ' + label;
     if (introDescription) introDescription.textContent = 'Estas son las publicaciones a las que ' + label + ' le dio me gusta. Abre cualquiera para ver sus respuestas.';
-    let result = await client.from('forum_posts').select(forumPostSelect(true)).in('id', postIds);
-    if (result.error) result = await client.from('forum_posts').select(forumPostSelect(false)).in('id', postIds);
+    let result = await readClient().from('forum_posts').select(forumPostSelect(true)).in('id', postIds);
+    if (result.error) result = await readClient().from('forum_posts').select(forumPostSelect(false)).in('id', postIds);
     host.replaceChildren();
     if (result.error) {
       const message = document.createElement('p');
@@ -1503,11 +1505,11 @@
     }
     host.replaceChildren();
     const loading = document.createElement('p'); loading.className = 'community-muted'; loading.textContent = 'Cargando publicaciones…'; host.appendChild(loading);
-    let result = await client.from('forum_posts')
+    let result = await readClient().from('forum_posts')
       .select('id,user_id,content_html,content_text,image_url,created_at,profiles!forum_posts_user_id_fkey(username,display_name,avatar_url,profile_badges(is_mod,is_verified)),forum_post_likes(user_id)')
       .order('created_at', { ascending: false }).limit(50);
     if (result.error) {
-      result = await client.from('forum_posts')
+      result = await readClient().from('forum_posts')
         .select('id,user_id,content_html,content_text,image_url,created_at,profiles!forum_posts_user_id_fkey(username,display_name,avatar_url),forum_post_likes(user_id)')
         .order('created_at', { ascending: false }).limit(50);
     }
@@ -1530,6 +1532,7 @@
     ensureForumNavigation();
     ensureNotificationLink();
     client = window.NS_SUPABASE_CLIENT || null;
+    publicClient = window.NS_SUPABASE_PUBLIC_CLIENT || null;
     if (!client) {
       if ($('#forumFeed')) {
         const info = document.createElement('p'); info.className = 'community-status community-status--error';
