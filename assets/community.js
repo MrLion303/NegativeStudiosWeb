@@ -1312,7 +1312,7 @@
         const usernames = Array.from(new Set(matches));
         if (createdPostId && usernames.length) {
           try {
-            const mentioned = await client.from('profiles').select('id,username').in('username', usernames);
+            const mentioned = await readClient().from('profiles').select('id,username').in('username', usernames);
             if (!mentioned.error && mentioned.data?.length) {
               const rows = mentioned.data.filter(person => person.id !== user.id).map(person => ({ post_id: createdPostId, mentioned_user_id: person.id }));
               if (rows.length) {
