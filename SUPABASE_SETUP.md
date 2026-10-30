@@ -137,10 +137,11 @@ Para permitir acceso con correo o nombre de usuario, despliega la función `logi
 
 1. En Supabase → **Edge Functions**, crea una función llamada exactamente `login-by-username` usando el editor web.
 2. Copia el contenido de [`supabase/functions/login-by-username/index.ts`](https://github.com/MrLion303/NegativeStudiosWeb/blob/main/supabase/functions/login-by-username/index.ts) y publícalo.
-3. Desactiva **Verify JWT** para esta función porque el usuario todavía no ha iniciado sesión. La propia función valida el nombre y la contraseña con Supabase Auth; responde con un mensaje genérico y no expone el correo asociado al nombre.
-4. No añadas claves privadas al navegador. La función usa las variables de entorno de Supabase; nunca copies la `service_role` a archivos públicos.
+3. Desactiva **Verify JWT** para esta función porque el usuario todavía no ha iniciado sesión. La función valida internamente la contraseña con Supabase Auth antes de devolver tokens. El despliegue actual debe conservar **Verify JWT: OFF**; no actives esa opción, porque bloquearía los inicios de sesión por nombre de usuario antes de llegar al código.
+4. El código permite únicamente los orígenes `https://negativestudios.akjon.dev`, `https://mrlion303.github.io` y `http://localhost:5500`, y devuelve `Cache-Control: no-store` para no almacenar respuestas que contienen tokens.
+5. No añadas claves privadas al navegador. La función usa las variables de entorno de Supabase; nunca copies la `service_role` a archivos públicos.
 
-Hasta que la función se despliegue, el inicio de sesión por correo sigue disponible; el inicio con nombre de usuario mostrará un aviso.
+Hasta que la función se despliegue, el inicio de sesión por correo sigue disponible; el inicio con nombre de usuario mostrará un aviso. El estado desplegado del proyecto NegativeWeb debe seguir en **Verify JWT: OFF** para esta función.
 
 ## 11. Centro de notificaciones, menciones y menús de moderación
 
