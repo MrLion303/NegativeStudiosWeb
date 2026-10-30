@@ -469,3 +469,63 @@ dialog.ns-modal::backdrop{background:rgba(1,6,13,.75);backdrop-filter:blur(5px)}
     max-height: 38px !important;
   }
 }
+
+/* Botones activos en Personalizar perfil: contraste claro y estado clicable. */
+.account-settings-page #settingsWorkspace .btn.ghost:not(:disabled),
+.account-settings-page #settingsWorkspace label.btn.ghost {
+  color: #eaf6ff !important;
+  background: linear-gradient(135deg, rgba(31, 105, 166, .72), rgba(15, 48, 78, .98)) !important;
+  border: 1px solid rgba(117, 195, 255, .58) !important;
+  box-shadow: 0 5px 18px rgba(0, 0, 0, .22), inset 0 1px 0 rgba(255, 255, 255, .08) !important;
+  opacity: 1 !important;
+  cursor: pointer;
+  font-weight: 800;
+  text-decoration: none;
+}
+.account-settings-page #settingsWorkspace .btn.ghost:not(:disabled):hover,
+.account-settings-page #settingsWorkspace label.btn.ghost:hover {
+  color: #fff !important;
+  background: linear-gradient(135deg, rgba(43, 137, 207, .9), rgba(19, 69, 108, 1)) !important;
+  border-color: rgba(151, 217, 255, .9) !important;
+  box-shadow: 0 8px 24px rgba(24, 120, 205, .28) !important;
+  transform: translateY(-1px);
+}
+.account-settings-page #settingsWorkspace .btn:focus-visible,
+.account-settings-page #settingsWorkspace .settings-tab:focus-visible,
+.account-settings-page #settingsWorkspace .account-logout-button:focus-visible {
+  outline: 2px solid #a8ddff;
+  outline-offset: 3px;
+}
+.account-settings-page #settingsWorkspace .btn:disabled {
+  opacity: .52 !important;
+  cursor: not-allowed;
+  filter: grayscale(.35);
+  transform: none;
+  box-shadow: none;
+}
+.account-settings-page .settings-tabs .settings-tab:not(.is-active):not(:disabled) {
+  color: #d1e2f2;
+  border-color: rgba(126, 190, 245, .25);
+  background: rgba(255, 255, 255, .035);
+}
+.account-settings-page .settings-tabs .settings-tab:not(.is-active):not(:disabled):hover {
+  color: #fff;
+  border-color: rgba(126, 200, 255, .58);
+  background: rgba(48, 133, 199, .18);
+}
+.account-settings-page .settings-tabs .settings-tab--danger:not(.is-active) {
+  color: #ffc9c9;
+  border-color: rgba(255, 126, 126, .24);
+  background: rgba(220, 65, 65, .045);
+}
+.account-settings-page #settingsWorkspace .account-logout-button {
+  color: #ffe5e5;
+  border-color: rgba(255, 126, 126, .62);
+  background: linear-gradient(135deg, rgba(131, 43, 54, .54), rgba(65, 20, 29, .96));
+  box-shadow: 0 5px 18px rgba(0, 0, 0, .2);
+  opacity: 1;
+}
+.account-settings-page #settingsWorkspace .account-logout-button:hover {
+  background: linear-gradient(135deg, rgba(167, 52, 66, .72), rgba(83, 22, 34, 1));
+  border-color: rgba(255, 157, 157, .9);
+}
