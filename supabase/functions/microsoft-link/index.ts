@@ -1,14 +1,19 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const siteOrigin = "https://mrlion303.github.io";
-const settingsReturnUrl = siteOrigin + "/NegativeStudiosWeb/configurar-perfil.html?connections=";
-const corsHeaders = {
-  "Access-Control-Allow-Origin": siteOrigin,
+const siteOrigin = "https://negativestudios.akjon.dev";
+const settingsReturnUrl = siteOrigin + "/configurar-perfil.html?connections=";
+const allowedOrigins = new Set([
+  siteOrigin,
+  "https://mrlion303.github.io",
+  "http://localhost:5500",
+]);
+const corsHeadersFor = (origin: string | null) => ({
+  "Access-Control-Allow-Origin": origin && allowedOrigins.has(origin) ? origin : siteOrigin,
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
   "Access-Control-Allow-Methods": "POST, GET, OPTIONS",
+  "Access-Control-Max-Age": "86400",
   "Vary": "Origin",
-};
-const json = (body: unknown, status = 200) => Response.json(body, { status, headers: corsHeaders });
+});
 const env = (key: string) => Deno.env.get(key) || "";
 const redirectToSettings = (state: string) => Response.redirect(settingsReturnUrl + encodeURIComponent(state), 302);
 
@@ -59,7 +64,16 @@ async function encryptToken(value: string, secret: string): Promise<string> {
 }
 
 Deno.serve(async (req: Request) => {
-  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+  const origin = req.headers.get("origin");
+  if (origin && !allowedOrigins.has(origin) && (req.method === "POST" || req.method === "OPTIONS")) {
+    return new Response("Origen no autorizado.", { status: 403 });
+  }
+  const responseHeaders = corsHeadersFor(origin);
+  if (req.method === "OPTIONS") return new Response("ok", { headers: responseHeaders });
+  const json = (body: unknown, status = 200) => Response.json(body, {
+    status,
+    headers: { ...responseHeaders, "Cache-Control": "no-store" },
+  });
   const url = env("SUPABASE_URL");
   const anonKey = env("SUPABASE_ANON_KEY");
   const serviceKey = env("SUPABASE_SERVICE_ROLE_KEY");
@@ -142,8 +156,7 @@ Deno.serve(async (req: Request) => {
   }
 
   if (req.method !== "POST") return json({ error: "Método no permitido." }, 405);
-  const origin = req.headers.get("origin");
-  if (origin && origin !== siteOrigin) return json({ error: "Origen no autorizado." }, 403);
+  if (origin && !allowedOrigins.has(origin)) return json({ error: "Origen no autorizado." }, 403);
   const authorization = req.headers.get("authorization");
   if (!authorization?.startsWith("Bearer ")) return json({ error: "Inicia sesión para administrar conexiones." }, 401);
   const caller = createClient(url, anonKey, {
