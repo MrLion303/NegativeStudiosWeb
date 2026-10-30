@@ -229,6 +229,8 @@ El esquema actual mantiene RLS activo en las tablas públicas y aplica permisos 
 - Las solicitudes pendientes y las notificaciones son privadas.
 - Los tokens Microsoft y la lista de administradores no tienen acceso directo desde el navegador; solo las funciones de servidor pueden utilizarlos.
 - Las funciones que se ejecutan exclusivamente como triggers no deben exponerse como RPC. El bloque final de `supabase/schema.sql` revoca su ejecución directa y deja los RPC de la aplicación solo para `authenticated`.
+- El borrado de publicaciones y comentarios protege las respuestas de otras personas; solo el autor sin respuestas ajenas o un moderador autorizado puede eliminar el hilo.
+- Los likes de respuestas del foro generan una notificación al autor y enlazan directamente a la respuesta.
 
 **Importante para el inicio con nombre de usuario:** la Edge Function `login-by-username` debe estar desplegada con **Verify JWT desactivado**. No hay una sesión válida todavía cuando se llama al endpoint; la propia función verifica la contraseña con Supabase Auth antes de entregar los tokens de sesión. Si se activa Verify JWT, Supabase rechazará la petición antes de ejecutar esa validación.
 
