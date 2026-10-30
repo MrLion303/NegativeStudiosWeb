@@ -5,6 +5,7 @@
   const SCRIPT_URL = ownScript && ownScript.src ? ownScript.src : new URL('assets/accounts.js', location.href).href;
   let SITE_ROOT = new URL('../', SCRIPT_URL).href;
   let client = null;
+  let publicClient = null;
   let currentUser = null;
   let lastProfile = null;
   let verifyEmail = '';
@@ -1326,7 +1327,8 @@
   }
 
   async function loadProjectComments(slug) {
-    if (!client) return;
+    const reader = publicClient || client;
+    if (!reader) return;
     const root = document.querySelector('[data-project-comments][data-project-slug="' + slug + '"]');
     if (!root) return;
     const feed = root.querySelector('[data-project-comments-feed]');
@@ -1341,16 +1343,16 @@
 
     const baseSelect = 'id, project_slug, parent_comment_id, user_id, content, created_at';
     const profileRelation = 'profiles!project_comments_user_id_fkey(username, display_name, avatar_url';
-    let response = await client.from('project_comments')
+    let response = await reader.from('project_comments')
       .select(baseSelect + ', ' + profileRelation + ', profile_badges(is_mod, is_verified)), project_comment_likes(user_id)')
       .eq('project_slug', slug).order('created_at', { ascending: true }).limit(1000);
     if (response.error) {
-      response = await client.from('project_comments')
+      response = await reader.from('project_comments')
         .select(baseSelect + ', ' + profileRelation + ', profile_badges(is_mod, is_verified))')
         .eq('project_slug', slug).order('created_at', { ascending: true }).limit(1000);
     }
     if (response.error) {
-      response = await client.from('project_comments')
+      response = await reader.from('project_comments')
         .select(baseSelect + ', profiles!project_comments_user_id_fkey(username, display_name, avatar_url)')
         .eq('project_slug', slug).order('created_at', { ascending: true }).limit(1000);
     }
@@ -1447,8 +1449,13 @@
     client = window.supabase.createClient(config.url, config.publishableKey, {
       auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
     });
+    // Las lecturas públicas no deben depender del JWT guardado de una sesión.
+    // Así evitamos que un access token vencido bloquee el feed de comentarios.
+    publicClient = window.supabase.createClient(config.url, config.publishableKey, {
+      auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false }
+    });
     window.NS_SUPABASE_CLIENT = client;
-    initProjectComments();
+    window.NS_SUPABASE_PUBLIC_CLIENT = publicClient;
     try { await loadScript(new URL('assets/community.js?v=20261023c', SITE_ROOT).href, 'data-ns-community-script'); } catch (error) { console.warn('No se pudo cargar el módulo de comunidad.', error); }
 
     if (pageType === 'auth') initAuthPage();
