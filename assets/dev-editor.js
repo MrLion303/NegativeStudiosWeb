@@ -107,7 +107,16 @@ function wire(){
  editorCanvasMode();applyPreview();markEditable();setupCanvasDrop();buildLayers();
  const ev=()=>{applyPreview();markEditable();buildLayers()};d.addEventListener('projects-rendered',ev);
  observer=new MutationObserver(()=>{markEditable();buildLayers()});observer.observe(d.body,{childList:true,subtree:true});
-}function q(s){try{return [...frame.contentDocument.querySelectorAll(s)]}catch(e){return[]}}
+}function q(s,raw=false){
+ try{
+   let selector=s;
+   if(!raw){
+     const records=(pageCfg().layoutIds||[]).filter(item=>selector===item.selector||selector.startsWith(item.selector+'>')).sort((a,b)=>b.selector.length-a.selector.length);
+     if(records.length){const item=records[0];selector='[data-ns-layout-id="'+item.id+'"]'+selector.slice(item.selector.length)}
+   }
+   return [...frame.contentDocument.querySelectorAll(selector)];
+ }catch(e){return[]}
+}
 function applyPreview(){
  const c=pageCfg(),d=frame.contentDocument;
  Object.entries(c.styles||{}).forEach(([selector,props])=>q(selector).forEach(el=>{el.style.removeProperty('visibility');Object.entries(props).forEach(([key,value])=>el.style.setProperty(key,value))}));
@@ -126,7 +135,7 @@ function applyPreview(){
    const template=d.createElement('template');template.innerHTML=block.html.trim();const node=template.content.firstElementChild;if(!node)return;
    node.dataset.nsEditorCloneId=block.id;const ref=host.children[block.index]||null;host.insertBefore(node,ref);
  });
- (c.layoutIds||[]).forEach(item=>{try{const node=q(item.selector)[0];if(node)node.dataset.nsLayoutId=item.id}catch(e){}});
+ (c.layoutIds||[]).forEach(item=>{try{const node=d.querySelector('[data-ns-layout-id="'+item.id+'"]')||q(item.selector,true)[0];if(node)node.dataset.nsLayoutId=item.id}catch(e){}});
  (c.order||[]).forEach(group=>{
    const parent=q(group.parent)[0];if(!parent)return;
    const nodes=(group.children||[]).map(selector=>{try{return q(selector).find(node=>node.parentElement===parent)}catch(e){return null}}).filter(Boolean);
@@ -224,7 +233,7 @@ function persistOrder(parent){
  const root=$('#layersList');if(!root||!frame?.contentDocument)return;
  const parent=primaryCanvasRoot();if(!parent){root.innerHTML='<p class="dev-empty-note">Esta página no tiene secciones editables.</p>';return}
  ensureLayoutIds(parent);
- const elements=Array.from(parent.children).filter(el=>!['SCRIPT','STYLE','NOSCRIPT'].includes(el.tagName)&&el.id!=='ns-transform-box'&&getComputedStyle(el).display!=='none');
+ const elements=Array.from(parent.children).filter(el=>!['SCRIPT','STYLE','NOSCRIPT'].includes(el.tagName)&&el.id!=='ns-transform-box'&&frame.contentWindow.getComputedStyle(el).display!=='none');
  if(!elements.length){root.innerHTML='<p class="dev-empty-note">Todavía no hay secciones en esta página.</p>';return}
  root.innerHTML=elements.map((el,index)=>{
    const heading=el.querySelector('h1,h2,h3,h4,[aria-label]');
