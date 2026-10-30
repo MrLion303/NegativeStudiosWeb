@@ -22,6 +22,24 @@
     return String(value || '').endsWith('/') ? String(value) : String(value || '') + '/';
   }
 
+  async function getSessionSafely() {
+    if (!client) return null;
+    try {
+      const { data, error } = await client.auth.getSession();
+      if (error) throw error;
+      return data?.session || null;
+    } catch (error) {
+      const detail = [error?.message, error?.code, error?.name].filter(Boolean).join(' ').toLowerCase();
+      // Si el refresh token ya no es válido, limpia solo esta sesión local.
+      // Un fallo de red temporal no debe cerrar la sesión del usuario.
+      if (/invalid refresh token|refresh token not found|refresh_token_not_found|session_not_found|invalid_grant/.test(detail)) {
+        try { await client.auth.signOut({ scope: 'local' }); } catch (_) {}
+      }
+      console.warn('No se pudo recuperar la sesión de NegativeStudios.', error);
+      return null;
+    }
+  }
+
   function loadScript(src, marker) {
     return new Promise((resolve, reject) => {
       const existing = marker ? document.querySelector('script[' + marker + ']') : null;
@@ -149,11 +167,11 @@
 
   async function loadProfileBrief(user) {
     if (!client || !user) return null;
-    let result = await client.from('profiles')
+    let result = await (publicClient || client).from('profiles')
       .select('id, username, display_name, avatar_url, banner_url, username_changed_at, created_at, profile_badges(is_mod, is_verified)')
       .eq('id', user.id).maybeSingle();
     if (result.error) {
-      result = await client.from('profiles')
+      result = await (publicClient || client).from('profiles')
         .select('id, username, display_name, avatar_url, banner_url, username_changed_at, created_at')
         .eq('id', user.id).maybeSingle();
     }
@@ -200,7 +218,7 @@
     );
     if (!avatarUrl) return null;
 
-    const { data: profile, error: readError } = await client.from('profiles')
+    const { data: profile, error: readError } = await (publicClient || client).from('profiles')
       .select('id, avatar_url')
       .eq('id', user.id)
       .maybeSingle();
@@ -479,11 +497,11 @@
 
   async function loadCurrentProfile(user) {
     if (!user || !client) return null;
-    let result = await client.from('profiles')
+    let result = await (publicClient || client).from('profiles')
       .select('id, username, display_name, bio, avatar_url, banner_url, username_changed_at, created_at, updated_at, profile_badges(is_mod, is_verified)')
       .eq('id', user.id).maybeSingle();
     if (result.error) {
-      result = await client.from('profiles')
+      result = await (publicClient || client).from('profiles')
         .select('id, username, display_name, bio, avatar_url, banner_url, username_changed_at, created_at, updated_at')
         .eq('id', user.id).maybeSingle();
     }
@@ -595,7 +613,7 @@
     const { data: urlData } = client.storage.from(bucket).getPublicUrl(path);
     let profile;
     try {
-      const result = await client.from('profiles')
+      const result = await (publicClient || client).from('profiles')
         .update({ [column]: urlData.publicUrl })
         .eq('id', currentUser.id)
         .select('id, username, display_name, bio, avatar_url, banner_url, username_changed_at, created_at, updated_at')
@@ -1079,8 +1097,8 @@
     showPublicProfileState('publicProfileLoading');
     let user = userFromSession || currentUser;
     if (!user) {
-      const { data } = await client.auth.getSession();
-      user = data.session?.user || null;
+      const session = await getSessionSafely();
+      user = session?.user || null;
     }
     const requestedUsername = new URLSearchParams(location.search).get('username');
     if (!requestedUsername && !user) {
@@ -1091,11 +1109,11 @@
     if (requestedUsername) {
       const username = normalizeUsername(requestedUsername);
       if (!username) { showPublicProfileState('publicProfileMissing'); return; }
-      let result = await client.from('profiles')
+      let result = await (publicClient || client).from('profiles')
         .select('id, username, display_name, bio, avatar_url, banner_url, created_at, profile_badges(is_mod, is_verified)')
         .eq('username', username).maybeSingle();
       if (result.error) {
-        result = await client.from('profiles')
+        result = await (publicClient || client).from('profiles')
           .select('id, username, display_name, bio, avatar_url, banner_url, created_at')
           .eq('username', username).maybeSingle();
       }
@@ -1492,9 +1510,8 @@
       authListenerRegistered = true;
     }
 
-    const { data, error } = await client.auth.getSession();
-    if (error) throw error;
-    const user = data.session?.user || null;
+    const session = await getSessionSafely();
+    const user = session?.user || null;
     await refreshNav(user);
     if (user) {
       try { await syncOAuthAvatar(user); } catch (_) {}
