@@ -12,7 +12,37 @@
       "order": [],
       "blocks": [],
       "customCss": "",
-      "grid": {}
+      "grid": {},
+      "layoutIds": [
+        {
+          "selector": "main>section.hero.home-cinematic-hero:nth-of-type(1)",
+          "id": "layer-mvvafiyy-ub6ue"
+        },
+        {
+          "selector": "main>div.marquee.home-after-hero",
+          "id": "layer-mvvafiyz-8nkf9"
+        },
+        {
+          "selector": "main>section.section.home-presentation:nth-of-type(2)",
+          "id": "layer-mvvafiyz-ipkru"
+        },
+        {
+          "selector": "#homeProjects",
+          "id": "layer-mvvafiyz-2x3ls"
+        },
+        {
+          "selector": "#featuredVideos",
+          "id": "layer-mvvafiyz-alib4"
+        },
+        {
+          "selector": "main>section.section:nth-of-type(5)",
+          "id": "layer-mvvafiyz-0tfyr"
+        },
+        {
+          "selector": "main>section.section:nth-of-type(6)",
+          "id": "layer-mvvafiyz-h5qm8"
+        }
+      ]
     },
     "proyectos/pdc-rebirth/index.html": {
       "styles": {
@@ -55,13 +85,14 @@
       "text": {},
       "attrs": {
         "main>section.project-media-band:nth-of-type(2)>div.container>div.project-media-frame>img": {
-          "src": "https://mrlion303.github.io/NegativeStudiosWeb/assets/media/overland.webp"
+          "src": "https://raw.githubusercontent.com/MrLion303/NegativeStudiosWeb/main/assets/uploads/1793383886178-OVERLAND_3.png"
         }
       },
       "order": [],
       "blocks": [],
       "customCss": "",
-      "grid": {}
+      "grid": {},
+      "layoutIds": []
     },
     "proyectos/parasites/index.html": {
       "styles": {},
@@ -70,7 +101,8 @@
       "order": [],
       "blocks": [],
       "customCss": "",
-      "grid": {}
+      "grid": {},
+      "layoutIds": []
     },
     "proyectos/pdc-final-chapter/index.html": {
       "styles": {
@@ -92,6 +124,26 @@
       "blocks": [],
       "customCss": "",
       "grid": {}
+    },
+    "proyectos/proyecto-x/index.html": {
+      "styles": {},
+      "text": {},
+      "attrs": {},
+      "order": [],
+      "blocks": [],
+      "customCss": "",
+      "grid": {},
+      "layoutIds": []
+    },
+    "proyectos/negative-awards/index.html": {
+      "styles": {},
+      "text": {},
+      "attrs": {},
+      "order": [],
+      "blocks": [],
+      "customCss": "",
+      "grid": {},
+      "layoutIds": []
     }
   }
 }
