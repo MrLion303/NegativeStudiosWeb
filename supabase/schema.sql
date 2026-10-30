@@ -985,3 +985,77 @@ create index if not exists project_comments_user_id_idx
   on public.project_comments(user_id);
 
 commit;
+
+
+-- Evitar que se pierdan respuestas de otras personas al borrar un comentario de proyecto.
+create or replace function public.protect_foreign_project_comment_replies()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  if auth.uid() is not null
+    and not exists (
+      select 1 from public.profile_badges
+      where user_id = auth.uid() and is_mod = true
+    )
+    and exists (
+      with recursive descendants(id, user_id) as (
+        select c.id, c.user_id
+        from public.project_comments c
+        where c.parent_comment_id = old.id
+        union all
+        select c.id, c.user_id
+        from public.project_comments c
+        join descendants d on c.parent_comment_id = d.id
+      )
+      select 1 from descendants where user_id <> auth.uid()
+    )
+  then
+    raise exception 'No puedes eliminar un comentario que contiene respuestas de otras personas. Un moderador puede eliminar el hilo completo.'
+      using errcode = '42501';
+  end if;
+  return old;
+end;
+$$;
+
+drop trigger if exists protect_foreign_project_comment_replies on public.project_comments;
+create trigger protect_foreign_project_comment_replies
+before delete on public.project_comments
+for each row execute function public.protect_foreign_project_comment_replies();
+
+-- Evitar que borrar una publicación propia elimine las respuestas de otras personas.
+create or replace function public.protect_foreign_forum_post_replies()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  if auth.uid() is not null
+    and not exists (
+      select 1 from public.profile_badges
+      where user_id = auth.uid() and is_mod = true
+    )
+    and exists (
+      select 1
+      from public.forum_post_comments c
+      where c.post_id = old.id
+        and c.user_id <> auth.uid()
+    )
+  then
+    raise exception 'No puedes eliminar una publicación que contiene respuestas de otras personas. Un moderador puede eliminarla.'
+      using errcode = '42501';
+  end if;
+  return old;
+end;
+$$;
+
+drop trigger if exists protect_foreign_forum_post_replies on public.forum_posts;
+create trigger protect_foreign_forum_post_replies
+before delete on public.forum_posts
+for each row execute function public.protect_foreign_forum_post_replies();
+
+revoke all on function public.protect_foreign_project_comment_replies() from public, anon, authenticated;
+revoke all on function public.protect_foreign_forum_post_replies() from public, anon, authenticated;
