@@ -1097,3 +1097,21 @@ after insert on public.forum_post_comment_likes
 for each row execute function public.notify_forum_post_comment_like();
 
 revoke all on function public.notify_forum_post_comment_like() from public, anon, authenticated;
+
+
+-- Explicit deny policies for private tables: only SECURITY DEFINER functions
+-- and service_role (which bypasses RLS) can access these records.
+drop policy if exists "Deny direct access to site admins" on public.site_admins;
+create policy "Deny direct access to site admins"
+  on public.site_admins for all to public
+  using (false) with check (false);
+
+drop policy if exists "Deny direct access to Microsoft connections" on public.microsoft_account_connections;
+create policy "Deny direct access to Microsoft connections"
+  on public.microsoft_account_connections for all to public
+  using (false) with check (false);
+
+drop policy if exists "Deny direct access to Microsoft OAuth states" on public.microsoft_oauth_states;
+create policy "Deny direct access to Microsoft OAuth states"
+  on public.microsoft_oauth_states for all to public
+  using (false) with check (false);
