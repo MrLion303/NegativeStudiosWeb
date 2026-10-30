@@ -62,6 +62,36 @@
       "blocks": [],
       "customCss": "",
       "grid": {}
+    },
+    "proyectos/parasites/index.html": {
+      "styles": {},
+      "text": {},
+      "attrs": {},
+      "order": [],
+      "blocks": [],
+      "customCss": "",
+      "grid": {}
+    },
+    "proyectos/pdc-final-chapter/index.html": {
+      "styles": {
+        "main>section.project-media-band:nth-of-type(2)>div.container>div.project-media-frame>img": {
+          "color": "rgb(244, 249, 255)",
+          "font-size": "16px",
+          "border-radius": "0px",
+          "padding": "0px",
+          "margin-top": "0px"
+        }
+      },
+      "text": {},
+      "attrs": {
+        "main>section.project-media-band:nth-of-type(2)>div.container>div.project-media-frame>img": {
+          "src": "https://raw.githubusercontent.com/MrLion303/NegativeStudiosWeb/main/assets/uploads/1793383052944-fondo1.png"
+        }
+      },
+      "order": [],
+      "blocks": [],
+      "customCss": "",
+      "grid": {}
     }
   }
 }
