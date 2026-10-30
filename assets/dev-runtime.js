@@ -8,6 +8,7 @@
     if(el.id)return '#'+esc(el.id);
     var parts=[],cur=el;
     while(cur&&cur.nodeType===1&&cur!==document.body){
+      if(cur.dataset&&cur.dataset.nsLayoutId){parts.unshift('[data-ns-layout-id="'+esc(cur.dataset.nsLayoutId)+'"]');break;}
       var part=cur.tagName.toLowerCase(),cl=[];
       for(var i=0;i<cur.classList.length&&cl.length<2;i++)if(!cur.classList[i].startsWith('ns-editor-'))cl.push(esc(cur.classList[i]));
       if(cl.length)part+='.'+cl.join('.');
