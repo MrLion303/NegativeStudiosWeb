@@ -1,18 +1,128 @@
-<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>Modo desarrollador — NegativeStudios</title><link rel="icon" href="assets/media/brand-icon.webp"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300..700&display=swap" rel="stylesheet"><link rel="stylesheet" href="assets/dev-editor.css?v=20261029c"></head><body>
-<div class="dev-token" id="tokenGate"><div class="dev-token-card"><h1>Modo desarrollador</h1><p>Tu sesión de GitHub ya debería estar autorizada desde la página de Anuncios. Si no lo está, puedes introducir el token aquí.</p><input id="tokenInput" type="password" autocomplete="off" placeholder="github_pat_…"><div id="tokenMsg" class="dev-status"></div><button class="dev-action dev-primary" id="tokenEnter">Entrar</button></div></div>
-<div class="dev-shell" id="editor" hidden><button class="dev-panel-toggle left-toggle" data-panel-toggle="left" aria-label="Contraer panel izquierdo" aria-expanded="true">‹</button><button class="dev-panel-toggle right-toggle" data-panel-toggle="right" aria-label="Contraer panel derecho" aria-expanded="true">›</button>
-<aside class="dev-sidebar">
-<div class="dev-brand">NegativeStudios Editor</div>
-<div class="dev-section"><h3>Páginas</h3><div class="dev-page-list" id="pageList"></div></div>
-<div class="dev-section"><h3>Diseño</h3><button class="dev-tool" id="theme">Paleta y tema</button><button class="dev-tool" id="projectTemplate" style="margin-top:6px">Nueva página de proyecto</button></div>
-</aside>
-<main class="dev-main">
-<div class="dev-toolbar"><button class="dev-action" id="exit">Salir</button><button class="dev-action toolbar-icon" id="undo" title="Deshacer (Ctrl+Z)">↶</button><button class="dev-action toolbar-icon" id="redo" title="Rehacer (Ctrl+Y)">↷</button><button class="dev-action" id="reset">Reiniciar sin guardar</button><button class="dev-action" id="reload">Recargar</button><span class="dev-status repo-version" id="repoVersion">Repositorio: cargando…</span><span class="spacer"></span><span class="dev-status" id="status">Listo</span><button class="dev-action" id="preview">Vista previa</button><button class="dev-action dev-primary" id="publish">Publicar cambios</button></div>
-<div class="dev-canvas"><div class="dev-frame"><iframe id="siteFrame"></iframe></div></div>
-</main>
-<aside class="dev-inspector">
-<div class="dev-tabs"><button class="dev-tab active" data-tab="inspector">Inspector</button><button class="dev-tab" data-tab="templates">Plantillas</button></div>
-<section id="inspectorPanel"><div class="inspector-top"><h2>Inspector</h2><div class="dev-muted" id="selectedName">Selecciona un elemento.</div></div><div id="inspectorBody"><p class="dev-muted">Selecciona un elemento de la página para editarlo.</p></div></section>
-<section id="templatesPanel" hidden><div class="inspector-top"><h2>Plantillas</h2><p class="dev-muted">Componentes listos para usar con el estilo de NegativeStudios. No necesitas escribir HTML.</p></div><div class="template-filter"><input id="templateSearch" placeholder="Buscar plantilla…"></div><div class="dev-template-library" id="templateLibrary"></div></section>
-</aside>
-</div><script src="assets/dev-editor.js?v=14"></script></body></html>
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#080c12">
+<title>NegativeStudios — Editor visual</title>
+<link rel="icon" href="assets/media/brand-icon.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300..700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/dev-editor.css?v=20261030a">
+</head>
+<body>
+<div class="dev-token" id="tokenGate">
+  <div class="dev-token-card">
+    <div class="dev-token-mark"><img src="assets/media/brand-icon.webp" alt="NegativeStudios"></div>
+    <span class="dev-token-kicker">NEGATIVESTUDIOS / WORKSPACE</span>
+    <h1>Editor visual</h1>
+    <p>Conecta tu sesión de GitHub para editar las páginas del sitio. Los cambios se publican directamente en la rama principal.</p>
+    <label for="tokenInput">Token de acceso</label>
+    <input id="tokenInput" type="password" autocomplete="off" placeholder="github_pat_…">
+    <div id="tokenMsg" class="dev-status" role="status"></div>
+    <button class="dev-action dev-primary" id="tokenEnter">Entrar al editor <span aria-hidden="true">→</span></button>
+    <small>Tu token se conserva únicamente durante esta sesión del navegador.</small>
+  </div>
+</div>
+
+<div class="dev-workspace" id="editor" hidden>
+  <header class="dev-appbar">
+    <a class="dev-app-brand" href="anuncios.html" aria-label="Salir del editor">
+      <img src="assets/media/brand-icon.webp" alt="">
+      <span><strong>NEGATIVE</strong><small>STUDIOS · EDITOR</small></span>
+    </a>
+    <div class="dev-app-center">
+      <span class="dev-app-context-icon"><span></span><span></span><span></span></span>
+      <div class="dev-app-page"><small>EDITANDO SITIO</small><strong id="activePageTitle">Inicio</strong></div>
+      <span class="dev-draft-indicator" id="draftIndicator"><i></i><span>Todo guardado</span></span>
+    </div>
+    <div class="dev-app-actions">
+      <button class="dev-action toolbar-icon" id="undo" title="Deshacer (Ctrl+Z)" aria-label="Deshacer" disabled>↶</button>
+      <button class="dev-action toolbar-icon" id="redo" title="Rehacer (Ctrl+Y)" aria-label="Rehacer" disabled>↷</button>
+      <span class="dev-app-divider"></span>
+      <button class="dev-action" id="reset">Restablecer</button>
+      <button class="dev-action" id="reload">Recargar</button>
+      <button class="dev-action" id="preview"><span aria-hidden="true">↗</span> Vista previa</button>
+      <button class="dev-action dev-primary" id="publish"><span aria-hidden="true">↑</span> Publicar</button>
+      <button class="dev-action dev-exit" id="exit" title="Salir del editor" aria-label="Salir del editor">×</button>
+    </div>
+  </header>
+
+  <div class="dev-shell" id="devShell">
+    <button class="dev-panel-toggle left-toggle" data-panel-toggle="left" aria-label="Contraer panel izquierdo" aria-expanded="true">‹</button>
+    <button class="dev-panel-toggle right-toggle" data-panel-toggle="right" aria-label="Contraer panel derecho" aria-expanded="true">›</button>
+
+    <aside class="dev-sidebar">
+      <div class="dev-sidebar-heading">
+        <div><small>ESPACIO DE TRABAJO</small><h2>Explorador</h2></div>
+        <span class="dev-live-mark" title="Conectado"></span>
+      </div>
+      <div class="dev-sidebar-tabs" role="tablist" aria-label="Explorador">
+        <button class="dev-sidebar-tab active" data-sidebar-tab="pages" role="tab" aria-selected="true">Páginas</button>
+        <button class="dev-sidebar-tab" data-sidebar-tab="layers" role="tab" aria-selected="false">Capas</button>
+      </div>
+      <section id="pagesPanel" class="dev-sidebar-panel">
+        <div class="dev-section">
+          <div class="dev-section-heading"><h3>Tu sitio</h3><span id="pageCount"></span></div>
+          <label class="dev-search"><span aria-hidden="true">⌕</span><input id="pageSearch" type="search" placeholder="Buscar página…" autocomplete="off"></label>
+          <div class="dev-page-list" id="pageList"></div>
+        </div>
+        <div class="dev-sidebar-bottom">
+          <div class="dev-section">
+            <h3>Personalización</h3>
+            <button class="dev-tool" id="theme"><span class="dev-tool-icon">◐</span><span><strong>Paleta y tema</strong><small>Colores de tu sitio</small></span><b>›</b></button>
+            <button class="dev-tool" id="projectTemplate"><span class="dev-tool-icon">＋</span><span><strong>Nueva página de proyecto</strong><small>Crear desde plantilla</small></span><b>›</b></button>
+          </div>
+          <span class="dev-sidebar-footnote">NegativeStudios · 2026</span>
+        </div>
+      </section>
+      <section id="layersPanel" class="dev-sidebar-panel" hidden>
+        <div class="dev-section">
+          <div class="dev-section-heading"><h3>Estructura de página</h3><button class="dev-mini-button" id="refreshLayers" title="Actualizar capas">↻</button></div>
+          <p class="dev-panel-help">Selecciona una sección para editarla. Arrastra sus controles para cambiar el orden.</p>
+          <div id="layersList" class="dev-layers-list"><p class="dev-empty-note">Carga una página para ver su estructura.</p></div>
+        </div>
+      </section>
+    </aside>
+
+    <main class="dev-main">
+      <div class="dev-toolbar">
+        <div class="dev-canvas-heading"><small>LIENZO</small><strong id="canvasPageName">Inicio</strong></div>
+        <button class="dev-insert-button" id="insertContent"><span>＋</span> Insertar</button>
+        <span class="dev-toolbar-spacer"></span>
+        <div class="dev-viewport-switch" role="group" aria-label="Tamaño de vista previa">
+          <button class="active" data-viewport="desktop" title="Escritorio" aria-label="Vista de escritorio">▰</button>
+          <button data-viewport="tablet" title="Tableta" aria-label="Vista de tableta">▯</button>
+          <button data-viewport="mobile" title="Móvil" aria-label="Vista móvil">▯</button>
+        </div>
+        <span class="dev-viewport-label" id="viewportLabel">Escritorio</span>
+      </div>
+      <div class="dev-canvas">
+        <div class="dev-frame" id="devFrame"><iframe id="siteFrame" title="Vista previa editable del sitio"></iframe></div>
+        <div class="dev-canvas-hint"><span>⌘</span> Selecciona un elemento para editarlo · Arrastra bloques desde Insertar al lienzo</div>
+      </div>
+    </main>
+
+    <aside class="dev-inspector">
+      <div class="dev-inspector-heading"><div><small>PROPIEDADES</small><h2>Panel de edición</h2></div><span class="dev-inspector-spark">✦</span></div>
+      <div class="dev-tabs" role="tablist" aria-label="Herramientas">
+        <button class="dev-tab active" data-tab="inspector" role="tab" aria-selected="true">Inspector</button>
+        <button class="dev-tab" data-tab="templates" role="tab" aria-selected="false">Insertar</button>
+      </div>
+      <section id="inspectorPanel">
+        <div class="inspector-top"><h3>Inspector</h3><div class="dev-muted" id="selectedName">Selecciona un elemento.</div></div>
+        <div id="inspectorBody"><div class="dev-inspector-empty"><span>✦</span><strong>Todo empieza con una selección</strong><p>Selecciona cualquier texto, imagen o sección en el lienzo para personalizar su contenido y apariencia.</p><button class="dev-empty-insert" id="emptyInsert">＋ Añadir contenido</button></div></div>
+      </section>
+      <section id="templatesPanel" hidden>
+        <div class="inspector-top"><h3>Biblioteca de contenido</h3><p class="dev-muted">Arrastra un componente al lienzo o selecciónalo para insertarlo.</p></div>
+        <div class="template-filter"><input id="templateSearch" placeholder="Buscar componentes…" autocomplete="off"></div>
+        <div class="dev-template-library" id="templateLibrary"></div>
+      </section>
+    </aside>
+  </div>
+</div>
+<script src="assets/dev-editor.js?v=20261030a"></script>
+</body>
+</html>
