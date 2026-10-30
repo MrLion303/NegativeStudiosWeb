@@ -574,7 +574,7 @@
 
   async function initSettingsPage(userFromSession) {
     if (!$('#settingsWorkspace') || !client) return;
-    const user = userFromSession || (await client.auth.getSession()).data.session?.user || null;
+    const user = userFromSession || (await getSessionSafely())?.user || null;
     if (!user) {
       $('#settingsWorkspace').hidden = true;
       $('#settingsGuest').hidden = false;
@@ -897,7 +897,7 @@
 
     $('#signOutButton')?.addEventListener('click', async () => {
       if (!client) return;
-      const { error } = await client.auth.signOut();
+      const { error } = await client.auth.signOut({ scope: 'local' });
       if (error) message('securityMessage', friendlyError(error), 'error');
       else location.assign(new URL('cuenta.html', SITE_ROOT).href);
     });
