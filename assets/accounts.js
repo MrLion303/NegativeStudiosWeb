@@ -1068,10 +1068,10 @@
             verified_enabled: verified.checked
           });
           if (result.error) throw result.error;
-          let fresh = await client.from('profiles')
+          let fresh = await (publicClient || client).from('profiles')
             .select('id, username, display_name, bio, avatar_url, banner_url, created_at, profile_badges(is_mod, is_verified)')
             .eq('id', profileToManage.id).maybeSingle();
-          if (fresh.error) fresh = await client.from('profiles')
+          if (fresh.error) fresh = await (publicClient || client).from('profiles')
             .select('id, username, display_name, bio, avatar_url, banner_url, created_at')
             .eq('id', profileToManage.id).maybeSingle();
           if (fresh.error) throw fresh.error;
