@@ -34,6 +34,114 @@ function gallery(){if(!p.gallery?.length)return '';return `<section class="nmc-s
 function videos(){if(!p.videos?.length)return '';return `<section class="nmc-section"><span class="eyebrow">Videos</span><div class="video-grid">${p.videos.map(([id,t])=>`<article class="video-card"><div class="video-frame"><iframe src="https://www.youtube-nocookie.com/embed/${encodeURIComponent(id)}" title="${esc(t)}" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe></div><div class="video-label">${esc(t)}</div></article>`).join('')}</div></section>`}
 function links(){if(!p.links?.length)return '';return `<section class="nmc-section"><span class="eyebrow">Enlaces originales</span><div class="nmc-child-grid">${p.links.map(([t,u])=>`<a class="nmc-child" href="${u}" target="_blank" rel="noreferrer"><h3>${esc(t)}</h3><span class="nmc-arrow">Abrir enlace →</span></a>`).join('')}</div></section>`}
 function comments(){return `<section id="projectComments" class="project-comments nmc-section" data-project-comments data-project-slug="${key}"><div class="project-comments-heading"><div><span class="eyebrow">Comunidad</span><h2>Comentarios del proyecto</h2></div><span class="project-comments-count" data-project-comments-count>0 comentarios</span></div><div class="project-comments-compose" data-project-comments-compose></div><div class="account-message" id="projectCommentsMessage" hidden role="status" aria-live="polite"></div><div class="project-comments-feed" data-project-comments-feed><p class="project-comment-empty">Los comentarios aparecerán aquí.</p></div></section>`}
-function render(){if(!p)return;document.title=`${p.title} — NegativeStudios`;if(!document.querySelector('link[href*="refresh.css"]')){const l=document.createElement('link');l.rel='stylesheet';l.href=asset('assets/refresh.css?v=20260930a');document.head.appendChild(l)}const icon=document.querySelector('link[rel="icon"]');if(icon)icon.href=href('assets/media/brand-icon.webp');document.body.insertAdjacentHTML('afterbegin',nav());const sections=p.sections.map(s=>`<section class="nmc-section">${s.title?`<h2 class="nmc-section-title">${esc(s.title)}</h2>`:''}${s.p.map(x=>`<p>${esc(x)}</p>`).join('')}</section>`).join('');document.querySelector('#projectPage').innerHTML=`<section class="project-shell-title"><div class="container"><div class="nmc-breadcrumb"><a href="${navHref('proyectos.html')}">Proyectos</a><span>›</span><span>${esc(p.title)}</span></div><span class="eyebrow">${esc(p.label)}</span><h1 class="display nmc-title">${esc(p.title)}</h1></div></section>${media()}<section class="section nmc-content-wrap project-shell-content"><div class="container nmc-layout"><article class="nmc-copy">${sections}${gallery()}${videos()}${links()}<section class="nmc-section nmc-source"><span class="eyebrow">Archivo original</span><p>Esta ruta conserva la página independiente que existe en el sitio original.</p><a class="btn ghost" href="${p.source}" target="_blank" rel="noreferrer">Abrir página original ↗</a></section>${comments()}</article></div></section>`;document.body.insertAdjacentHTML('beforeend',footer());if(!document.querySelector('script[src*="dev-runtime.js"]')){const ds=document.createElement('script');ds.src=asset('assets/dev-runtime.js?v=6');document.body.appendChild(ds)}const menu=document.querySelector('.menu-btn'),n=document.querySelector('#navLinks');menu?.addEventListener('click',()=>{n?.classList.toggle('open');menu.setAttribute('aria-expanded',n?.classList.contains('open')?'true':'false')});if(!document.querySelector('script[data-ns-account-script]')){const accountScript=document.createElement('script');accountScript.src=new URL('accounts.js?v=20261020u',SCRIPT_URL).href;accountScript.dataset.nsAccountScript='true';document.body.appendChild(accountScript);}}
+
+function overlandMarkup(){
+  if(key!=='overland')return '';
+  return '<section class="overland-progress-section" aria-labelledby="overlandProgressTitle"><div class="overland-progress-inner"><h2 class="overland-progress-title" id="overlandProgressTitle">Progreso de OVERLAND</h2><div id="overlandProgressContainer" aria-live="polite">Cargando progreso...</div></div></section>'+
+  '<section class="overland-coming-soon" aria-label="Próximamente"><div class="overland-coming-soon-inner"><img class="overland-coming-soon-image" src="https://imgur.com/DVtvH2Z.png" alt="DESENLACE" loading="lazy"><div class="overland-coming-soon-text">MUY PRONTO</div></div></section>';
+}
+function installOverlandStyles(){
+  if(key!=='overland'||document.getElementById('overland-page-styles'))return;
+  if(!document.querySelector('link[data-overland-font]')){
+    const font=document.createElement('link');
+    font.rel='stylesheet';
+    font.href='https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap';
+    font.dataset.overlandFont='true';
+    document.head.appendChild(font);
+  }
+  const style=document.createElement('style');
+  style.id='overland-page-styles';
+  style.textContent=[
+    '.overland-progress-section{width:100%;padding:54px 20px 28px;background:transparent}',
+    '.overland-progress-inner{width:min(900px,100%);margin:0 auto}',
+    '.overland-progress-title{text-align:center;font-size:clamp(2.6rem,7vw,4rem);line-height:1.08;margin:0 0 30px;background:linear-gradient(90deg,#773407,#f5f17d,#773407);background-size:200% 100%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;animation:overlandGoldShift 4s ease-in-out infinite}',
+    '@keyframes overlandGoldShift{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}',
+    '.overland-progress-box{margin:0 0 18px}',
+    '.overland-progress-info{display:flex;justify-content:space-between;align-items:baseline;gap:16px;margin-bottom:6px;font-size:14px;color:#fff}',
+    '.overland-progress-info span:first-child{min-width:0;overflow-wrap:anywhere}',
+    '.overland-progress-info span:last-child,.overland-progress-info strong:last-child{white-space:nowrap;font-variant-numeric:tabular-nums}',
+    '.overland-progress-track{width:100%;height:26px;position:relative;overflow:hidden;border-radius:999px!important;background:rgba(255,255,255,.05);backdrop-filter:blur(10px);box-shadow:inset 0 0 10px rgba(255,255,255,.05)}',
+    '.overland-progress-fill{height:100%;width:0%;position:relative;overflow:hidden;border-radius:999px!important;transition:width 1s cubic-bezier(.25,.8,.25,1);background:linear-gradient(270deg,#00ff88,#00ccff,#7a5cff,#00ff88);background-size:400% 400%;animation:overlandGradientMove 4s ease infinite;box-shadow:0 0 10px rgba(0,255,200,.35),0 0 25px rgba(0,180,255,.25)}',
+    '.overland-progress-fill:after{content:"";position:absolute;top:0;left:-60%;width:60%;height:100%;background:linear-gradient(120deg,transparent,rgba(255,255,255,.35),transparent);animation:overlandShine 2.5s infinite}',
+    '@keyframes overlandGradientMove{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}',
+    '@keyframes overlandShine{0%{left:-60%}100%{left:120%}}',
+    '.overland-progress-box.general .overland-progress-fill{background:linear-gradient(270deg,#ffb300,#ffd700,#fff2a8,#ffb300);background-size:400% 400%;animation:overlandGradientMove 3.5s ease infinite;box-shadow:0 0 12px rgba(255,215,0,.45),0 0 30px rgba(255,180,0,.25)}',
+    '.overland-progress-box.general .overland-progress-info strong{font-size:16px}',
+    '.overland-progress-error{color:#ffb8b8;text-align:center;padding:12px 0}',
+    '.overland-coming-soon{display:flex;justify-content:center;align-items:center;width:100%;padding:12px 20px 76px;background:transparent;text-align:center}',
+    '.overland-coming-soon-inner{width:min(666px,100%);margin:0 auto}',
+    '.overland-coming-soon-image{display:block;width:100%;max-width:666px;height:auto;margin:0 auto 10px}',
+    '.overland-coming-soon-text{position:relative;top:-10px;font-family:"Bebas Neue",sans-serif!important;font-size:clamp(3.3rem,9vw,5rem);line-height:1;letter-spacing:5px;color:#f5f17d;animation:overlandBlinkText 1s infinite alternate}',
+    '@keyframes overlandBlinkText{0%{color:#f5f17d}100%{color:#773407}}',
+    '@media(max-width:600px){.overland-progress-section{padding:42px 16px 22px}.overland-progress-title{margin-bottom:25px}.overland-progress-info{font-size:13px;gap:10px}.overland-progress-track{height:22px}.overland-coming-soon{padding:8px 16px 56px}.overland-coming-soon-text{letter-spacing:3px}}',
+    '@media(prefers-reduced-motion:reduce){.overland-progress-title,.overland-progress-fill,.overland-progress-fill:after,.overland-coming-soon-text{animation:none!important;transition:none!important}}'
+  ].join('\n');
+  document.head.appendChild(style);
+}
+function parseOverlandCsv(text){
+  const rows=[];
+  let row=[],field='',quoted=false;
+  const csv=String(text||'').replace(/^\uFEFF/,'');
+  for(let i=0;i<csv.length;i++){
+    const ch=csv[i];
+    if(quoted){
+      if(ch==='"'){
+        if(csv[i+1]==='"'){field+='"';i++;}
+        else quoted=false;
+      }else field+=ch;
+    }else if(ch==='"'&&field.length===0)quoted=true;
+    else if(ch===','){row.push(field);field='';}
+    else if(ch==='\n'){
+      row.push(field);
+      if(row.some(cell=>String(cell).trim()))rows.push(row);
+      row=[];field='';
+    }else if(ch!=='\r')field+=ch;
+  }
+  if(field.length||row.length){row.push(field);if(row.some(cell=>String(cell).trim()))rows.push(row);}
+  return rows;
+}
+function escapeOverlandHtml(value){
+  return String(value??'').replace(/[&<>"']/g,function(ch){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch];
+  });
+}
+function initOverlandProgress(){
+  if(key!=='overland')return;
+  const container=document.getElementById('overlandProgressContainer');
+  if(!container)return;
+  const csvUrl='https://docs.google.com/spreadsheets/d/e/2PACX-1vRW4W8W3eafn7UM8B5RlIToQpowNCopdnQtUEHayb4eEUNzYOEcK4AbV5F_2kSQav6ya1jNaXNmuVuk/pub?output=csv';
+  const formatPercent=new Intl.NumberFormat('es-MX',{maximumFractionDigits:2});
+  async function cargarDatos(){
+    try{
+      const response=await fetch(csvUrl+'&t='+Date.now(),{cache:'no-store'});
+      if(!response.ok)throw new Error('No se pudo consultar la hoja de cálculo.');
+      const csv=await response.text();
+      const datos=parseOverlandCsv(csv).map(columns=>{
+        const nombre=String(columns[0]||'').trim();
+        const raw=String(columns[1]??'').trim().replace(/%/g,'').replace(',','.');
+        const porcentaje=Number(raw);
+        if(!nombre||!Number.isFinite(porcentaje))return null;
+        return {nombre:nombre,porcentaje:Math.max(0,Math.min(100,porcentaje))};
+      }).filter(Boolean);
+      if(!datos.length){
+        container.innerHTML='<p class="overland-progress-error">Todavía no hay datos de progreso disponibles.</p>';
+        return;
+      }
+      const promedio=datos.reduce((total,item)=>total+item.porcentaje,0)/datos.length;
+      let html='<div class="overland-progress-box general"><div class="overland-progress-info"><strong>Progreso General</strong><strong>'+formatPercent.format(promedio)+'%</strong></div><div class="overland-progress-track"><div class="overland-progress-fill" style="width:'+promedio+'%"></div></div></div>';
+      datos.forEach(item=>{
+        html+='<div class="overland-progress-box"><div class="overland-progress-info"><span>'+escapeOverlandHtml(item.nombre)+'</span><span>'+formatPercent.format(item.porcentaje)+'%</span></div><div class="overland-progress-track"><div class="overland-progress-fill" style="width:'+item.porcentaje+'%"></div></div></div>';
+      });
+      container.innerHTML=html;
+    }catch(error){
+      container.innerHTML='<p class="overland-progress-error">Error cargando datos de progreso.</p>';
+      console.error('OVERLAND progress:',error);
+    }
+  }
+  cargarDatos();
+  window.setInterval(cargarDatos,60000);
+}
+
+function render(){if(!p)return;document.title=`${p.title} — NegativeStudios`;if(!document.querySelector('link[href*="refresh.css"]')){const l=document.createElement('link');l.rel='stylesheet';l.href=asset('assets/refresh.css?v=20260930a');document.head.appendChild(l)}const icon=document.querySelector('link[rel="icon"]');if(icon)icon.href=href('assets/media/brand-icon.webp');document.body.insertAdjacentHTML('afterbegin',nav());const sections=p.sections.map(s=>`<section class="nmc-section">${s.title?`<h2 class="nmc-section-title">${esc(s.title)}</h2>`:''}${s.p.map(x=>`<p>${esc(x)}</p>`).join('')}</section>`).join('');document.querySelector('#projectPage').innerHTML=`<section class="project-shell-title"><div class="container"><div class="nmc-breadcrumb"><a href="${navHref('proyectos.html')}">Proyectos</a><span>›</span><span>${esc(p.title)}</span></div><span class="eyebrow">${esc(p.label)}</span><h1 class="display nmc-title">${esc(p.title)}</h1></div></section>${media()}${overlandMarkup()}<section class="section nmc-content-wrap project-shell-content"><div class="container nmc-layout"><article class="nmc-copy">${sections}${gallery()}${videos()}${links()}<section class="nmc-section nmc-source"><span class="eyebrow">Archivo original</span><p>Esta ruta conserva la página independiente que existe en el sitio original.</p><a class="btn ghost" href="${p.source}" target="_blank" rel="noreferrer">Abrir página original ↗</a></section>${comments()}</article></div></section>`;if(key==='overland'){installOverlandStyles();initOverlandProgress()}document.body.insertAdjacentHTML('beforeend',footer());if(!document.querySelector('script[src*="dev-runtime.js"]')){const ds=document.createElement('script');ds.src=asset('assets/dev-runtime.js?v=6');document.body.appendChild(ds)}const menu=document.querySelector('.menu-btn'),n=document.querySelector('#navLinks');menu?.addEventListener('click',()=>{n?.classList.toggle('open');menu.setAttribute('aria-expanded',n?.classList.contains('open')?'true':'false')});if(!document.querySelector('script[data-ns-account-script]')){const accountScript=document.createElement('script');accountScript.src=new URL('accounts.js?v=20261020u',SCRIPT_URL).href;accountScript.dataset.nsAccountScript='true';document.body.appendChild(accountScript);}}
 function start(){const script=document.createElement('script');const artworkUrl=new URL('project-artwork.js',SCRIPT_URL);artworkUrl.searchParams.set('v','20261012b');script.src=artworkUrl.href;script.onload=function(){Promise.resolve(window.NS_PROJECT_ARTWORK_READY).then(render)};script.onerror=render;document.head.appendChild(script)}if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start);else start()
 })();
