@@ -227,14 +227,20 @@
   }
 
   function friendlyError(error) {
-    const raw = String(error?.message || error || 'Ocurrió un error inesperado.');
-    const lower = raw.toLowerCase();
+    const raw = String(error?.message || error?.code || error || 'Ocurrió un error inesperado.');
+    const lower = [error?.message, error?.code, raw].filter(Boolean).join(' ').toLowerCase();
     if (lower.includes('invalid login credentials')) return 'El correo o la contraseña no son correctos.';
     if (lower.includes('email not confirmed')) return 'Primero debes verificar tu correo electrónico.';
     if (lower.includes('user already registered')) return 'Ya existe una cuenta con ese correo. Prueba iniciar sesión.';
     if (lower.includes('password should be at least')) return 'La contraseña debe tener al menos ocho caracteres.';
     if (lower.includes('rate limit') || lower.includes('too many requests')) return 'Se alcanzó el límite temporal de solicitudes. Espera un momento antes de intentarlo de nuevo.';
-    if (lower.includes('provider is not enabled')) return 'Este proveedor todavía no está habilitado en Supabase. Revisa Authentication → Providers y activa Google, Discord o Twitch según corresponda.';
+    if (lower.includes('manual_linking_disabled') || lower.includes('manual linking is disabled') || lower.includes('manual linking disabled') || lower.includes('identity linking is disabled')) {
+      return 'La vinculación de cuentas está desactivada en Supabase. Activa Authentication → Settings → Allow manual linking y vuelve a intentarlo.';
+    }
+    if (lower.includes('identity_already_exists') || lower.includes('identity_exists') || lower.includes('identity already linked') || lower.includes('identity is already linked')) {
+      return 'Esta cuenta externa ya está vinculada a otra cuenta de Negative. Inicia sesión en la cuenta de Negative que la tiene vinculada; los perfiles no se fusionan automáticamente.';
+    }
+    if (lower.includes('provider is not enabled')) return 'Este proveedor todavía no está habilitado en Supabase. Revisa Authentication → Sign In / Providers y activa Google, Discord o Twitch según corresponda.';
     if (lower.includes('username_cooldown')) return 'Solo puedes cambiar tu nombre de usuario una vez cada 14 días.';
     if (lower.includes('duplicate key') || lower.includes('profiles_username_lower_unique')) return 'Ese nombre de usuario ya está ocupado. Prueba con otro.';
     if (lower.includes('failed to fetch') || lower.includes('function') && lower.includes('not found')) return 'No se pudo contactar con la función de Supabase. Comprueba que esté desplegada.';
@@ -649,17 +655,43 @@
     else if (requested?.startsWith('microsoft-error')) message('connectionsMessage', 'No se pudo vincular Microsoft. Comprueba las credenciales, permisos y URL de retorno en Supabase.', 'error');
   }
 
-  async function refreshIdentityConnections() {
-    if (!client || !currentUser) return;
+  async function loadLinkedIdentities() {
+    if (!client) return [];
+    if (typeof client.auth.getUserIdentities === 'function') {
+      const { data, error } = await client.auth.getUserIdentities();
+      if (error) throw error;
+      return Array.isArray(data?.identities) ? data.identities : [];
+    }
+
+    // Compatibilidad con versiones anteriores del cliente de Supabase.
     const { data, error } = await client.auth.getUser();
     if (error) throw error;
-    const identities = data.user?.identities || [];
+    return Array.isArray(data.user?.identities) ? data.user.identities : [];
+  }
+
+  function identityDisplayLabel(identity) {
+    const data = identity?.identity_data || {};
+    const label = [
+      data.full_name,
+      data.name,
+      data.global_name,
+      data.preferred_username,
+      data.user_name,
+      data.login,
+      identity?.email
+    ].find(value => typeof value === 'string' && value.trim());
+    return label ? 'Vinculada como ' + label.trim() : 'Vinculada';
+  }
+
+  async function refreshIdentityConnections() {
+    if (!client || !currentUser) return;
+    const identities = await loadLinkedIdentities();
     ['google','discord','twitch'].forEach(provider => {
       const status = document.querySelector('[data-connection-status="' + provider + '"]');
       const button = document.querySelector('[data-link-identity="' + provider + '"]');
       const row = document.querySelector('[data-identity-provider="' + provider + '"]');
       const identity = identities.find(item => item.provider === provider);
-      if (status) status.textContent = identity ? 'Vinculada' : 'No vinculada';
+      if (status) status.textContent = identity ? identityDisplayLabel(identity) : 'No vinculada';
       if (button) {
         button.textContent = identity ? 'Desvincular' : 'Vincular';
         button.dataset.connectionAction = identity ? 'unlink' : 'link';
@@ -704,11 +736,9 @@
         const action = button.dataset.connectionAction || 'link';
         button.disabled = true;
         try {
-          const { data, error } = await client.auth.getUser();
-          if (error) throw error;
-          const identity = (data.user?.identities || []).find(item => item.provider === provider);
+          const linked = await loadLinkedIdentities();
+          const identity = linked.find(item => item.provider === provider);
           if (action === 'unlink' && identity) {
-            const linked = data.user?.identities || [];
             if (linked.length <= 1) throw new Error('No puedes quitar el único método de acceso. Vincula otra cuenta primero.');
             const { error: unlinkError } = await client.auth.unlinkIdentity(identity);
             if (unlinkError) throw unlinkError;
