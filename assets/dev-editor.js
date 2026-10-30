@@ -151,6 +151,7 @@ function renderInspector(el){
  h+='<details open><summary>Tamaño y espacio</summary>'+slider('isize','Tamaño de texto',parseFloat(p['font-size']||getComputedStyle(el).fontSize),8,100,1,'px')+slider('iradius','Radio',parseFloat(p['border-radius']||0),0,80,1,'px')+slider('ipadding','Padding',parseFloat(p.padding)||0,0,120,1,'px')+slider('imargin','Margen superior',parseFloat((p.marginTop||p.margin||'').toString())||0,0,160,1,'px')+'<label>Anchura</label><div class="input-unit"><input id="iwidth" value="'+esc(p.width||'')+'" placeholder="Auto / 100%"><span>px/%</span></div><label>Altura</label><div class="input-unit"><input id="iheight" value="'+esc(p.height||'')+'" placeholder="Auto"><span>px/%</span></div></details>';
  h+='<details><summary>Posición y alineación</summary><div class="segmented"><button data-align="left">Izquierda</button><button data-align="center">Centro</button><button data-align="right">Derecha</button></div><label>Diseño del contenedor</label><div class="segmented"><button id="gridOn">Grid</button><button id="gridOff">Libre</button></div></details>';
  if(el.tagName==='IMG')h+='<details open><summary>Imagen</summary><label>URL</label><input id="isrc" value="'+esc(el.getAttribute('src')||'')+'"><input id="ifile" type="file" accept="image/*"><button class="dev-action" id="upload">Subir imagen</button><label>Texto alternativo</label><input id="ialt" value="'+esc(el.alt||'')+'"></details>';
+ if(el.tagName==='IMG'&&el.closest('.overland-carousel-track'))h+='<div class="inline-edit-hint">Esta imagen es una diapositiva del carrusel. Puedes añadir otra y después subirle una imagen diferente.</div><button class="dev-action" id="addCarouselImage">Agregar otra imagen al carrusel</button>';
  if(el.tagName==='A')h+='<details open><summary>Enlace</summary><label>URL</label><input id="ihref" value="'+esc(el.getAttribute('href')||'')+'"><label>Destino</label><select id="itarget"><option value="">Misma pestaña</option><option value="_blank">Nueva pestaña</option></select></details>';
  h+='<details><summary>CSS avanzado</summary><textarea id="icss">'+esc(c.customCss||'')+'</textarea></details><button class="dev-action dev-primary apply-main" id="apply">Aplicar cambios</button></div>';
  $('#inspectorBody').innerHTML=h;
@@ -173,6 +174,7 @@ function bindInspector(el){
  
  $('#gridOn').onclick=()=>toggleGrid(el,true);$('#gridOff').onclick=()=>toggleGrid(el,false);
  if(el.tagName==='IMG')$('#upload').onclick=()=>uploadImage(el);
+ if(el.tagName==='IMG'&&el.closest('.overland-carousel-track'))$('#addCarouselImage').onclick=()=>duplicateElement(el);
  if(el.tagName==='IMG')$('#ialt').onchange=()=>{historyPush();el.alt=$('#ialt').value;saveAttr(el,'alt',el.alt);dirty=true};
 }
 function applyElement(el){
@@ -180,11 +182,11 @@ function applyElement(el){
  const vals=[['color','icolor'],['background-color','ibg'],['font-size','isize'],['border-radius','iradius'],['padding','ipadding'],['margin-top','imargin'],['width','iwidth'],['height','iheight']];
  vals.forEach(([k,id])=>{const x=$('#'+id);if(!x)return;let v=x.value.trim();if(['font-size','border-radius','padding','margin-top'].includes(k)&&v&&!/[a-z%]+$/i.test(v))v+='px';if(v&&!(k==='background-color'&&/^transparent$/i.test(v)))c.styles[s][k]=v;else delete c.styles[s][k];if(v)el.style.setProperty(k,v);else if(k==='background-color')el.style.removeProperty(k)});
  if($('#itext')){c.text[s]={html:$('#itext').value};el.innerHTML=$('#itext').value}
- if(el.tagName==='IMG'&&$('#isrc')){const imageUrl=$('#isrc').value.trim();if(imageUrl){saveAttr(el,'src',imageUrl);el.setAttribute('src',imageUrl);el.removeAttribute('srcset');el.removeAttribute('data-src');}else{saveAttr(el,'src','');el.removeAttribute('src');el.removeAttribute('srcset');el.removeAttribute('data-src')}}
+ if(el.tagName==='IMG'&&$('#isrc')){const imageUrl=$('#isrc').value.trim();if(imageUrl){el.setAttribute('src',imageUrl);el.removeAttribute('srcset');el.removeAttribute('data-src');saveAttr(el,'src',imageUrl);}else{el.removeAttribute('src');el.removeAttribute('srcset');el.removeAttribute('data-src');saveAttr(el,'src','')}}
  if(el.tagName==='A'&&$('#ihref')){saveAttr(el,'href',$('#ihref').value);el.href=$('#ihref').value}
  c.customCss=$('#icss').value;dirty=true;msg('Cambios aplicados');updateHistoryButtons()
 }
-function saveAttr(el,k,v){const c=pageCfg(),s=sel(el);c.attrs[s]=c.attrs[s]||{};c.attrs[s][k]=v}
+function saveAttr(el,k,v){const c=pageCfg(),s=sel(el);c.attrs[s]=c.attrs[s]||{};c.attrs[s][k]=v;if(el.dataset.nsEditorCloneId){const clone=(c.clones||[]).find(item=>item.id===el.dataset.nsEditorCloneId);if(clone)clone.html=el.outerHTML}}
 function deleteElement(el){
  historyPush();const s=sel(el),c=pageCfg(),blockId=el.dataset.nsEditorBlock;
  c.deleted=c.deleted||[];if(!c.deleted.includes(s))c.deleted.push(s);
