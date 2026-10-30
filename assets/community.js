@@ -772,6 +772,26 @@
     return profile;
   }
 
+  function isExpiredJwtError(error) {
+    const detail = [error?.message, error?.code, error?.name].filter(Boolean).join(' ').toLowerCase();
+    return /jwt expired|token has expired|expired jwt|pgrst303/.test(detail);
+  }
+
+  async function runWithFreshSessionRetry(operation) {
+    let result = await operation();
+    if (!result?.error || !isExpiredJwtError(result.error)) return result;
+
+    // PostgREST puede recibir el access token vencido aunque autoRefreshToken
+    // esté activo. Fuerza la renovación y reintenta la operación una sola vez.
+    const refreshed = await client.auth.refreshSession();
+    if (refreshed.error || !refreshed.data?.session) {
+      throw refreshed.error || result.error;
+    }
+    sessionUser = refreshed.data.session.user || sessionUser;
+    result = await operation();
+    return result;
+  }
+
   function renderHeartButton(table, keyName, post, user, likes) {
     const button = document.createElement('button');
     let liked = Boolean(user && likes.some(row => row.user_id === user.id));
@@ -788,22 +808,23 @@
       button.disabled = true;
       const nextLiked = !liked;
       try {
-        const query = client.from(table);
         const filter = keyName === 'post_id' ? 'post_id' : 'comment_id';
-        if (nextLiked) {
-          const result = await query.insert({ [filter]: post.id, user_id: sessionUser.id });
-          if (result.error) throw result.error;
-        } else {
-          const result = await query.delete().eq(filter, post.id).eq('user_id', sessionUser.id);
-          if (result.error) throw result.error;
-        }
+        const operation = () => nextLiked
+          ? client.from(table).insert({ [filter]: post.id, user_id: sessionUser.id })
+          : client.from(table).delete().eq(filter, post.id).eq('user_id', sessionUser.id);
+        const result = await runWithFreshSessionRetry(operation);
+        if (result.error) throw result.error;
         liked = nextLiked;
         count = Math.max(0, count + (liked ? 1 : -1));
         button.classList.toggle('is-liked', liked);
         button.setAttribute('aria-label', liked ? 'Quitar corazón' : 'Dar corazón');
         button.textContent = '♥ ' + count;
       } catch (error) {
-        alert(error?.message || 'No se pudo guardar el corazón. Comprueba que hayas actualizado Supabase.');
+        const detail = [error?.message, error?.code].filter(Boolean).join(' ').toLowerCase();
+        const message = isExpiredJwtError(error) || detail.includes('refresh token')
+          ? 'Tu sesión caducó. Inicia sesión de nuevo y vuelve a intentarlo.'
+          : (error?.message || 'No se pudo guardar el corazón. Comprueba que hayas actualizado Supabase.');
+        alert(message);
       } finally {
         button.disabled = false;
       }
