@@ -86,10 +86,20 @@
     resolveProjectImages();
     (pc.order||[]).forEach(function(g){
       var par=document.querySelector(g.parent);if(!par)return;
+      var current=[].slice.call(par.children);
       var nodes=(g.children||[]).map(function(selector){
         try{return par.querySelector(':scope>'+selector)||document.querySelector(selector)}catch(e){return null}
       }).filter(function(node){return node&&node.parentElement===par});
-      nodes.forEach(function(node){par.appendChild(node)});
+      var ordered=new Set(nodes);
+      var extras=current.filter(function(node){return !ordered.has(node)}).map(function(node){
+        return {node:node,at:current.slice(0,current.indexOf(node)).filter(function(previous){return ordered.has(previous)}).length};
+      });
+      var arranged=[];
+      for(var index=0;index<=nodes.length;index++){
+        extras.filter(function(item){return item.at===index}).forEach(function(item){arranged.push(item.node)});
+        if(index<nodes.length)arranged.push(nodes[index]);
+      }
+      arranged.forEach(function(node){par.appendChild(node)});
     });
   }
   function load(){
