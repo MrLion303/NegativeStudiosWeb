@@ -219,3 +219,28 @@ La cuenta con badge de moderador también puede eliminar publicaciones ajenas de
 El esquema crea el bucket público `post-images`. Los perfiles, publicaciones e imágenes adjuntas son públicos por diseño; no publiques información privada.
 
 Después de ejecutar el SQL, prueba con dos cuentas distintas: envía una solicitud desde una, acéptala desde la otra, crea una publicación con formato e imagen y comprueba los corazones. El código ya está preparado, pero estas tablas y políticas no se activan en Supabase hasta ejecutar el esquema.
+
+## Auditoría y mantenimiento de Supabase
+
+El esquema actual mantiene RLS activo en las tablas públicas y aplica permisos explícitos:
+
+- Las consultas públicas solo pueden leer perfiles, proyectos, comentarios, publicaciones, respuestas, reacciones y amistades aceptadas.
+- Publicar, responder, reaccionar, actualizar perfiles y gestionar amistades requiere una sesión autenticada.
+- Las solicitudes pendientes y las notificaciones son privadas.
+- Los tokens Microsoft y la lista de administradores no tienen acceso directo desde el navegador; solo las funciones de servidor pueden utilizarlos.
+- Las funciones que se ejecutan exclusivamente como triggers no deben exponerse como RPC. El bloque final de `supabase/schema.sql` revoca su ejecución directa y deja los RPC de la aplicación solo para `authenticated`.
+
+**Importante para el inicio con nombre de usuario:** la Edge Function `login-by-username` debe estar desplegada con **Verify JWT desactivado**. No hay una sesión válida todavía cuando se llama al endpoint; la propia función verifica la contraseña con Supabase Auth antes de entregar los tokens de sesión. Si se activa Verify JWT, Supabase rechazará la petición antes de ejecutar esa validación.
+
+### Proveedores sociales
+
+Si aparece `provider is not enabled`, abre Supabase → Authentication → Sign In / Providers y habilita el proveedor que se desea utilizar. Google, Discord y Twitch requieren sus credenciales OAuth correspondientes y las URL de callback configuradas en cada proveedor. Que el botón aparezca en la web no significa que el proveedor esté habilitado en el proyecto.
+
+### Protección de contraseñas filtradas
+
+En Supabase → Authentication → Security / Password security, activa **Leaked password protection** cuando esté disponible en el plan del proyecto. Esta opción comprueba las contraseñas contra la base de contraseñas filtradas de HaveIBeenPwned y no se activa mediante el SQL del repositorio. Consulta la [documentación oficial de Supabase sobre seguridad de contraseñas](https://supabase.com/docs/guides/auth/password-security).
+
+### Cambios de base de datos
+
+Cuando se modifique el esquema, ejecuta el archivo completo `supabase/schema.sql` en SQL Editor. El bloque final de permisos está preparado para repetirse: vuelve a aplicar las ACL estrictas, las políticas de lectura de amistades y los índices de claves foráneas. No otorgues permisos generales a `anon` para solucionar errores de escritura; revisa primero la política RLS, el GRANT de la tabla y los permisos de columna.
+
