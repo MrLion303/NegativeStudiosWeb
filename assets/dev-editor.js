@@ -141,7 +141,7 @@ function makeTransformBox(el){
  const d=frame.contentDocument;if(!d)return;
  removeTransformBox();
  const box=d.createElement('div');box.id='ns-transform-box';
- box.innerHTML='<div class="ns-tb-label"></div>'+
+ box.innerHTML='<div class="ns-tb-label"></div><i class="ns-tb-move" title="Arrastra para mover">✥</i>'+
  '<i class="ns-h ns-h-nw"></i><i class="ns-h ns-h-n"></i><i class="ns-h ns-h-ne"></i>'+
  '<i class="ns-h ns-h-e"></i><i class="ns-h ns-h-se"></i><i class="ns-h ns-h-s"></i>'+
  '<i class="ns-h ns-h-sw"></i><i class="ns-h ns-h-w"></i>';
@@ -180,7 +180,7 @@ function makeTransformBox(el){
  });
  d.defaultView.addEventListener('scroll',sync,{passive:true});d.defaultView.addEventListener('resize',sync);
  box.addEventListener('pointerdown',e=>{
-   if(e.target!==box)return;
+   if(e.target!==box&&!e.target.classList.contains('ns-tb-move'))return;
    e.preventDefault();e.stopPropagation();
    const cs=getComputedStyle(el),sx=e.clientX,sy=e.clientY,sl=parseFloat(cs.left)||0,st=parseFloat(cs.top)||0;
    if(cs.position==='static')el.style.position='relative';
@@ -210,6 +210,7 @@ function ensureLayoutIds(parent){
 }
 function persistOrder(parent){
  if(!parent)return;
+ if(parent.parentElement)ensureLayoutIds(parent.parentElement);
  ensureLayoutIds(parent);
  const c=pageCfg(),parentSelector=sel(parent);
  const children=Array.from(parent.children).filter(child=>!['SCRIPT','STYLE','NOSCRIPT'].includes(child.tagName)&&child.id!=='ns-transform-box');
@@ -217,8 +218,7 @@ function persistOrder(parent){
  if(!group){group={parent:parentSelector,children:[]};c.order.push(group)}
  group.children=children.map(child=>sel(child));
  dirty=true;updateHistoryButtons();
-}
-function buildLayers(){
+}function buildLayers(){
  const root=$('#layersList');if(!root||!frame?.contentDocument)return;
  const parent=primaryCanvasRoot();if(!parent){root.innerHTML='<p class="dev-empty-note">Esta página no tiene secciones editables.</p>';return}
  ensureLayoutIds(parent);
