@@ -1059,3 +1059,41 @@ for each row execute function public.protect_foreign_forum_post_replies();
 
 revoke all on function public.protect_foreign_project_comment_replies() from public, anon, authenticated;
 revoke all on function public.protect_foreign_forum_post_replies() from public, anon, authenticated;
+
+
+-- Notificar cuando alguien da un corazón a una respuesta del foro.
+create or replace function public.notify_forum_post_comment_like()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  comment_owner uuid;
+  target_post_id bigint;
+begin
+  select c.user_id, c.post_id
+    into comment_owner, target_post_id
+  from public.forum_post_comments c
+  where c.id = new.comment_id;
+
+  if comment_owner is not null and comment_owner <> new.user_id then
+    insert into public.notifications(
+      user_id, actor_id, type, title, body, post_id, forum_post_comment_id
+    )
+    values(
+      comment_owner, new.user_id, 'post_comment_like',
+      'Le gustó tu respuesta', '', target_post_id, new.comment_id
+    );
+  end if;
+
+  return new;
+end;
+$$;
+
+drop trigger if exists notify_forum_post_comment_like on public.forum_post_comment_likes;
+create trigger notify_forum_post_comment_like
+after insert on public.forum_post_comment_likes
+for each row execute function public.notify_forum_post_comment_like();
+
+revoke all on function public.notify_forum_post_comment_like() from public, anon, authenticated;
