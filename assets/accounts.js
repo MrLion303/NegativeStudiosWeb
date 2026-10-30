@@ -253,6 +253,8 @@
     if (lower.includes('user already registered')) return 'Ya existe una cuenta con ese correo. Prueba iniciar sesión.';
     if (lower.includes('password should be at least')) return 'La contraseña debe tener al menos ocho caracteres.';
     if (lower.includes('rate limit') || lower.includes('too many requests')) return 'Se alcanzó el límite temporal de solicitudes. Espera un momento antes de intentarlo de nuevo.';
+    if (lower.includes('jwt expired') || lower.includes('token has expired')) return 'Tu sesión caducó. Inicia sesión de nuevo para continuar.';
+    if (lower.includes('invalid refresh token') || lower.includes('refresh token not found') || lower.includes('session_not_found')) return 'Tu sesión ya no es válida. Inicia sesión de nuevo.';
     if (lower.includes('manual_linking_disabled') || lower.includes('manual linking is disabled') || lower.includes('manual linking disabled') || lower.includes('identity linking is disabled')) {
       return 'La vinculación de cuentas está desactivada en Supabase. Activa Authentication → Settings → Allow manual linking y vuelve a intentarlo.';
     }
