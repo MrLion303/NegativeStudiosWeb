@@ -640,6 +640,7 @@
         : 0;
       const friendNotification = item.type === 'friend_request' || item.type === 'friend_request_accepted';
       const commentNotification = ['post_reply', 'post_comment_reply', 'comment_reply'].includes(item.type);
+      const replyLikeNotification = item.type === 'post_comment_like';
       const actorName = actor.display_name || actor.username || 'Alguien';
       const headline = document.createElement('strong');
       if (friendNotification) {
@@ -650,6 +651,8 @@
         headline.textContent = item.type === 'post_reply'
           ? actorName + ' comentó en tu publicación.'
           : actorName + ' respondió a tu comentario.';
+      } else if (replyLikeNotification) {
+        headline.textContent = actorName + ' le dio me gusta a tu respuesta.';
       } else {
         headline.textContent = likeCount > 1 ? 'Le gustaron ' + likeCount + ' publicaciones' : (item.title || 'Nueva actividad');
       }
@@ -658,6 +661,8 @@
         body.textContent = actorName + ' le dio me gusta a ' + likeCount + ' de tus publicaciones. Pulsa para recorrerlas.';
       } else if (commentNotification) {
         body.textContent = String(item.body || '').trim() || 'El comentario ya no está disponible.';
+      } else if (replyLikeNotification) {
+        body.textContent = 'Abre la conversación para ver la respuesta que recibió el corazón.';
       } else {
         body.textContent = item.body || actorName + ' interactuó con tu contenido.';
       }
@@ -667,8 +672,8 @@
       else copy.append(headline, body, meta);
       const open = document.createElement('a'); open.className = 'community-notification-open';
       open.href = notificationDestination(item, actor);
-      open.textContent = likeCount > 1 ? 'Ver publicaciones' : friendNotification ? 'Ver perfil' : commentNotification ? 'Ver comentario' : 'Ver';
-      open.setAttribute('aria-label', likeCount > 1 ? 'Ver publicaciones a las que dio me gusta' : commentNotification ? 'Ver comentario' : friendNotification ? 'Ver perfil del usuario' : 'Ver actividad');
+      open.textContent = likeCount > 1 ? 'Ver publicaciones' : friendNotification ? 'Ver perfil' : replyLikeNotification ? 'Ver respuesta' : commentNotification ? 'Ver comentario' : 'Ver';
+      open.setAttribute('aria-label', likeCount > 1 ? 'Ver publicaciones a las que dio me gusta' : replyLikeNotification ? 'Ver respuesta que recibió un corazón' : commentNotification ? 'Ver comentario' : friendNotification ? 'Ver perfil del usuario' : 'Ver actividad');
       const activate = async () => {
         const notifications = item.groupedLikes?.length ? item.groupedLikes : [item];
         await Promise.all(notifications.filter(row => !row.read_at).map(row => markNotificationRead(row.id)));
