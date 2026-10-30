@@ -168,3 +168,5 @@ body .community-compose-login .community-button:hover {
   -webkit-clip-path: none !important;
   overflow: visible !important;
 }
+/* Estilo global: esquinas rectas en todos los componentes de NegativeStudios. */
+*,*::before,*::after{border-radius:0!important}
