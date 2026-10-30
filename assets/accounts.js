@@ -1474,7 +1474,7 @@
     });
     window.NS_SUPABASE_CLIENT = client;
     window.NS_SUPABASE_PUBLIC_CLIENT = publicClient;
-    try { await loadScript(new URL('assets/community.js?v=20261030f', SITE_ROOT).href, 'data-ns-community-script'); } catch (error) { console.warn('No se pudo cargar el módulo de comunidad.', error); }
+    try { await loadScript(new URL('assets/community.js?v=20261030g', SITE_ROOT).href, 'data-ns-community-script'); } catch (error) { console.warn('No se pudo cargar el módulo de comunidad.', error); }
 
     if (pageType === 'auth') initAuthPage();
     if (pageType === 'settings') initSettingsEvents();
