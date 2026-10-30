@@ -73,6 +73,24 @@ function installOverlandStyles(){
     '.overland-info-grid .nmc-section{min-width:0;margin:0 0 34px;padding:0 0 30px}',
     '.overland-info-grid .nmc-section-title{margin-bottom:16px}',
     '@media(max-width:700px){.overland-info-grid{grid-template-columns:minmax(0,1fr);gap:0}.overland-info-grid .nmc-section{margin-bottom:28px}}',
+    '.overland-teasers-layout{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:32px;align-items:start}',
+    '.overland-teasers-layout>.nmc-section{min-width:0;margin:0 0 34px}',
+    '.overland-carousel-panel{min-width:0;margin:0 0 34px}',
+    '.overland-carousel{width:100%}',
+    '.overland-carousel-frame{width:100%;aspect-ratio:4/3;position:relative;overflow:hidden;background:rgba(255,255,255,.04);border:1px solid var(--line)}',
+    '.overland-carousel-track{display:flex;width:100%;height:100%;transition:transform .55s cubic-bezier(.22,.61,.36,1);will-change:transform}',
+    '.overland-carousel-track>img{display:block;flex:0 0 100%;width:100%;min-width:100%;height:100%;object-fit:cover;user-select:none}',
+    '.overland-carousel-controls{display:flex;align-items:center;justify-content:center;gap:18px;margin-top:14px}',
+    '.overland-carousel-controls>button{display:grid;place-items:center;width:36px;height:36px;border:1px solid var(--line);background:rgba(255,255,255,.035);color:#fff;font-size:24px;line-height:1;cursor:pointer;transition:background .2s ease,border-color .2s ease}',
+    '.overland-carousel-controls>button:hover{background:rgba(102,194,255,.12);border-color:var(--line-strong)}',
+    '.overland-carousel-dots{display:flex;align-items:center;justify-content:center;gap:9px}',
+    '.overland-carousel-dots>button{width:7px;height:7px;padding:0;border:0;background:rgba(255,255,255,.35);cursor:pointer;transition:transform .2s ease,background .2s ease}',
+    '.overland-carousel-dots>button.is-active{background:var(--accent);transform:scale(1.3)}',
+    '.ns-editor-carousel-preview .overland-carousel-frame{aspect-ratio:auto;overflow:visible}',
+    '.ns-editor-carousel-preview .overland-carousel-track{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;width:100%;height:auto;transform:none!important;transition:none}',
+    '.ns-editor-carousel-preview .overland-carousel-track>img{width:100%;min-width:0;height:auto;aspect-ratio:4/3;object-fit:cover;cursor:pointer}',
+    '.ns-editor-carousel-preview .overland-carousel-controls{display:none}',
+    '@media(max-width:700px){.overland-teasers-layout{grid-template-columns:minmax(0,1fr);gap:6px}.overland-teasers-layout>.nmc-section{margin-bottom:24px}.overland-carousel-panel{margin-bottom:30px}.overland-carousel-frame{aspect-ratio:16/10}}',
     '.overland-progress-error{color:#ffb8b8;text-align:center;padding:12px 0}',
     '.overland-coming-soon{display:flex;justify-content:center;align-items:center;width:100%;padding:12px 20px 76px;background:transparent;text-align:center}',
     '.overland-coming-soon-inner{width:min(666px,100%);margin:0 auto}',
@@ -166,9 +184,90 @@ function overlandContentMarkup(){
   ).join('');
   return (trailer?'<section class="nmc-section overland-trailer-section"><h2 class="nmc-section-title">'+esc(trailer.title)+'</h2><div class="video-grid overland-trailer-grid">'+trailerVideos+'</div></section>':'')+
     '<div class="overland-info-grid">'+renderTextSection(overland)+renderTextSection(development)+'</div>'+
-    renderTextSection(teasers);
+    (teasers?'<div class="overland-teasers-layout">'+renderTextSection(teasers)+
+      '<section class="overland-carousel-panel" aria-label="Carrusel de imágenes de OVERLAND"><div class="overland-carousel" data-overland-carousel>'+
+      '<div class="overland-carousel-frame"><div class="overland-carousel-track" data-overland-carousel-track>'+
+      '<img src="'+href('assets/media/overland-gallery.webp')+'" alt="Imagen de OVERLAND" loading="lazy">'+
+      '<img src="'+href('assets/media/overland.webp')+'" alt="Otra imagen de OVERLAND" loading="lazy">'+
+      '</div></div><div class="overland-carousel-controls">'+
+      '<button type="button" data-overland-prev aria-label="Imagen anterior">‹</button>'+
+      '<div class="overland-carousel-dots" aria-label="Seleccionar imagen"></div>'+
+      '<button type="button" data-overland-next aria-label="Imagen siguiente">›</button>'+
+      '</div></div></section></div>':'');
 }
 
-function render(){if(!p)return;document.title=`${p.title} — NegativeStudios`;if(!document.querySelector('link[href*="refresh.css"]')){const l=document.createElement('link');l.rel='stylesheet';l.href=asset('assets/refresh.css?v=20260930a');document.head.appendChild(l)}const icon=document.querySelector('link[rel="icon"]');if(icon)icon.href=href('assets/media/brand-icon.webp');document.body.insertAdjacentHTML('afterbegin',nav());const sections=key==='overland'?'':p.sections.map(s=>`<section class="nmc-section">${s.title?`<h2 class="nmc-section-title">${esc(s.title)}</h2>`:''}${s.p.map(x=>`<p>${esc(x)}</p>`).join('')}</section>`).join('');document.querySelector('#projectPage').innerHTML=`<section class="project-shell-title"><div class="container"><div class="nmc-breadcrumb"><a href="${navHref('proyectos.html')}">Proyectos</a><span>›</span><span>${esc(p.title)}</span></div><span class="eyebrow">${esc(p.label)}</span><h1 class="display nmc-title">${esc(p.title)}</h1></div></section>${media()}${overlandMarkup()}<section class="section nmc-content-wrap project-shell-content"><div class="container nmc-layout"><article class="nmc-copy">${key==='overland'?overlandContentMarkup():sections}${gallery()}${key==='overland'?'':videos()}${links()}<section class="nmc-section nmc-source"><span class="eyebrow">Archivo original</span><p>Esta ruta conserva la página independiente que existe en el sitio original.</p><a class="btn ghost" href="${p.source}" target="_blank" rel="noreferrer">Abrir página original ↗</a></section>${comments()}</article></div></section>`;if(key==='overland'){installOverlandStyles();initOverlandProgress()}document.body.insertAdjacentHTML('beforeend',footer());if(!document.querySelector('script[src*="dev-runtime.js"]')){const ds=document.createElement('script');ds.src=asset('assets/dev-runtime.js?v=6');document.body.appendChild(ds)}const menu=document.querySelector('.menu-btn'),n=document.querySelector('#navLinks');menu?.addEventListener('click',()=>{n?.classList.toggle('open');menu.setAttribute('aria-expanded',n?.classList.contains('open')?'true':'false')});if(!document.querySelector('script[data-ns-account-script]')){const accountScript=document.createElement('script');accountScript.src=new URL('accounts.js?v=20261020u',SCRIPT_URL).href;accountScript.dataset.nsAccountScript='true';document.body.appendChild(accountScript);}}
+
+function initOverlandCarousel(){
+  if(key!=='overland')return;
+  const editorPreview=new URLSearchParams(window.location.search).has('editor');
+  if(editorPreview)document.documentElement.classList.add('ns-editor-carousel-preview');
+  document.querySelectorAll('[data-overland-carousel]').forEach(carousel=>{
+    if(carousel.dataset.nsCarouselReady==='true')return;
+    const track=carousel.querySelector('[data-overland-carousel-track]');
+    const dots=carousel.querySelector('.overland-carousel-dots');
+    const previous=carousel.querySelector('[data-overland-prev]');
+    const next=carousel.querySelector('[data-overland-next]');
+    if(!track||!dots)return;
+    carousel.dataset.nsCarouselReady='true';
+    let active=0;
+    let slideCount=0;
+    const slides=()=>Array.from(track.children).filter(node=>node.tagName==='IMG');
+    const render=()=>{
+      const items=slides();
+      if(!items.length)return;
+      if(active>=items.length)active=0;
+      if(items.length!==slideCount){
+        slideCount=items.length;
+        dots.innerHTML=items.map((_,index)=>
+          '<button type="button" data-overland-dot="'+index+'" aria-label="Ir a la imagen '+(index+1)+'"></button>'
+        ).join('');
+        dots.querySelectorAll('[data-overland-dot]').forEach(dot=>{
+          dot.addEventListener('click',()=>{
+            active=Number(dot.dataset.overlandDot)||0;
+            render();
+            restartAutoplay();
+          });
+        });
+      }
+      track.style.transform='translateX(-'+(active*100)+'%)';
+      dots.querySelectorAll('[data-overland-dot]').forEach((dot,index)=>{
+        dot.classList.toggle('is-active',index===active);
+        dot.setAttribute('aria-current',index===active?'true':'false');
+      });
+      items.forEach((item,index)=>item.setAttribute('aria-hidden',index===active?'false':'true'));
+    };
+    const move=direction=>{
+      const count=slides().length;
+      if(count<2)return;
+      active=(active+direction+count)%count;
+      render();
+      restartAutoplay();
+    };
+    let autoplay=null;
+    const stopAutoplay=()=>{
+      if(autoplay!==null){window.clearInterval(autoplay);autoplay=null;}
+    };
+    const restartAutoplay=()=>{
+      stopAutoplay();
+      if(!editorPreview&&!window.matchMedia('(prefers-reduced-motion: reduce)').matches&&slides().length>1){
+        autoplay=window.setInterval(()=>move(1),5000);
+      }
+    };
+    previous?.addEventListener('click',()=>move(-1));
+    next?.addEventListener('click',()=>move(1));
+    carousel.addEventListener('mouseenter',stopAutoplay);
+    carousel.addEventListener('mouseleave',restartAutoplay);
+    render();
+    restartAutoplay();
+    const observer=new MutationObserver(()=>{
+      const count=slides().length;
+      if(count!==slideCount)render();
+      restartAutoplay();
+    });
+    observer.observe(track,{childList:true});
+  });
+}
+
+function render(){if(!p)return;document.title=`${p.title} — NegativeStudios`;if(!document.querySelector('link[href*="refresh.css"]')){const l=document.createElement('link');l.rel='stylesheet';l.href=asset('assets/refresh.css?v=20260930a');document.head.appendChild(l)}const icon=document.querySelector('link[rel="icon"]');if(icon)icon.href=href('assets/media/brand-icon.webp');document.body.insertAdjacentHTML('afterbegin',nav());const sections=key==='overland'?'':p.sections.map(s=>`<section class="nmc-section">${s.title?`<h2 class="nmc-section-title">${esc(s.title)}</h2>`:''}${s.p.map(x=>`<p>${esc(x)}</p>`).join('')}</section>`).join('');document.querySelector('#projectPage').innerHTML=`<section class="project-shell-title"><div class="container"><div class="nmc-breadcrumb"><a href="${navHref('proyectos.html')}">Proyectos</a><span>›</span><span>${esc(p.title)}</span></div><span class="eyebrow">${esc(p.label)}</span><h1 class="display nmc-title">${esc(p.title)}</h1></div></section>${media()}${overlandMarkup()}<section class="section nmc-content-wrap project-shell-content"><div class="container nmc-layout"><article class="nmc-copy">${key==='overland'?overlandContentMarkup():sections}${gallery()}${key==='overland'?'':videos()}${links()}<section class="nmc-section nmc-source"><span class="eyebrow">Archivo original</span><p>Esta ruta conserva la página independiente que existe en el sitio original.</p><a class="btn ghost" href="${p.source}" target="_blank" rel="noreferrer">Abrir página original ↗</a></section>${comments()}</article></div></section>`;if(key==='overland'){installOverlandStyles();initOverlandProgress();initOverlandCarousel()}document.body.insertAdjacentHTML('beforeend',footer());if(!document.querySelector('script[src*="dev-runtime.js"]')){const ds=document.createElement('script');ds.src=asset('assets/dev-runtime.js?v=6');document.body.appendChild(ds)}const menu=document.querySelector('.menu-btn'),n=document.querySelector('#navLinks');menu?.addEventListener('click',()=>{n?.classList.toggle('open');menu.setAttribute('aria-expanded',n?.classList.contains('open')?'true':'false')});if(!document.querySelector('script[data-ns-account-script]')){const accountScript=document.createElement('script');accountScript.src=new URL('accounts.js?v=20261020u',SCRIPT_URL).href;accountScript.dataset.nsAccountScript='true';document.body.appendChild(accountScript);}}
 function start(){const script=document.createElement('script');const artworkUrl=new URL('project-artwork.js',SCRIPT_URL);artworkUrl.searchParams.set('v','20261012b');script.src=artworkUrl.href;script.onload=function(){Promise.resolve(window.NS_PROJECT_ARTWORK_READY).then(render)};script.onerror=render;document.head.appendChild(script)}if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start);else start()
 })();
