@@ -412,11 +412,11 @@ function applyElement(el){
 }
 function saveAttr(el,k,v){const c=pageCfg(),s=sel(el);c.attrs[s]=c.attrs[s]||{};c.attrs[s][k]=v;if(el.dataset.nsEditorCloneId){const clone=(c.clones||[]).find(item=>item.id===el.dataset.nsEditorCloneId);if(clone)clone.html=el.outerHTML}}
 function deleteElement(el){
- historyPush();const s=sel(el),c=pageCfg(),blockId=el.dataset.nsEditorBlock;
+ historyPush();const s=sel(el),c=pageCfg(),blockId=el.dataset.nsEditorBlock,cloneId=el.dataset.nsEditorCloneId;
  c.deleted=c.deleted||[];if(!c.deleted.includes(s))c.deleted.push(s);
  delete c.styles[s];delete c.text[s];delete c.attrs[s];
  c.order.forEach(g=>g.children=(g.children||[]).filter(x=>x!==s));
- c.blocks=c.blocks.filter(b=>b.id!==blockId);
+ c.blocks=c.blocks.filter(b=>b.id!==blockId);if(cloneId)c.clones=(c.clones||[]).filter(b=>b.id!==cloneId);
  applyPreview();selected=null;removeTransformBox();$('#selectedName').textContent='Selecciona un elemento.';buildLayers();
  $('#inspectorBody').innerHTML='<p class="dev-muted">Elemento eliminado.</p>';
  dirty=true;updateHistoryButtons();msg('Elemento eliminado; se conserva su espacio.');
@@ -438,7 +438,7 @@ function move(el,dir){
  if(index<0||next<0||next>=siblings.length)return;
  historyPush();ensureLayoutIds(parent);
  if(dir<0)parent.insertBefore(el,siblings[next]);else parent.insertBefore(siblings[next],el);
- persistOrder(parent);buildLayers();msg('Orden de secciones actualizado');
+ persistOrder(parent);if(selected===el)makeTransformBox(el);buildLayers();msg('Orden de secciones actualizado');
 }function toggleGrid(el,on){historyPush();const c=pageCfg(),s=sel(el);c.styles[s]=c.styles[s]||{};if(on){c.styles[s].display='grid';c.styles[s]['grid-template-columns']='repeat(2,minmax(0,1fr))';c.styles[s].gap='24px';el.style.display='grid';el.style.gridTemplateColumns='repeat(2,minmax(0,1fr))';el.style.gap='24px'}else{c.styles[s].display='block';delete c.styles[s]['grid-template-columns'];delete c.styles[s].gap;el.style.display='block';el.style.gridTemplateColumns='';el.style.gap=''}dirty=true;msg(on?'Grid activado':'Diseño libre activado')}
 const TEMPLATE_LIBRARY=[
  {id:'text-card',cat:'NegativeStudios',name:'Cuadro de texto',desc:'Texto dentro de una tarjeta elegante.',icon:'T',html:'<section class="section"><div class="container"><div class="card" style="padding:28px"><span class="eyebrow">Sección</span><h2 class="title">Título de sección</h2><p class="lead">Escribe aquí el contenido de este cuadro.</p></div></div></section>'},
