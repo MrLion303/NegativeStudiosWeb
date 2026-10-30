@@ -613,7 +613,7 @@
     const { data: urlData } = client.storage.from(bucket).getPublicUrl(path);
     let profile;
     try {
-      const result = await (publicClient || client).from('profiles')
+      const result = await client.from('profiles')
         .update({ [column]: urlData.publicUrl })
         .eq('id', currentUser.id)
         .select('id, username, display_name, bio, avatar_url, banner_url, username_changed_at, created_at, updated_at')
