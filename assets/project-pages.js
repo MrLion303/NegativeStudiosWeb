@@ -67,6 +67,12 @@ function installOverlandStyles(){
     '@keyframes overlandShine{0%{left:-60%}100%{left:120%}}',
     '.overland-progress-box.general .overland-progress-fill{background:linear-gradient(270deg,#ffb300,#ffd700,#fff2a8,#ffb300);background-size:400% 400%;animation:overlandGradientMove 3.5s ease infinite;box-shadow:0 0 12px rgba(255,215,0,.45),0 0 30px rgba(255,180,0,.25)}',
     '.overland-progress-box.general .overland-progress-info strong{font-size:16px}',
+    '.overland-trailer-grid{grid-template-columns:minmax(0,1fr);margin-top:0}',
+    '.overland-trailer-grid .video-card{width:100%}',
+    '.overland-info-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:28px;align-items:start}',
+    '.overland-info-grid .nmc-section{min-width:0;margin:0 0 34px;padding:0 0 30px}',
+    '.overland-info-grid .nmc-section-title{margin-bottom:16px}',
+    '@media(max-width:700px){.overland-info-grid{grid-template-columns:minmax(0,1fr);gap:0}.overland-info-grid .nmc-section{margin-bottom:28px}}',
     '.overland-progress-error{color:#ffb8b8;text-align:center;padding:12px 0}',
     '.overland-coming-soon{display:flex;justify-content:center;align-items:center;width:100%;padding:12px 20px 76px;background:transparent;text-align:center}',
     '.overland-coming-soon-inner{width:min(666px,100%);margin:0 auto}',
@@ -142,6 +148,27 @@ function initOverlandProgress(){
   window.setInterval(cargarDatos,60000);
 }
 
-function render(){if(!p)return;document.title=`${p.title} — NegativeStudios`;if(!document.querySelector('link[href*="refresh.css"]')){const l=document.createElement('link');l.rel='stylesheet';l.href=asset('assets/refresh.css?v=20260930a');document.head.appendChild(l)}const icon=document.querySelector('link[rel="icon"]');if(icon)icon.href=href('assets/media/brand-icon.webp');document.body.insertAdjacentHTML('afterbegin',nav());const sections=p.sections.map(s=>`<section class="nmc-section">${s.title?`<h2 class="nmc-section-title">${esc(s.title)}</h2>`:''}${s.p.map(x=>`<p>${esc(x)}</p>`).join('')}</section>`).join('');document.querySelector('#projectPage').innerHTML=`<section class="project-shell-title"><div class="container"><div class="nmc-breadcrumb"><a href="${navHref('proyectos.html')}">Proyectos</a><span>›</span><span>${esc(p.title)}</span></div><span class="eyebrow">${esc(p.label)}</span><h1 class="display nmc-title">${esc(p.title)}</h1></div></section>${media()}${overlandMarkup()}<section class="section nmc-content-wrap project-shell-content"><div class="container nmc-layout"><article class="nmc-copy">${sections}${gallery()}${videos()}${links()}<section class="nmc-section nmc-source"><span class="eyebrow">Archivo original</span><p>Esta ruta conserva la página independiente que existe en el sitio original.</p><a class="btn ghost" href="${p.source}" target="_blank" rel="noreferrer">Abrir página original ↗</a></section>${comments()}</article></div></section>`;if(key==='overland'){installOverlandStyles();initOverlandProgress()}document.body.insertAdjacentHTML('beforeend',footer());if(!document.querySelector('script[src*="dev-runtime.js"]')){const ds=document.createElement('script');ds.src=asset('assets/dev-runtime.js?v=6');document.body.appendChild(ds)}const menu=document.querySelector('.menu-btn'),n=document.querySelector('#navLinks');menu?.addEventListener('click',()=>{n?.classList.toggle('open');menu.setAttribute('aria-expanded',n?.classList.contains('open')?'true':'false')});if(!document.querySelector('script[data-ns-account-script]')){const accountScript=document.createElement('script');accountScript.src=new URL('accounts.js?v=20261020u',SCRIPT_URL).href;accountScript.dataset.nsAccountScript='true';document.body.appendChild(accountScript);}}
+
+function overlandContentMarkup(){
+  if(key!=='overland')return '';
+  const findSection=title=>p.sections.find(section=>section.title===title);
+  const trailer=findSection('TRÁILER CINEMATOGRÁFICO');
+  const overland=findSection('OVERLAND');
+  const development=findSection('DESARROLLO');
+  const teasers=findSection('Teasers');
+  const renderTextSection=section=>{
+    if(!section)return '';
+    return '<section class="nmc-section"><h2 class="nmc-section-title">'+esc(section.title)+'</h2>'+
+      section.p.map(paragraph=>'<p>'+esc(paragraph)+'</p>').join('')+'</section>';
+  };
+  const trailerVideos=(p.videos||[]).map(([id,title])=>
+    '<article class="video-card"><div class="video-frame"><iframe src="https://www.youtube-nocookie.com/embed/'+encodeURIComponent(id)+'" title="'+esc(title)+'" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe></div></article>'
+  ).join('');
+  return (trailer?'<section class="nmc-section overland-trailer-section"><h2 class="nmc-section-title">'+esc(trailer.title)+'</h2><div class="video-grid overland-trailer-grid">'+trailerVideos+'</div></section>':'')+
+    '<div class="overland-info-grid">'+renderTextSection(overland)+renderTextSection(development)+'</div>'+
+    renderTextSection(teasers);
+}
+
+function render(){if(!p)return;document.title=`${p.title} — NegativeStudios`;if(!document.querySelector('link[href*="refresh.css"]')){const l=document.createElement('link');l.rel='stylesheet';l.href=asset('assets/refresh.css?v=20260930a');document.head.appendChild(l)}const icon=document.querySelector('link[rel="icon"]');if(icon)icon.href=href('assets/media/brand-icon.webp');document.body.insertAdjacentHTML('afterbegin',nav());const sections=key==='overland'?'':p.sections.map(s=>`<section class="nmc-section">${s.title?`<h2 class="nmc-section-title">${esc(s.title)}</h2>`:''}${s.p.map(x=>`<p>${esc(x)}</p>`).join('')}</section>`).join('');document.querySelector('#projectPage').innerHTML=`<section class="project-shell-title"><div class="container"><div class="nmc-breadcrumb"><a href="${navHref('proyectos.html')}">Proyectos</a><span>›</span><span>${esc(p.title)}</span></div><span class="eyebrow">${esc(p.label)}</span><h1 class="display nmc-title">${esc(p.title)}</h1></div></section>${media()}${overlandMarkup()}<section class="section nmc-content-wrap project-shell-content"><div class="container nmc-layout"><article class="nmc-copy">${key==='overland'?overlandContentMarkup():sections}${gallery()}${key==='overland'?'':videos()}${links()}<section class="nmc-section nmc-source"><span class="eyebrow">Archivo original</span><p>Esta ruta conserva la página independiente que existe en el sitio original.</p><a class="btn ghost" href="${p.source}" target="_blank" rel="noreferrer">Abrir página original ↗</a></section>${comments()}</article></div></section>`;if(key==='overland'){installOverlandStyles();initOverlandProgress()}document.body.insertAdjacentHTML('beforeend',footer());if(!document.querySelector('script[src*="dev-runtime.js"]')){const ds=document.createElement('script');ds.src=asset('assets/dev-runtime.js?v=6');document.body.appendChild(ds)}const menu=document.querySelector('.menu-btn'),n=document.querySelector('#navLinks');menu?.addEventListener('click',()=>{n?.classList.toggle('open');menu.setAttribute('aria-expanded',n?.classList.contains('open')?'true':'false')});if(!document.querySelector('script[data-ns-account-script]')){const accountScript=document.createElement('script');accountScript.src=new URL('accounts.js?v=20261020u',SCRIPT_URL).href;accountScript.dataset.nsAccountScript='true';document.body.appendChild(accountScript);}}
 function start(){const script=document.createElement('script');const artworkUrl=new URL('project-artwork.js',SCRIPT_URL);artworkUrl.searchParams.set('v','20261012b');script.src=artworkUrl.href;script.onload=function(){Promise.resolve(window.NS_PROJECT_ARTWORK_READY).then(render)};script.onerror=render;document.head.appendChild(script)}if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start);else start()
 })();
