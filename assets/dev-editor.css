@@ -252,7 +252,7 @@ button,input,textarea,select{font-family:"Quicksand",sans-serif}
 .dev-sidebar,.dev-inspector{scrollbar-color:#2a4156 transparent;scrollbar-width:thin}
 .dev-sidebar::-webkit-scrollbar,.dev-inspector::-webkit-scrollbar,#inspectorPanel::-webkit-scrollbar,#templatesPanel::-webkit-scrollbar{width:6px}
 .dev-sidebar::-webkit-scrollbar-thumb,.dev-inspector::-webkit-scrollbar-thumb,#inspectorPanel::-webkit-scrollbar-thumb,#templatesPanel::-webkit-scrollbar-thumb{background:#263a4e}
-@media(max-width:1300px){
+#pagesPanel{display:flex;flex-direction:column}\n@media(max-width:1300px){
   .dev-shell{grid-template-columns:245px minmax(0,1fr) 330px}
   .left-toggle{left:245px}.right-toggle{right:330px}
   .dev-shell.panel-left-collapsed{grid-template-columns:0 minmax(0,1fr) 330px}
