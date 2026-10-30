@@ -40,6 +40,28 @@
       "blocks": [],
       "customCss": "",
       "grid": {}
+    },
+    "proyectos/overland/index.html": {
+      "styles": {
+        "main>section.project-media-band:nth-of-type(2)>div.container>div.project-media-frame>img": {
+          "position": "relative",
+          "color": "rgb(244, 249, 255)",
+          "font-size": "16px",
+          "border-radius": "0px",
+          "padding": "0px",
+          "margin-top": "0px"
+        }
+      },
+      "text": {},
+      "attrs": {
+        "main>section.project-media-band:nth-of-type(2)>div.container>div.project-media-frame>img": {
+          "src": "https://mrlion303.github.io/NegativeStudiosWeb/assets/media/overland.webp"
+        }
+      },
+      "order": [],
+      "blocks": [],
+      "customCss": "",
+      "grid": {}
     }
   }
 }
