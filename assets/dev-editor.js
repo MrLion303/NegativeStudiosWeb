@@ -16,12 +16,22 @@ async function loadConfig(){
 function snapshot(){return JSON.stringify(config)}
 function historyPush(raw=null){if(suspendHistory)return;const snap=raw===null?snapshot():raw;if(!snap||undoStack[undoStack.length-1]===snap)return;undoStack.push(snap);if(undoStack.length>50)undoStack.shift();redoStack=[];updateHistoryButtons()}
 function restore(raw){
+ const activeSelector=selected?sel(selected):null;
  suspendHistory=true;config=JSON.parse(raw);suspendHistory=false;dirty=true;
- applyPreview();markEditable();
- if(selected){const s=sel(selected),fresh=q(s)[0];if(fresh)select(fresh);else{selected=null;removeTransformBox();$('#selectedName').textContent='Selecciona un elemento.'}}
+ if(observer)observer.disconnect();
+ selected=null;removeTransformBox();
+ const label=$('#selectedName');if(label)label.textContent='Selecciona un elemento.';
+ frame.onload=()=>setTimeout(()=>{
+   wire();
+   if(activeSelector){
+     const fresh=q(activeSelector)[0];
+     if(fresh&&frame.contentWindow.getComputedStyle(fresh).visibility!=='hidden')select(fresh);
+   }
+   buildLayers();updateHistoryButtons();
+ },350);
+ frame.src=current+(current.includes('?')?'&':'?')+'editor='+Date.now();
  updateHistoryButtons();
-}
-function undo(){if(!undoStack.length)return;const current=snapshot(),prev=undoStack.pop();if(current!==prev)redoStack.push(current);restore(prev);msg('Cambio deshecho')}
+}function undo(){if(!undoStack.length)return;const current=snapshot(),prev=undoStack.pop();if(current!==prev)redoStack.push(current);restore(prev);msg('Cambio deshecho')}
 function redo(){if(!redoStack.length)return;const current=snapshot(),next=redoStack.pop();if(current!==next)undoStack.push(current);restore(next);msg('Cambio restaurado')}
 function updateHistoryButtons(){const u=$('#undo'),r=$('#redo'),reset=$('#reset'),indicator=$('#draftIndicator');if(u)u.disabled=!undoStack.length;if(r)r.disabled=!redoStack.length;if(reset)reset.disabled=!dirty;if(indicator){indicator.classList.toggle('is-dirty',dirty);indicator.querySelector('span').textContent=dirty?'Cambios sin publicar':'Todo guardado'}const publishButton=$('#publish');if(publishButton)publishButton.classList.toggle('has-changes',dirty)}
 function loadRepoVersion(){const v=$('#repoVersion');if(!v)return;v.textContent='Cargando…';fetch('https://api.github.com/repos/'+REPO+'/commits/'+BRANCH,{headers:{Accept:'application/vnd.github+json','Authorization':'Bearer '+token,'X-GitHub-Api-Version':'2022-11-28'}}).then(r=>r.json()).then(d=>{if(d&&d.sha){const short=d.sha.slice(0,7),message=d.commit&&d.commit.message?d.commit.message.split('\n')[0]:'';v.textContent=d.sha;v.title=message}}).catch(()=>{v.textContent='?'})}
@@ -122,6 +132,8 @@ function applyPreview(){
  Object.entries(c.styles||{}).forEach(([selector,props])=>q(selector).forEach(el=>{el.style.removeProperty('visibility');Object.entries(props).forEach(([key,value])=>el.style.setProperty(key,value))}));
  Object.entries(c.text||{}).forEach(([selector,value])=>q(selector).forEach(el=>el.innerHTML=value&&typeof value==='object'&&value.html!==undefined?value.html:String(value)));
  Object.entries(c.attrs||{}).forEach(([selector,props])=>q(selector).forEach(el=>Object.entries(props).forEach(([key,value])=>el.setAttribute(key,value))));
+ const configuredBlockIds=new Set((c.blocks||[]).map(block=>block.id));
+ d.querySelectorAll('[data-ns-editor-block]').forEach(node=>{if(!configuredBlockIds.has(node.dataset.nsEditorBlock))node.remove()});
  (c.blocks||[]).forEach(block=>{
    const host=q(block.host)[0]||d.querySelector('main')||d.body;
    if(!host||host.querySelector('[data-ns-editor-block="'+block.id+'"]'))return;
@@ -245,7 +257,7 @@ function persistOrder(parent){
  const root=$('#layersList');if(!root||!frame?.contentDocument)return;
  const parent=primaryCanvasRoot();if(!parent){root.innerHTML='<p class="dev-empty-note">Esta página no tiene secciones editables.</p>';return}
  ensureLayoutIds(parent);
- const elements=Array.from(parent.children).filter(el=>!['SCRIPT','STYLE','NOSCRIPT'].includes(el.tagName)&&el.id!=='ns-transform-box'&&frame.contentWindow.getComputedStyle(el).display!=='none');
+ const elements=Array.from(parent.children).filter(el=>!['SCRIPT','STYLE','NOSCRIPT'].includes(el.tagName)&&el.id!=='ns-transform-box'&&frame.contentWindow.getComputedStyle(el).display!=='none'&&frame.contentWindow.getComputedStyle(el).visibility!=='hidden');
  if(!elements.length){root.innerHTML='<p class="dev-empty-note">Todavía no hay secciones en esta página.</p>';return}
  root.innerHTML=elements.map((el,index)=>{
    const heading=el.querySelector('h1,h2,h3,h4,[aria-label]');
