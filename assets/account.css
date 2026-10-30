@@ -307,7 +307,12 @@
 .connection-copy strong{overflow-wrap:anywhere}
 .connection-copy .muted{font-size:.8rem;line-height:1.4;overflow-wrap:anywhere}
 .connection-slot-number{color:var(--accent);border:1px solid rgba(102,194,255,.2)}
-.connection-row .btn{min-width:100px;white-space:nowrap}
+.connection-row .btn{min-width:104px;min-height:40px;padding:9px 15px;white-space:nowrap;color:#e8f5ff;border:1px solid rgba(117,190,255,.42);background:linear-gradient(135deg,rgba(35,102,158,.55),rgba(19,48,77,.9));box-shadow:0 5px 18px rgba(0,0,0,.18);font-size:.84rem;font-weight:800;opacity:1;cursor:pointer}
+.connection-row .btn:hover{color:#fff;border-color:rgba(133,207,255,.78);background:linear-gradient(135deg,rgba(47,133,196,.72),rgba(23,62,96,.98));box-shadow:0 8px 24px rgba(25,111,190,.22);transform:translateY(-1px)}
+.connection-row .btn:focus-visible{outline:2px solid #8ed4ff;outline-offset:3px}
+.connection-row .btn:disabled{color:#a9bac9;border-color:rgba(148,165,181,.18);background:rgba(79,96,113,.14);box-shadow:none;opacity:.58;cursor:not-allowed;transform:none}
+.connection-row.is-connected .btn{border-color:rgba(100,215,160,.35);background:linear-gradient(135deg,rgba(32,111,81,.5),rgba(17,61,49,.9));color:#d8ffeb}
+.connection-row.is-connected .btn:hover{border-color:rgba(100,235,176,.72);background:linear-gradient(135deg,rgba(37,140,95,.68),rgba(18,77,57,.98))}
 @media(max-width:620px){.settings-tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px}.settings-tab{padding:9px 8px;font-size:.79rem}.connection-row{grid-template-columns:36px minmax(0,1fr);gap:10px;padding:11px}.connection-logo,.connection-slot-number{width:34px;height:34px}.connection-row .btn{grid-column:2;justify-self:start;min-width:0}.settings-panel{gap:14px}}
 
 
