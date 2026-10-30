@@ -898,7 +898,7 @@
       try {
         let result;
         if (moderator) result = await client.rpc('moderator_delete_forum_post', { target_post_id: post.id });
-        else result = await readClient().from('forum_posts').delete().eq('id', post.id).eq('user_id', user.id);
+        else result = await client.from('forum_posts').delete().eq('id', post.id).eq('user_id', user.id);
         if (result.error) throw result.error;
         if ($('#forumFeed')) await loadForumFeed();
         if ($('#publicProfilePosts') && activeProfile?.id) await loadPostsForProfile(activeProfile.id, $('#publicProfilePosts'));
@@ -1319,7 +1319,7 @@
           if (upload.error) throw upload.error;
           imageUrl = client.storage.from('post-images').getPublicUrl(uploadedPath).data.publicUrl;
         }
-        const result = await readClient().from('forum_posts').insert({
+        const result = await client.from('forum_posts').insert({
           user_id: user.id, content_html: contentHtml, content_text: contentText, image_url: imageUrl
         }).select('id').single();
         if (result.error) throw result.error;
