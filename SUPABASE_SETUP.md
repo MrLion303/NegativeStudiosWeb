@@ -152,7 +152,15 @@ Las opciones de borrar contenido también se muestran en el menú de tres puntos
 
 ### Google, Discord y Twitch
 
-Activa y configura cada proveedor en Supabase → **Authentication → Sign In / Providers**, siguiendo los pasos de Google, Discord y Twitch de esta guía. Desde **Personalizar perfil → Conexiones**, el usuario puede vincular o desvincular esas identidades. No se debe quitar el único método de acceso que tenga la cuenta.
+Antes de usar la vinculación, habilita la opción **Allow manual linking** en Supabase → **Authentication → Settings**. Esta opción viene desactivada por defecto; sin ella, el botón «Vincular» no puede asociar una identidad OAuth a una cuenta Negative existente. Este ajuste pertenece a Supabase Auth y no se activa ejecutando el SQL del repositorio.
+
+Después, activa y configura Google, Discord y Twitch en Supabase → **Authentication → Sign In / Providers**, siguiendo los pasos de esta guía. Comprueba también que la URL `https://negativestudios.akjon.dev/**` siga en **Authentication → URL Configuration → Redirect URLs**.
+
+Desde **Personalizar perfil → Conexiones**, el usuario debe iniciar sesión primero en la cuenta de Negative que desea conservar y después vincular sus cuentas externas. La vinculación usa la función `linkIdentity()`; al volver de Google, Discord o Twitch, Supabase guarda esa identidad en el mismo usuario de Auth y la web conserva el mismo perfil, nombre de usuario, amistades, publicaciones y comentarios.
+
+A partir de entonces, los botones sociales de `cuenta.html` (`signInWithOAuth()`) permiten entrar con cualquiera de las identidades que estén vinculadas y Supabase devuelve la misma cuenta de Negative. Si el proveedor usa el mismo correo verificado, Supabase también puede enlazar automáticamente esa identidad. Para cuentas externas con correos diferentes se necesita la vinculación manual descrita arriba.
+
+**Importante:** si una cuenta de Google, Discord o Twitch ya está vinculada a otro usuario de Supabase, no se puede asociar directamente a una segunda cuenta ni se fusionarán perfiles automáticamente. Inicia sesión con la cuenta de Negative que ya tiene esa identidad vinculada. No elimines ni recrees usuarios para intentar unirlos. Antes de desvincular una identidad, asegúrate de conservar otro método de acceso; la web impide quitar el último método disponible.
 
 ### Microsoft / Minecraft
 
