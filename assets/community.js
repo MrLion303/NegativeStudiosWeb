@@ -540,7 +540,10 @@
 
   async function markNotificationRead(id) {
     if (!client || !sessionUser) return;
-    await client.from('notifications').update({ read_at: new Date().toISOString() }).eq('id', id).eq('user_id', sessionUser.id);
+    const { error } = await client.from('notifications')
+      .update({ read_at: new Date().toISOString() })
+      .eq('id', id).eq('user_id', sessionUser.id);
+    if (error) throw error;
   }
 
   async function loadNotifications() {
@@ -568,12 +571,12 @@
     }
     if (result.error) {
       result = await client.from('notifications')
-        .select('id,type,title,body,post_id,comment_id,friend_request_id,project_slug,created_at,read_at,actor_id,profiles!notifications_actor_id_fkey(username,display_name,avatar_url)')
+        .select('id,type,title,body,post_id,comment_id,forum_post_comment_id,friend_request_id,project_slug,created_at,read_at,actor_id,profiles!notifications_actor_id_fkey(username,display_name,avatar_url)')
         .order('created_at', { ascending: false }).limit(100);
     }
     if (result.error) {
       result = await client.from('notifications')
-        .select('id,type,title,body,post_id,comment_id,friend_request_id,project_slug,created_at,read_at,actor_id')
+        .select('id,type,title,body,post_id,comment_id,forum_post_comment_id,friend_request_id,project_slug,created_at,read_at,actor_id')
         .order('created_at', { ascending: false }).limit(100);
     }
     host.replaceChildren();
@@ -678,10 +681,16 @@
         const notifications = item.groupedLikes?.length ? item.groupedLikes : [item];
         await Promise.all(notifications.filter(row => !row.read_at).map(row => markNotificationRead(row.id)));
       };
-      open.addEventListener('click', async event => { event.preventDefault(); await activate(); location.assign(open.href); });
+      open.addEventListener('click', async event => {
+        event.preventDefault();
+        try { await activate(); }
+        catch (error) { showStatus($('#notificationsMessage'), error?.message || 'No se pudo marcar la notificación como leída.', 'error'); }
+        location.assign(open.href);
+      });
       copy.addEventListener('click', async event => {
         if (event.target.closest('a')) return;
-        await activate();
+        try { await activate(); }
+        catch (error) { showStatus($('#notificationsMessage'), error?.message || 'No se pudo marcar la notificación como leída.', 'error'); }
         location.assign(open.href);
       });
       card.append(actorLink, copy, open);
