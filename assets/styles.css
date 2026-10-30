@@ -170,3 +170,21 @@ body .community-compose-login .community-button:hover {
 }
 /* Estilo global: esquinas rectas en todos los componentes de NegativeStudios. */
 *,*::before,*::after{border-radius:0!important}
+
+/* Las fotos de perfil conservan su forma circular aunque el resto de la interfaz use esquinas rectas. */
+.public-profile-avatar,
+.public-profile-avatar img,
+.account-avatar-large,
+.account-avatar-large img,
+.ns-account-link--profile,
+.ns-account-link--profile img,
+.ns-account-avatar-fallback,
+.project-comment-avatar,
+.project-comment-avatar img,
+.community-avatar,
+.community-avatar img,
+.community-notification-avatar,
+.community-notification-avatar .community-avatar,
+.brand-profile-image {
+  border-radius: 50% !important;
+}
