@@ -1,6 +1,14 @@
 -- Esquema de cuentas, perfiles públicos y comentarios de NegativeStudios.
 -- Se puede volver a ejecutar en el SQL Editor de Supabase.
 
+-- Least-privilege defaults: future application objects must receive explicit grants.
+alter default privileges for role postgres in schema public
+  revoke all on tables from public, anon, authenticated;
+alter default privileges for role postgres in schema public
+  revoke all on sequences from public, anon, authenticated;
+alter default privileges for role postgres in schema public
+  revoke execute on functions from public, anon, authenticated;
+
 create table if not exists public.profiles (
   id uuid primary key references auth.users (id) on delete cascade,
   username text not null,
@@ -845,3 +853,135 @@ alter table public.microsoft_oauth_states alter column nonce set not null;
 create index if not exists microsoft_oauth_states_expires_at_idx on public.microsoft_oauth_states (expires_at);
 grant all privileges on public.microsoft_account_connections to service_role;
 grant all privileges on public.microsoft_oauth_states to service_role;
+
+
+-- ---------------------------------------------------------------------------
+-- Hardening final: permisos de tablas, secuencias, RPC y políticas públicas.
+-- Debe permanecer al final para compensar ACL heredadas de instalaciones previas.
+-- ---------------------------------------------------------------------------
+begin;
+
+revoke all privileges on table
+  public.profiles,
+  public.profile_badges,
+  public.site_admins,
+  public.project_comments,
+  public.project_comment_likes,
+  public.friend_requests,
+  public.forum_posts,
+  public.forum_post_likes,
+  public.forum_post_comments,
+  public.forum_post_comment_likes,
+  public.forum_post_mentions,
+  public.notifications,
+  public.microsoft_account_connections,
+  public.microsoft_oauth_states
+from public, anon, authenticated;
+
+grant select on public.profiles to anon, authenticated;
+grant update (username, display_name, bio, avatar_url, banner_url)
+  on public.profiles to authenticated;
+grant select on public.profile_badges to anon, authenticated;
+
+grant select on public.project_comments to anon, authenticated;
+grant insert (project_slug, user_id, parent_comment_id, content)
+  on public.project_comments to authenticated;
+grant delete on public.project_comments to authenticated;
+
+grant select on public.project_comment_likes to anon, authenticated;
+grant insert (comment_id, user_id) on public.project_comment_likes to authenticated;
+grant delete on public.project_comment_likes to authenticated;
+
+grant select on public.friend_requests to anon, authenticated;
+
+grant select on public.forum_posts to anon, authenticated;
+grant insert (user_id, content_html, content_text, image_url)
+  on public.forum_posts to authenticated;
+grant update (content_html, content_text, image_url)
+  on public.forum_posts to authenticated;
+grant delete on public.forum_posts to authenticated;
+
+grant select on public.forum_post_likes to anon, authenticated;
+grant insert (post_id, user_id) on public.forum_post_likes to authenticated;
+grant delete on public.forum_post_likes to authenticated;
+
+grant select on public.forum_post_comments to anon, authenticated;
+grant insert (post_id, parent_comment_id, user_id, content)
+  on public.forum_post_comments to authenticated;
+grant delete on public.forum_post_comments to authenticated;
+
+grant select on public.forum_post_comment_likes to anon, authenticated;
+grant insert (comment_id, user_id) on public.forum_post_comment_likes to authenticated;
+grant delete on public.forum_post_comment_likes to authenticated;
+
+grant select on public.forum_post_mentions to anon, authenticated;
+grant insert (post_id, mentioned_user_id) on public.forum_post_mentions to authenticated;
+
+grant select on public.notifications to authenticated;
+grant update (read_at) on public.notifications to authenticated;
+
+revoke all privileges on table public.site_admins,
+  public.microsoft_account_connections, public.microsoft_oauth_states
+from public, anon, authenticated;
+
+revoke all privileges on all sequences in schema public from public, anon, authenticated;
+grant usage, select on sequence
+  public.project_comments_id_seq,
+  public.forum_posts_id_seq,
+  public.forum_post_comments_id_seq,
+  public.forum_post_comment_likes_id_seq
+to authenticated;
+
+revoke all on function public.handle_new_user_profile() from public, anon, authenticated;
+revoke all on function public.notify_forum_post_comment() from public, anon, authenticated;
+revoke all on function public.notify_forum_post_like() from public, anon, authenticated;
+revoke all on function public.notify_forum_post_mention() from public, anon, authenticated;
+revoke all on function public.notify_friend_request_activity() from public, anon, authenticated;
+revoke all on function public.notify_project_comment_like() from public, anon, authenticated;
+revoke all on function public.notify_project_comment_reply() from public, anon, authenticated;
+revoke all on function public.protect_foreign_forum_replies() from public, anon, authenticated;
+revoke all on function public.enforce_public_profile_rules() from public, anon, authenticated;
+revoke all on function public.validate_project_comment_parent() from public, anon, authenticated;
+revoke all on function public.enforce_forum_post_timestamps() from public, anon, authenticated;
+revoke all on function public.validate_forum_post_comment_parent() from public, anon, authenticated;
+
+grant execute on function public.set_profile_badges(uuid, boolean, boolean) to authenticated;
+grant execute on function public.moderator_delete_project_comment(bigint) to authenticated;
+grant execute on function public.send_friend_request(uuid) to authenticated;
+grant execute on function public.respond_friend_request(uuid, boolean) to authenticated;
+grant execute on function public.remove_friend(uuid) to authenticated;
+grant execute on function public.moderator_delete_forum_comment(bigint) to authenticated;
+grant execute on function public.moderator_delete_forum_post(bigint) to authenticated;
+
+drop policy if exists "Accepted friendships are publicly readable" on public.friend_requests;
+drop policy if exists "Users can read their own friendship requests" on public.friend_requests;
+drop policy if exists "Users can read relevant friendship requests" on public.friend_requests;
+create policy "Users can read relevant friendship requests"
+  on public.friend_requests for select to public
+  using (
+    status = 'accepted'
+    or (
+      (select auth.uid()) is not null
+      and (
+        requester_id = (select auth.uid())
+        or recipient_id = (select auth.uid())
+      )
+    )
+  );
+
+create index if not exists forum_post_comments_user_id_idx
+  on public.forum_post_comments(user_id);
+create index if not exists microsoft_oauth_states_user_id_idx
+  on public.microsoft_oauth_states(user_id);
+create index if not exists notifications_actor_id_idx
+  on public.notifications(actor_id);
+create index if not exists notifications_comment_id_idx
+  on public.notifications(comment_id);
+create index if not exists notifications_friend_request_id_idx
+  on public.notifications(friend_request_id);
+create index if not exists notifications_post_id_idx
+  on public.notifications(post_id);
+create index if not exists project_comments_user_id_idx
+  on public.project_comments(user_id);
+
+commit;
