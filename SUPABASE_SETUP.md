@@ -169,10 +169,16 @@ La vinculación Microsoft usa la Edge Function `microsoft-link`; no utiliza los 
 1. Registra una aplicación web en [Microsoft Entra](https://entra.microsoft.com/) que permita cuentas personales de Microsoft (y organizacionales, si las necesitas).
 2. En la configuración de autenticación de la aplicación, añade como redirect URI de plataforma **Web** la URL exacta de tu proyecto Supabase seguida de `/functions/v1/microsoft-link`. El valor tiene esta forma: `https://TU-PROYECTO.supabase.co/functions/v1/microsoft-link`; reemplaza el dominio por el que muestra tu propio proyecto.
 3. Configura los permisos de Microsoft necesarios para la identidad y Xbox Live, incluido `XboxLive.signin`, y acepta el consentimiento que solicite Microsoft.
-4. En Supabase → **Edge Functions**, crea la función `microsoft-link`, copia [`supabase/functions/microsoft-link/index.ts`](https://github.com/MrLion303/NegativeStudiosWeb/blob/main/supabase/functions/microsoft-link/index.ts) y publícala.
-5. Desactiva **Verify JWT** para la función de callback. Sus peticiones POST validan la sesión Supabase del usuario; el callback GET se valida con un estado OAuth aleatorio de corta duración.
-6. En los secretos de Edge Functions, configura `MICROSOFT_CLIENT_ID`, `MICROSOFT_CLIENT_SECRET` y `MICROSOFT_TOKEN_ENCRYPTION_KEY`. El último debe ser un secreto aleatorio robusto; no lo publiques ni lo guardes en GitHub. Supabase proporciona `SUPABASE_URL`, `SUPABASE_ANON_KEY` y `SUPABASE_SERVICE_ROLE_KEY` a las funciones.
-7. Ejecuta otra vez todo `supabase/schema.sql`. La tabla de conexiones Microsoft no concede acceso directo a usuarios del navegador; los tokens de acceso y actualización se guardan cifrados del lado del servidor.
+4. La Edge Function `microsoft-link` ya está desplegada en el proyecto `NegativeWeb`. Su código fuente está en [`supabase/functions/microsoft-link/index.ts`](https://github.com/MrLion303/NegativeStudiosWeb/blob/main/supabase/functions/microsoft-link/index.ts). Si haces cambios en ese archivo, vuelve a desplegar la función desde Supabase.
+5. La función tiene **Verify JWT** desactivado para permitir el callback GET de Microsoft. No queda abierta sin control: cada petición POST comprueba el Bearer token con Supabase Auth y el callback GET exige un estado de un solo uso, verifica el nonce y la firma del ID token de Microsoft.
+6. En Supabase → **Edge Functions → Secrets**, configura:
+   - `MICROSOFT_CLIENT_ID`: Application (client) ID de Microsoft Entra.
+   - `MICROSOFT_CLIENT_SECRET`: valor del Client Secret de la aplicación de Entra.
+   - `MICROSOFT_TOKEN_ENCRYPTION_KEY`: secreto aleatorio largo (32 bytes o más) para cifrar los tokens. No lo compartas ni lo guardes en GitHub.
+   
+   Supabase proporciona las variables internas del proyecto que usa la función. No crees ni copies claves administrativas en el navegador.
+7. La URL exacta de retorno de Microsoft Entra para este proyecto es `https://fdoqiddixjxzaugkqquo.supabase.co/functions/v1/microsoft-link`. Debe estar registrada como plataforma **Web** en Entra; no uses la URL de Negative como callback de Microsoft.
+8. Las tablas `microsoft_account_connections` y `microsoft_oauth_states` ya existen en la base de datos actual. Ambas tienen RLS activo y deniegan lectura directa a `anon` y `authenticated`; solo la función de servidor puede consultar o guardar tokens cifrados. No hace falta volver a ejecutar el esquema para este despliegue.
 
 Las tres posiciones Microsoft se muestran en la pestaña **Conexiones**. La vinculación guarda una identidad Microsoft y tokens cifrados para futuras integraciones con el launcher; todavía no implementa el inicio de sesión Minecraft en el launcher ni comprueba licencias/entitlements. Esa integración requiere desarrollar y probar el flujo Xbox Live / Minecraft del launcher después.
 
