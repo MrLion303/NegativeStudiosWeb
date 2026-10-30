@@ -40,7 +40,7 @@
   }
 
   function ensureStyles() {
-    const href = new URL('assets/account.css?v=20261023j', SITE_ROOT).href;
+    const href = new URL('assets/account.css?v=20261029b', SITE_ROOT).href;
     if (!$$('link[rel="stylesheet"]').some(link => link.href === href)) {
       const link = document.createElement('link');
       link.rel = 'stylesheet';
@@ -707,9 +707,19 @@
     if (!host || !client || !currentUser) return;
     const { data, error } = await client.functions.invoke('microsoft-link', { body: { action: 'list', slot: 1 } });
     if (error || data?.error) {
+      const detail = error?.context?.body?.error || data?.error || error?.message || '';
+      const lower = String(detail).toLowerCase();
+      let statusText = 'No se pudo consultar la conexión Microsoft.';
+      if (lower.includes('not found') || lower.includes('function') && lower.includes('not deployed')) {
+        statusText = 'La función Microsoft todavía no está desplegada.';
+      } else if (lower.includes('falta configurar') || lower.includes('microsof') && lower.includes('secret')) {
+        statusText = 'Faltan las credenciales Microsoft en Supabase.';
+      } else if (lower.includes('session') || lower.includes('jwt') || lower.includes('inicia sesión')) {
+        statusText = 'Inicia sesión de nuevo para consultar tus cuentas.';
+      }
       host.querySelectorAll('.connection-row').forEach(row => {
         const status = row.querySelector('.connection-copy .muted');
-        if (status) status.textContent = 'Requiere configurar microsoft-link en Supabase';
+        if (status) status.textContent = statusText;
       });
       return;
     }
