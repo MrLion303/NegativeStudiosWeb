@@ -150,8 +150,16 @@ function applyPreview(){
  (c.layoutIds||[]).forEach(item=>{try{const node=d.querySelector('[data-ns-layout-id="'+item.id+'"]')||q(item.selector,true)[0];if(node)node.dataset.nsLayoutId=item.id}catch(e){}});
  (c.order||[]).forEach(group=>{
    const parent=q(group.parent)[0];if(!parent)return;
+   const current=Array.from(parent.children);
    const nodes=(group.children||[]).map(selector=>{try{return q(selector).find(node=>node.parentElement===parent)}catch(e){return null}}).filter(Boolean);
-   nodes.forEach(node=>parent.appendChild(node));
+   const ordered=new Set(nodes);
+   const extras=current.filter(node=>!ordered.has(node)).map(node=>({node,at:current.slice(0,current.indexOf(node)).filter(previous=>ordered.has(previous)).length}));
+   const arranged=[];
+   for(let index=0;index<=nodes.length;index++){
+     extras.filter(item=>item.at===index).forEach(item=>arranged.push(item.node));
+     if(index<nodes.length)arranged.push(nodes[index]);
+   }
+   arranged.forEach(node=>parent.appendChild(node));
  });
  (c.deleted||[]).forEach(selector=>q(selector).forEach(el=>el.style.setProperty('visibility','hidden','important')));
  if(c.customCss){let style=d.getElementById('ns-editor-css');if(!style){style=d.createElement('style');style.id='ns-editor-css';d.head.appendChild(style)}style.textContent=c.customCss}
