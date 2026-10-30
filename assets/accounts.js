@@ -652,7 +652,9 @@
     else activate(buttons.find(button => button.classList.contains('is-active'))?.dataset.settingsTab || 'information');
     if (requested === 'microsoft-linked') message('connectionsMessage', 'Cuenta Microsoft vinculada de forma segura.', 'success');
     else if (requested === 'linked') message('connectionsMessage', 'La cuenta externa se vinculó correctamente.', 'success');
-    else if (requested?.startsWith('microsoft-error')) message('connectionsMessage', 'No se pudo vincular Microsoft. Comprueba las credenciales, permisos y URL de retorno en Supabase.', 'error');
+    else if (requested === 'microsoft-error-config') message('connectionsMessage', 'Faltan las credenciales de la aplicación Microsoft en los secretos de Supabase.', 'error');
+    else if (requested === 'microsoft-error-duplicate') message('connectionsMessage', 'Esta cuenta Microsoft ya está vinculada en otra posición de tu perfil.', 'error');
+    else if (requested?.startsWith('microsoft-error')) message('connectionsMessage', 'No se pudo vincular Microsoft. Comprueba las credenciales, permisos y URL de retorno en Microsoft Entra y Supabase.', 'error');
   }
 
   async function loadLinkedIdentities() {
