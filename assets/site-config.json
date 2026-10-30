@@ -80,9 +80,38 @@
           "border-radius": "0px",
           "padding": "0px",
           "margin-top": "0px"
+        },
+        "main>section.project-shell-title:nth-of-type(1)": {
+          "position": "relative"
+        },
+        "main>section.section.nmc-content-wrap:nth-of-type(5)>div.container.nmc-layout>article.nmc-copy>div.overland-info-grid:nth-of-type(1)>section.nmc-section:nth-of-type(2)": {
+          "position": "relative"
+        },
+        "main>section.section.nmc-content-wrap:nth-of-type(5)>div.container.nmc-layout>article.nmc-copy>div.overland-info-grid:nth-of-type(1)": {
+          "position": "relative"
+        },
+        "main>section.section.nmc-content-wrap:nth-of-type(5)>div.container.nmc-layout>article.nmc-copy": {
+          "position": "relative"
+        },
+        "main>section.section.nmc-content-wrap:nth-of-type(5)>div.container.nmc-layout>article.nmc-copy>div.overland-info-grid:nth-of-type(1)>section.nmc-section:nth-of-type(2)>p": {
+          "color": "rgb(175, 193, 209)",
+          "font-size": "17px",
+          "border-radius": "0px",
+          "padding": "0px",
+          "margin-top": "0px"
+        },
+        "main>section.section.nmc-content-wrap:nth-of-type(5)>div.container.nmc-layout>article.nmc-copy>section.nmc-section:nth-of-type(2)": {
+          "position": "relative"
+        },
+        "main>section.section.nmc-content-wrap:nth-of-type(5)": {
+          "position": "relative"
         }
       },
-      "text": {},
+      "text": {
+        "main>section.section.nmc-content-wrap:nth-of-type(5)>div.container.nmc-layout>article.nmc-copy>div.overland-info-grid:nth-of-type(1)>section.nmc-section:nth-of-type(2)>p": {
+          "html": "Este servidor da inicio a la Fase 2 del UCC (Universo Cinematográfico del Caos), el cual expande el Lore de NegativeStudios.<div bis_skin_checked=\"1\" data-ns-editor-wired=\"1\" class=\"\"><br data-ns-editor-wired=\"1\"></div><div bis_skin_checked=\"1\" data-ns-editor-wired=\"1\"><br data-ns-editor-wired=\"1\"></div><div bis_skin_checked=\"1\" data-ns-editor-wired=\"1\"><br></div>"
+        }
+      },
       "attrs": {
         "main>section.project-media-band:nth-of-type(2)>div.container>div.project-media-frame>img": {
           "src": "https://raw.githubusercontent.com/MrLion303/NegativeStudiosWeb/main/assets/uploads/1793383886178-OVERLAND_3.png"
