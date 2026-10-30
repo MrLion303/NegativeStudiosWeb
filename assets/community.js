@@ -8,6 +8,22 @@
   let client = null;
   let publicClient = null;
   const readClient = () => publicClient || client;
+  async function getSessionSafely() {
+    if (!client) return null;
+    try {
+      const { data, error } = await client.auth.getSession();
+      if (error) throw error;
+      return data?.session || null;
+    } catch (error) {
+      const detail = [error?.message, error?.code, error?.name].filter(Boolean).join(' ').toLowerCase();
+      if (/invalid refresh token|refresh token not found|refresh_token_not_found|session_not_found|invalid_grant/.test(detail)) {
+        try { await client.auth.signOut({ scope: 'local' }); } catch (_) {}
+      }
+      console.warn('No se pudo recuperar la sesión de la comunidad.', error);
+      return null;
+    }
+  }
+
   let sessionUser = null;
   let sessionProfile = null;
   let activeProfile = null;
@@ -190,7 +206,7 @@
   }
 
   async function getAcceptedFriendships(profileId) {
-    const result = await client.from('friend_requests')
+    const result = await readClient().from('friend_requests')
       .select('id, requester_id, recipient_id, status, created_at')
       .eq('status', 'accepted')
       .or('requester_id.eq.' + profileId + ',recipient_id.eq.' + profileId)
@@ -1137,8 +1153,8 @@
 
   async function refreshCommunityProfile() {
     if (!client) return;
-    const session = await client.auth.getSession();
-    sessionUser = session.data?.session?.user || null;
+    const session = await getSessionSafely();
+    sessionUser = session?.user || null;
     sessionProfile = sessionUser ? await getCurrentProfile(sessionUser).catch(() => null) : null;
     if ($('#publicProfileCard')) {
       const param = new URLSearchParams(location.search).get('username');
@@ -1542,8 +1558,8 @@
       if ($('#notificationsFeed')) $('#notificationsFeed').replaceChildren(Object.assign(document.createElement('p'), { className: 'community-status community-status--error', textContent: 'No se pudo conectar con Supabase.' }));
       return;
     }
-    const session = await client.auth.getSession();
-    sessionUser = session.data?.session?.user || null;
+    const session = await getSessionSafely();
+    sessionUser = session?.user || null;
     sessionProfile = sessionUser ? await getCurrentProfile(sessionUser).catch(() => null) : null;
     if ($('#publicProfileCard')) await refreshCommunityProfile();
     await updateNotificationCount();
@@ -1560,8 +1576,8 @@
       if (nextUserId === (sessionUser?.id || null)) return;
       window.setTimeout(async () => {
         // Otra notificación puede haber actualizado ya la sesión mientras esperábamos.
-        const latest = await client.auth.getSession();
-        const latestUserId = latest.data?.session?.user?.id || null;
+        const latest = await getSessionSafely();
+        const latestUserId = latest?.user?.id || null;
         if (latestUserId === (sessionUser?.id || null)) return;
         await refreshCommunityProfile().catch(() => {});
         await updateNotificationCount();
