@@ -137,6 +137,13 @@ Deno.serve(async (req: Request) => {
       return redirectToSettings("microsoft-error-encryption");
     }
 
+    const { data: alreadyLinked, error: duplicateCheckError } = await admin.from("microsoft_account_connections")
+      .select("slot").eq("user_id", savedState.user_id).eq("microsoft_user_id", microsoftId).maybeSingle();
+    if (duplicateCheckError) return redirectToSettings("microsoft-error-save");
+    if (alreadyLinked && Number(alreadyLinked.slot) !== Number(savedState.slot)) {
+      return redirectToSettings("microsoft-error-duplicate");
+    }
+
     const email = String(account.preferred_username || account.email || account.upn || "");
     const displayName = String(account.name || email || "Cuenta Microsoft").slice(0, 160);
     const { error: saveError } = await admin.from("microsoft_account_connections").upsert({
