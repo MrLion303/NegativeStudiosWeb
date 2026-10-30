@@ -815,3 +815,8 @@ button { color: inherit; font: inherit; }
 }
 /* El portafolio mantiene el mismo criterio visual: todas las esquinas rectas. */
 *,*::before,*::after{border-radius:0!important}
+
+/* La foto de perfil del encabezado también permanece circular. */
+.brand-profile-image {
+  border-radius: 50% !important;
+}
