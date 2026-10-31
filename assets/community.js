@@ -79,13 +79,18 @@
     links.forEach(link => { link.hidden = !sessionUser; });
     if (!sessionUser || !client) { badges.forEach(badge => { badge.hidden = true; }); return; }
     try {
-      const { count, error } = await client.from('notifications').select('id', { count: 'exact', head: true }).is('read_at', null);
-      if (error) throw error;
+      const result = await runWithFreshSessionRetry(() =>
+        client.from('notifications').select('id', { count: 'exact', head: true }).is('read_at', null)
+      );
+      if (result.error) throw result.error;
       badges.forEach(badge => {
-        badge.textContent = count > 99 ? '99+' : String(count || 0);
-        badge.hidden = !count;
+        badge.textContent = result.count > 99 ? '99+' : String(result.count || 0);
+        badge.hidden = !result.count;
       });
-    } catch (_) { badges.forEach(badge => { badge.hidden = true; }); }
+    } catch (error) {
+      console.warn('No se pudo actualizar el contador de notificaciones.', error);
+      badges.forEach(badge => { badge.hidden = true; });
+    }
   }
 
   function avatar(profile, className) {
@@ -540,10 +545,12 @@
 
   async function markNotificationRead(id) {
     if (!client || !sessionUser) return;
-    const { error } = await client.from('notifications')
-      .update({ read_at: new Date().toISOString() })
-      .eq('id', id).eq('user_id', sessionUser.id);
-    if (error) throw error;
+    const result = await runWithFreshSessionRetry(() =>
+      client.from('notifications')
+        .update({ read_at: new Date().toISOString() })
+        .eq('id', id).eq('user_id', sessionUser.id)
+    );
+    if (result.error) throw result.error;
   }
 
   async function loadNotifications() {
@@ -561,28 +568,37 @@
     host.replaceChildren();
     const loading = document.createElement('p');
     loading.className = 'community-muted'; loading.textContent = 'Cargando actividad…'; host.appendChild(loading);
-    let result = await client.from('notifications')
-      .select('id,type,title,body,post_id,comment_id,forum_post_comment_id,friend_request_id,project_slug,created_at,read_at,actor_id,profiles!notifications_actor_id_fkey(username,display_name,avatar_url,profile_badges(is_mod,is_verified))')
-      .order('created_at', { ascending: false }).limit(100);
-    if (result.error) {
-      result = await client.from('notifications')
-        .select('id,type,title,body,post_id,comment_id,forum_post_comment_id,friend_request_id,project_slug,created_at,read_at,actor_id,profiles!notifications_actor_id_fkey(username,display_name,avatar_url)')
-        .order('created_at', { ascending: false }).limit(100);
+    const queryNotifications = async select => {
+      try {
+        return await runWithFreshSessionRetry(() =>
+          client.from('notifications').select(select)
+            .order('created_at', { ascending: false }).limit(100)
+        );
+      } catch (error) {
+        return { data: null, error };
+      }
+    };
+    let result = await queryNotifications(
+      'id,type,title,body,post_id,comment_id,forum_post_comment_id,friend_request_id,project_slug,created_at,read_at,actor_id,profiles!notifications_actor_id_fkey(username,display_name,avatar_url,profile_badges(is_mod,is_verified))'
+    );
+    if (result.error && !isAuthSessionError(result.error)) {
+      result = await queryNotifications(
+        'id,type,title,body,post_id,comment_id,forum_post_comment_id,friend_request_id,project_slug,created_at,read_at,actor_id,profiles!notifications_actor_id_fkey(username,display_name,avatar_url)'
+      );
     }
-    if (result.error) {
-      result = await client.from('notifications')
-        .select('id,type,title,body,post_id,comment_id,forum_post_comment_id,friend_request_id,project_slug,created_at,read_at,actor_id,profiles!notifications_actor_id_fkey(username,display_name,avatar_url)')
-        .order('created_at', { ascending: false }).limit(100);
-    }
-    if (result.error) {
-      result = await client.from('notifications')
-        .select('id,type,title,body,post_id,comment_id,forum_post_comment_id,friend_request_id,project_slug,created_at,read_at,actor_id')
-        .order('created_at', { ascending: false }).limit(100);
+    if (result.error && !isAuthSessionError(result.error)) {
+      result = await queryNotifications(
+        'id,type,title,body,post_id,comment_id,forum_post_comment_id,friend_request_id,project_slug,created_at,read_at,actor_id'
+      );
     }
     host.replaceChildren();
     if (result.error) {
       const error = document.createElement('p'); error.className = 'community-status community-status--error';
-      error.textContent = 'No se pudo cargar la actividad. Ejecuta el esquema actualizado de Supabase.';
+      const detail = [result.error?.message, result.error?.code, result.error?.name].filter(Boolean).join(' ').toLowerCase();
+      error.textContent = isAuthSessionError(result.error) || /invalid refresh token|refresh_token_not_found|session_not_found|invalid_grant/.test(detail)
+        ? 'Tu sesión dejó de ser válida. Inicia sesión nuevamente para consultar tus notificaciones.'
+        : 'No se pudo cargar la actividad. Revisa la conexión o el esquema de Supabase.';
+      console.warn('No se pudo cargar la actividad de notificaciones.', result.error);
       host.appendChild(error); return;
     }
     const entries = result.data || [];
@@ -613,7 +629,10 @@
       markAll.onclick = async () => {
         markAll.disabled = true;
         try {
-          const response = await client.from('notifications').update({ read_at: new Date().toISOString() }).eq('user_id', sessionUser.id).is('read_at', null);
+          const response = await runWithFreshSessionRetry(() =>
+            client.from('notifications').update({ read_at: new Date().toISOString() })
+              .eq('user_id', sessionUser.id).is('read_at', null)
+          );
           if (response.error) throw response.error;
           await loadNotifications();
           await updateNotificationCount();
@@ -775,6 +794,12 @@
   function isExpiredJwtError(error) {
     const detail = [error?.message, error?.code, error?.name].filter(Boolean).join(' ').toLowerCase();
     return /jwt expired|token has expired|expired jwt|pgrst303/.test(detail);
+  }
+
+  function isAuthSessionError(error) {
+    const detail = [error?.message, error?.code, error?.name].filter(Boolean).join(' ').toLowerCase();
+    return isExpiredJwtError(error) || Number(error?.status) === 401 ||
+      /pgrst301|pgrst302|invalid refresh token|refresh_token_not_found|session_not_found|invalid_grant|unauthorized/.test(detail);
   }
 
   async function runWithFreshSessionRetry(operation) {
@@ -1482,14 +1507,16 @@
     loading.className = 'community-muted';
     loading.textContent = 'Buscando publicaciones…';
     host.appendChild(loading);
-    const notifications = await client.from('notifications')
-      .select('post_id,created_at')
-      .eq('user_id', sessionUser.id)
-      .eq('actor_id', actorId)
-      .eq('type', 'post_like')
-      .not('post_id', 'is', null)
-      .order('created_at', { ascending: false })
-      .limit(200);
+    const notifications = await runWithFreshSessionRetry(() =>
+      client.from('notifications')
+        .select('post_id,created_at')
+        .eq('user_id', sessionUser.id)
+        .eq('actor_id', actorId)
+        .eq('type', 'post_like')
+        .not('post_id', 'is', null)
+        .order('created_at', { ascending: false })
+        .limit(200)
+    );
     host.replaceChildren();
     if (notifications.error) {
       const message = document.createElement('p');
