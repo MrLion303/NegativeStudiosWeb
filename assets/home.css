@@ -272,28 +272,31 @@
   .home-presentation-copy{max-width:680px!important;justify-self:start!important}
 }
 
-/* Presentation heading spans the complete two-column section */
+/* Full-width presentation heading, matching the other homepage section titles */
 .home-presentation-heading{
-  grid-column:1/-1;
-  width:100%;
+  display:block!important;
+  width:100%!important;
+  margin:0 0 48px!important;
+  padding-top:26px;
+  border-top:1px solid var(--line);
+}
+.home-presentation-heading>div{
+  width:100%!important;
   max-width:none!important;
-  padding:0 0 8px;
 }
 .home-presentation-heading .title{
-  width:100%;
+  display:block;
+  width:100%!important;
   max-width:none!important;
-  margin-top:14px;
-}
-.home-presentation-copy{
-  max-width:500px!important;
-  justify-self:end!important;
-  padding-left:28px!important;
+  margin-top:14px!important;
+  font-size:clamp(2.8rem,5.7vw,5.8rem)!important;
+  line-height:.87!important;
+  letter-spacing:-.055em!important;
 }
 @media(max-width:920px){
-  .home-presentation-heading{grid-column:1}
-  .home-presentation-copy{
-    max-width:680px!important;
-    justify-self:start!important;
-    padding-left:0!important;
+  .home-presentation-heading{margin-bottom:34px!important}
+  .home-presentation-heading .title{
+    font-size:clamp(2.2rem,8vw,4.8rem)!important;
+    line-height:.9!important;
   }
 }
