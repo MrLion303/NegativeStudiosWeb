@@ -222,3 +222,26 @@
 .home-presentation-copy .lead{max-width:470px!important}
 .home-presentation-copy .muted{max-width:450px!important}
 @media(max-width:920px){.home-presentation-grid{gap:36px!important}.home-presentation-copy{max-width:680px!important;justify-self:start!important;padding-left:0!important}.home-presentation-copy .title{font-size:clamp(1.8rem,5vw,2.6rem)!important}}
+
+/* Seamless infinite word marquee on the homepage */
+.home-after-hero .marquee-track{
+  display:flex;
+  width:max-content;
+  min-width:200vw;
+  align-items:center;
+  animation:marquee 26s linear infinite;
+  will-change:transform;
+}
+.home-after-hero .marquee-group{
+  display:flex;
+  flex:0 0 auto;
+  min-width:50%;
+  align-items:center;
+  justify-content:space-around;
+  gap:clamp(20px,2.5vw,38px);
+  padding-inline:clamp(12px,2vw,28px);
+}
+.home-after-hero .marquee-group span{margin-right:0}
+@media(prefers-reduced-motion:reduce){
+  .home-after-hero .marquee-track{animation:none}
+}
