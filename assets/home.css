@@ -271,3 +271,29 @@
 @media(max-width:920px){
   .home-presentation-copy{max-width:680px!important;justify-self:start!important}
 }
+
+/* Presentation heading spans the complete two-column section */
+.home-presentation-heading{
+  grid-column:1/-1;
+  width:100%;
+  max-width:none!important;
+  padding:0 0 8px;
+}
+.home-presentation-heading .title{
+  width:100%;
+  max-width:none!important;
+  margin-top:14px;
+}
+.home-presentation-copy{
+  max-width:500px!important;
+  justify-self:end!important;
+  padding-left:28px!important;
+}
+@media(max-width:920px){
+  .home-presentation-heading{grid-column:1}
+  .home-presentation-copy{
+    max-width:680px!important;
+    justify-self:start!important;
+    padding-left:0!important;
+  }
+}
