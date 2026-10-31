@@ -180,7 +180,7 @@ function overlandContentMarkup(){
       section.p.map(paragraph=>'<p>'+esc(paragraph)+'</p>').join('')+'</section>';
   };
   const trailerVideos=(p.videos||[]).map(([id,title])=>
-    '<article class="video-card"><div class="video-frame"><iframe src="https://www.youtube.com/embed/'+encodeURIComponent(id)+'+'" title="'+esc(title)+'" loading="lazy" referrerpolicy="strict-origin-when-cross-origin" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe></div></article>'
+    '<article class="video-card"><div class="video-frame"><iframe src="https://www.youtube.com/embed/'+encodeURIComponent(id)+'" title="'+esc(title)+'" loading="lazy" referrerpolicy="strict-origin-when-cross-origin" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe></div></article>'
   ).join('');
   return (trailer?'<section class="nmc-section overland-trailer-section"><h2 class="nmc-section-title">'+esc(trailer.title)+'</h2><div class="video-grid overland-trailer-grid">'+trailerVideos+'</div></section>':'')+
     '<div class="overland-info-grid">'+renderTextSection(overland)+renderTextSection(development)+'</div>'+
